@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>K6 Browser Test Page</title>
+</head>
+
+<body>
+    <h1>toBe Matchers</h1>
+
+    <section id="toBeChecked">
+        <input type="checkbox" id="toBeCheckedCheckbox">
+        <label for="toBeCheckedCheckbox">Test Checkbox</label>
+    </section>
+
+    <section id="toBeDisabled">
+        <input type="text" id="toBeDisabledInput" disabled>
+        <label for="toBeDisabledInput">Test Input</label>
+    </section>
+
+    <section id="toBeEditable">
+        <p type="text" id="toBeEditableInput" contenteditable="false">Test Paragraph</p>
+    </section>
+
+    <section id="toBeEnabled">
+        <input type="text" id="toBeEnabledInput">
+        <label for="toBeEnabledInput">Test Input</label>
+    </section>
+
+    <section id="toBeHidden">
+        <p id="toBeHiddenText" style="visibility: hidden;">Test Paragraph</p>
+    </section>
+
+    <section id="toBeVisible">
+        <p id="toBeVisibleText" style="visibility: visible;">Test Paragraph</p>
+    </section>
+
+    <section id="toHaveValue">
+        <input type="text" id="toHaveValueInput" value="test-value">
+        <label for="toHaveValueInput">Test Input</label>
+    </section>
+</body>
+</html>

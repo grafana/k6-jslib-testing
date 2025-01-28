@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Install Deno v2
+        uses: denolib/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Build & archive
+        run: |
+          set -x
+          VERSION="${GITHUB_REF##*/}"
+          deno task release
+          tar -zcf "k6-testing-${VERSION}.tar.gz" -C dist .
+
+      - name: Create release with assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+          VERSION="${GITHUB_REF##*/}"
+          gh release create "${VERSION}" "k6-testing-${VERSION}.tar.gz" dist/* --target "${GITHUB_SHA}" --title "${VERSION}"

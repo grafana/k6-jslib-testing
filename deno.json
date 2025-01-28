@@ -1,0 +1,17 @@
+{
+  "name": "@grafana/k6-testing",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "tasks": {
+    "build": "deno --allow-env --allow-read --allow-run esbuild.mjs",
+    "release": "NODE_ENV=production deno --allow-env --allow-read --allow-run esbuild.mjs",
+    "test": "deno task build && deno run --allow-run --allow-net --allow-read tests/run-tests.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "@types/k6": "npm:@types/k6@^0.54.2",
+    "esbuild": "npm:esbuild@^0.24.0",
+    "k6": "npm:k6@^0.0.0",
+    "k6-execution-shim": "./k6-execution-shim.ts"
+  }
+}

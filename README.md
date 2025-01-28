@@ -1,0 +1,275 @@
+# k6-testing
+
+A seamless way to write functional tests in k6 with Playwright-compatible assertions.
+
+> ⚠️ **Note**: This project is under active development. While it is functional, it is not yet ready for production use, expect bugs, and potential breaking changes.
+
+## Why k6-testing?
+
+- **✨ Write once, run anywhere**: Copy-paste your Playwright test assertions directly into k6 - they'll work out of the box
+- **🎯 Fail fast**: Tests interrupt immediately when assertions fail, giving you quick, clear feedback
+- **🎭 Familiar API**: Familiar API for anyone coming from Playwright, Deno, or Vite ecosystem
+- **🔍 Clear error messages**: Get detailed, actionable feedback when tests fail
+
+## Installation
+
+k6-testing is available as a [k6 jslib](https://jslib.k6.io). It can be directly imported as a dependency in your k6 script.
+
+```sh
+import { expect } from "https://jslib.k6.io/k6-testing/v0.1.0/index.js";
+```
+
+## Quick Start
+
+The following example demonstrates how to use k6-testing in a k6 script.
+
+The module exposes the `expect` function, which behaves in a similar way to [Playwright's `expect` function](https://playwright.dev/docs/test-assertions).
+
+To make an assertion, call `expect(value)` and choose a matcher that reflects the expectation. 
+
+```javascript
+import { expect } from "https://jslib.k6.io/k6-testing/v0.1.0/index.js";
+
+export default function () {
+  // Simple assertions
+  expect(response.status).toBe(200);
+  
+  // Async assertions with retry (perfect for UI testing)
+  await expect(page.locator('.submit-button')).toBeEnabled();
+}
+```
+
+For functional testing, metrics and performance are most likely irrelevant, and we recommend executing k6 functional tests in headless mode:
+
+```sh
+# Run k6 in headless mode
+k6 run --no-summary --quiet examples/browser.js
+
+# If any assertion/expectation fail, a non-zero exit code will be returned
+echo $status
+```
+
+
+### UI Testing
+
+## Features
+
+### 1. Playwright-Compatible Expectations
+
+Use the same assertions you know from Playwright:
+
+```javascript
+// These Playwright assertions work exactly the same in k6
+await expect(page.locator('.button')).toBeVisible();
+await expect(page.locator('input')).toHaveValue('test');
+```
+
+### 2. Auto-Retrying Assertions
+
+
+Perfect for UI testing, these assertions will retry until the assertion passes, or the assertion timeout is reached. Note that retrying assertions are async, so you must await them.
+
+By default, the timeout for assertions is set to 5 seconds, and the polling interval is set to 100 milliseconds. 
+
+| Assertion            | Description                |
+|----------------------|----------------------------|
+| `toBeChecked()`      | Element is checked         |
+| `toBeDisabled()`     | Element is disabled        |
+| `toBeEditable()`     | Element is editable        |
+| `toBeEnabled()`      | Element is enabled         |
+| `toBeHidden()`       | Element is hidden          |
+| `toBeVisible()`      | Element is visible         |
+| `toHaveValue(value)` | Element has specific value |
+
+You can customize these values by passing an options object as the second argument to the assertion function:
+  
+  ```javascript
+  await expect(page.locator('.button')).toBeVisible({ timeout: 10000, interval: 500 });
+  ```
+
+### 3. Standard Assertions
+
+These assertions allow to test any conditions, but do not auto-retry.
+
+| Assertion                         | Description                      |
+|-----------------------------------|----------------------------------|
+| `toBe(expected)`                  | Strict equality comparison       |
+| `toBeCloseTo(number, precision?)` | Number comparison with precision |
+| `toBeDefined()`                   | Asserts a value is defined       |
+| `toBeFalsy()`                     | Falsy value check                |
+| `toBeGreaterThan(number)`         | Greater than comparison          |
+| `toBeGreaterThanOrEqual(number)`   | Greater than or equal comparison |
+| `toBeInstanceOf(expected)`         | Asserts a value is an instance of a class |
+| `toBeLessThan(number)`            | Less than comparison             |
+| `toBeLessThanOrEqual(number)`     | Less than or equal comparison    |
+| `toBeNaN()`                       | Asserts a value is NaN             |
+| `toBeNull()`                      | Asserts a value is null           |
+| `toBeTruthy()`                    | Asserts a value is truthy         |
+| `toBeUndefined()`                 | Asserts a value is undefined     |
+| `toEqual(expected)`               | Deep equality comparison         |
+| `toHaveLength(expected)`         | Asserts a value has a length property equal to expected |
+
+#### 4. Configuration
+
+You can create a new expect instance with the `.configure` method. This will allow you to configure the behavior of the assertions.
+The configuration is applied to all assertions made using the expect instance.
+
+##### Example with inline display and no colorization
+
+```javascript
+export default function () {
+  // Create a new expect instance with the default configuration
+  const myExpect = new expect().configure({
+    // Display assertions using an inline format, aimed towards making them more readable in logs
+    display: "inline",
+
+    // Disable colorization of the output of the expect function
+    colorize: false,
+  })
+
+  // Use myExpect instead of expect, and it will use the configured display format and colorization
+  await myExpect(true).toBe(false);
+
+  // Note that you're still free to use the default expect instance, and it will not be affected by the configuration
+  expect(true).toBe(false);
+}
+```
+
+##### Example of controlling retrying assertions' timeout and polling interval
+
+You can configure the default timeout and polling interval for assertions by instantiating a new expect instance with the `.configure` method.
+
+```javascript
+export default function () {
+  const myExpect = new expect().configure({ timeout: 10000, interval: 500 });
+
+  // Use myExpect instead of expect, and it will use the configured timeout and interval
+  // for all assertions.
+  //
+  // In this specific case, the assertion will retry until the button is visible, or the timeout is reached: every
+  // 500ms, for a maximum of 10 seconds.
+  await myExpect(page.locator('.button')).toBeVisible();
+}
+```
+
+##### Available configuration options
+
+The available configuration options are:
+
+| Option          | Default  | Description                                                                            |
+|-----------------|----------|----------------------------------------------------------------------------------------|
+| `colorize`      | true     | Whether to colorize the output of the expect function.                                 |
+| `display`       | "pretty" | The display format to use. "pretty" (default) or "inline".                             |
+| `timeout`       | 5000     | Specific to retrying assertions. The timeout for assertions, in milliseconds.          |
+| `interval`      | 100      | Specific to retrying assertions. The polling interval for assertions, in milliseconds. |
+
+## Examples
+
+### API Testing
+
+```javascript
+import { expect } from "https://jslib.k6.io/k6-testing/v0.1.0/index.js";
+import http from 'k6/http';
+
+export function setup() {
+  // Ensure the API is up and running before running the tests
+  // If the response is not 200, the test will fail immediately with
+  // a non-zero exit code, display a user-friendly message, and stop the test.
+  const response = http.get('https://api.example.com/health');
+  expect(response.status).toBe(200);
+}
+
+export default function () {
+  const response = http.get('https://api.example.com/users');
+  expect(response.status).toBe(200);
+  
+  const json = response.json();
+  expect(json.users).toBeDefined();
+  expect(json.users).toBeInstanceOf(Array);
+  expect(json.users[0].id).toBeGreaterThan(0);
+}
+```
+
+### UI Testing
+
+```javascript
+import { expect } from "https://jslib.k6.io/k6-testing/v0.1.0/index.js";
+import { browser } from "k6/browser";
+
+export const options = {
+  scenarios: {
+    ui: {
+      executor: "shared-iterations",
+      options: {
+        browser: {
+          type: "chromium",
+        },
+      },
+    },
+  },
+};
+
+export default async function () {
+  const page = await browser.newPage();
+
+  try {
+    // Navigate to the page
+    await page.goto("https://test.k6.io/my_messages.php");
+
+    // Type into the login input field: 'testlogin'
+    const loc = await page.locator('input[name="login"]');
+    await loc.type("testlogin");
+
+    // Assert that the login input field is visible
+    await expect(page.locator('input[name="login"]')).toBeVisible();
+
+    // Expecting this to fail as we have typed 'testlogin' into the input instead of 'foo'
+    await expect(page.locator('input[name="login"]')).toHaveValue("foo");
+  } finally {
+    await page.close();
+  }
+}
+```
+
+
+## Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. **Report Issues**: File bugs or feature requests on our GitHub issues page
+2. **Submit PRs**: Code contributions are welcome
+3. **Improve Docs**: Documentation improvements are always valuable
+
+### Development Setup
+
+k6-testing is built with [Deno](https://deno.land), and [esbuild](https://esbuild.github.io/). Deno is used for the development of the library itself, as well as unit testing, and the output distributable files are built with esbuild.
+
+The following commands are used throughout the development process:
+
+- `deno task build` - Build the distributable files
+- `deno task release` - Build the distributable files in release mode
+- `deno test` - Run unit tests
+- `deno task test` - Run integration tests
+- `deno lint *.ts` - Report linting errors
+- `deno fmt *.ts` - Format the code
+
+The following files are must known when working on the project:
+
+- `mod.ts` - The main entry point for the expect library, defines the public API
+- `expect.ts` - The main entry point for the expect library
+- `expectNonRetrying.ts` - Contains the non-retrying assertions definition and implementation
+- `expectRetrying.ts` - Contains the retrying assertions definition and implementation
+- The `tests/` directory contains the integration tests for the expect library
+
+During development, a typical workflow would consist in the following steps:
+1. Make changes to the code
+2. Run `deno fmt *.ts` to format the code
+3. Run `deno lint *.ts` to report linting errors
+6. Run `deno task build` to (verify) build the code
+4. Run `deno test` to run unit tests
+5. Run `deno task test` to run integration tests
+6. (optional) import `dist/index.js` in a k6 script and run it with `k6 run --no-summary --quiet <script>.js` to verify that the library works as expected
+
+## License
+
+[Apache 2.0 License](LICENSE)
