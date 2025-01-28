@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-        - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-        - name: Setup Deno
-          uses: denoland/setup-deno@v2
-          with:
-           deno-version: v2.x
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
 
-        - uses: grafana/setup-k6-action@v1
+      - uses: grafana/setup-k6-action@v1
 
-        - name: Run Integration Tests
-          run: deno task test 
+      - name: Run Integration Tests
+        run: K6_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome K6_BROWSER_HEADLESS=true deno task test
