@@ -27,7 +27,7 @@ export const ANSI_COLORS = {
 
 export function colorize(
   text: string | undefined,
-  color: keyof typeof ANSI_COLORS
+  color: keyof typeof ANSI_COLORS,
 ): string {
   return `${ANSI_COLORS[color]}${text}${ANSI_COLORS.reset}`;
 }

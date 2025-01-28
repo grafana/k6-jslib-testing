@@ -1,17 +1,27 @@
 import { assert } from "./assert.ts";
 import type { ANSI_COLORS } from "./colors.ts";
-import { type ExpectConfig, type RetryConfig, DEFAULT_RETRY_OPTIONS } from "./config.ts";
+import {
+  DEFAULT_RETRY_OPTIONS,
+  type ExpectConfig,
+  type RetryConfig,
+} from "./config.ts";
 import { captureExecutionContext } from "./execution.ts";
-import { type MatcherErrorInfo, MatcherErrorRendererRegistry, ExpectedReceivedMatcherRenderer, type LineGroup, ReceivedOnlyMatcherRenderer } from "./render.ts";
+import {
+  ExpectedReceivedMatcherRenderer,
+  type LineGroup,
+  type MatcherErrorInfo,
+  MatcherErrorRendererRegistry,
+  ReceivedOnlyMatcherRenderer,
+} from "./render.ts";
 import { parseStackTrace } from "./stacktrace.ts";
 import type { Locator } from "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/refs/heads/master/types/k6/browser/index.d.ts";
 
 /**
  * RetryingExpectation is an interface that defines the methods that can be used to create a retrying expectation.
- * 
+ *
  * Retrying expectations are used to assert that a condition is met within a given timeout.
  * The provided assertion function is called repeatedly until the condition is met or the timeout is reached.
- * 
+ *
  * The RetryingExpectation interface is implemented by the createExpectation function.
  */
 export interface RetryingExpectation {
@@ -59,7 +69,7 @@ export interface RetryingExpectation {
 
 /**
  * createExpectation is a factory function that creates an expectation object for a given value.
- * 
+ *
  * Note that although the browser `is` prefixed methods are used, and return boolean values, we
  * throw errors if the condition is not met. This is to ensure that we align with playwright's
  * API, and have matchers return `Promise<void>`, as opposed to `Promise<boolean>`.
@@ -80,19 +90,46 @@ export function createExpectation(
   // From this point forward, we will use the `usedAssert` variable to refer to the assert function.
   const usedAssert = config.assertFn ?? assert;
   const isSoft = config.soft ?? false;
-  const retryConfig: RetryConfig = { timeout: config.timeout, interval: config.interval };
+  const retryConfig: RetryConfig = {
+    timeout: config.timeout,
+    interval: config.interval,
+  };
 
   // Configure the renderer with the colorize option.
-  MatcherErrorRendererRegistry.configure({ colorize: config.colorize, display: config.display });
+  MatcherErrorRendererRegistry.configure({
+    colorize: config.colorize,
+    display: config.display,
+  });
 
   // Register renderers specific to each matchers at initialization time.
-  MatcherErrorRendererRegistry.register("toBeChecked", new ToBeCheckedErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeDisabled", new ToBeDisabledErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeEditable", new ToBeEditableErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeEnabled", new ToBeEnabledErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeHidden", new ToBeHiddenErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeVisible", new ToBeVisibleErrorRenderer());
-  MatcherErrorRendererRegistry.register("toHaveValue", new ToHaveValueErrorRenderer());
+  MatcherErrorRendererRegistry.register(
+    "toBeChecked",
+    new ToBeCheckedErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeDisabled",
+    new ToBeDisabledErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeEditable",
+    new ToBeEditableErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeEnabled",
+    new ToBeEnabledErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeHidden",
+    new ToBeHiddenErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeVisible",
+    new ToBeVisibleErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toHaveValue",
+    new ToHaveValueErrorRenderer(),
+  );
 
   const matcherConfig = {
     locator,
@@ -102,69 +139,81 @@ export function createExpectation(
   };
 
   return {
-    async toBeChecked(options: Partial<RetryConfig> = retryConfig): Promise<void> {
+    async toBeChecked(
+      options: Partial<RetryConfig> = retryConfig,
+    ): Promise<void> {
       await createMatcher(
         "toBeChecked",
         async () => await locator.isChecked(),
         "checked",
         "unchecked",
-        { ...matcherConfig, options}
-      )
+        { ...matcherConfig, options },
+      );
     },
 
-    async toBeDisabled(options: Partial<RetryConfig> = retryConfig): Promise<void> {
+    async toBeDisabled(
+      options: Partial<RetryConfig> = retryConfig,
+    ): Promise<void> {
       await createMatcher(
         "toBeDisabled",
         async () => await locator.isDisabled(),
         "disabled",
         "enabled",
-        { ...matcherConfig, options }
-      )
+        { ...matcherConfig, options },
+      );
     },
 
-    async toBeEditable(options: Partial<RetryConfig> = retryConfig): Promise<void> {
+    async toBeEditable(
+      options: Partial<RetryConfig> = retryConfig,
+    ): Promise<void> {
       await createMatcher(
         "toBeEditable",
         async () => await locator.isEditable(),
         "editable",
         "uneditable",
-        { ...matcherConfig, options }
-      )
+        { ...matcherConfig, options },
+      );
     },
 
-    async toBeEnabled(options: Partial<RetryConfig> = retryConfig): Promise<void> {
+    async toBeEnabled(
+      options: Partial<RetryConfig> = retryConfig,
+    ): Promise<void> {
       await createMatcher(
         "toBeEnabled",
         async () => await locator.isEnabled(),
         "enabled",
         "disabled",
-        { ...matcherConfig, options }
-      )
+        { ...matcherConfig, options },
+      );
     },
 
-    async toBeHidden(options: Partial<RetryConfig> = retryConfig): Promise<void> {
+    async toBeHidden(
+      options: Partial<RetryConfig> = retryConfig,
+    ): Promise<void> {
       await createMatcher(
         "toBeHidden",
         async () => await locator.isHidden(),
         "hidden",
         "visible",
-        { ...matcherConfig, options }
-      )
+        { ...matcherConfig, options },
+      );
     },
 
-    async toBeVisible(options: Partial<RetryConfig> = retryConfig): Promise<void> {
+    async toBeVisible(
+      options: Partial<RetryConfig> = retryConfig,
+    ): Promise<void> {
       await createMatcher(
         "toBeVisible",
         async () => await locator.isVisible(),
         "visible",
         "hidden",
-        { ...matcherConfig, options }
-      )
+        { ...matcherConfig, options },
+      );
     },
 
     async toHaveValue(
       expectedValue: string,
-      options: Partial<RetryConfig> = retryConfig
+      options: Partial<RetryConfig> = retryConfig,
     ): Promise<void> {
       const stacktrace = parseStackTrace(new Error().stack);
       const executionContext = captureExecutionContext(stacktrace);
@@ -184,12 +233,22 @@ export function createExpectation(
           const actualValue = await locator.inputValue();
           usedAssert(
             expectedValue === actualValue,
-            MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(info, MatcherErrorRendererRegistry.getConfig()),
-            isSoft
+            MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
+              info,
+              MatcherErrorRendererRegistry.getConfig(),
+            ),
+            isSoft,
           );
         }, { ...retryConfig, ...options });
       } catch (_) {
-        usedAssert(false, MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(info, MatcherErrorRendererRegistry.getConfig()), isSoft);
+        usedAssert(
+          false,
+          MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
+            info,
+            MatcherErrorRendererRegistry.getConfig(),
+          ),
+          isSoft,
+        );
       }
     },
   };
@@ -197,14 +256,14 @@ export function createExpectation(
 
 // Helper function to create common matcher error info
 function createMatcherInfo(
-  matcherName: string, 
-  expected: string, 
-  received: string, 
-  additionalInfo = {}
+  matcherName: string,
+  expected: string,
+  received: string,
+  additionalInfo = {},
 ): MatcherErrorInfo {
   const stacktrace = parseStackTrace(new Error().stack);
   const executionContext = captureExecutionContext(stacktrace);
-  
+
   if (!executionContext) {
     throw new Error("k6 failed to capture execution context");
   }
@@ -236,13 +295,13 @@ async function createMatcher(
     usedAssert: typeof assert;
     isSoft: boolean;
     options?: Partial<RetryConfig>;
-  }
+  },
 ): Promise<void> {
   const info = createMatcherInfo(matcherName, expected, received, {
     matcherSpecific: {
       locator,
       timeout: options.timeout,
-    }
+    },
   });
 
   try {
@@ -254,15 +313,21 @@ async function createMatcher(
 
       usedAssert(
         result,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(info, MatcherErrorRendererRegistry.getConfig()),
-        isSoft
+        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
+        ),
+        isSoft,
       );
     }, { ...retryConfig, ...options });
   } catch (_) {
     usedAssert(
       false,
-      MatcherErrorRendererRegistry.getRenderer(matcherName).render(info, MatcherErrorRendererRegistry.getConfig()),
-      isSoft
+      MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+        info,
+        MatcherErrorRendererRegistry.getConfig(),
+      ),
+      isSoft,
     );
   }
 }
@@ -270,7 +335,8 @@ async function createMatcher(
 /**
  * Base class for boolean state matchers (checked, disabled, etc.)
  */
-export abstract class BooleanStateErrorRenderer extends ReceivedOnlyMatcherRenderer {
+export abstract class BooleanStateErrorRenderer
+  extends ReceivedOnlyMatcherRenderer {
   protected abstract state: string;
   protected abstract oppositeState: string;
 
@@ -282,13 +348,31 @@ export abstract class BooleanStateErrorRenderer extends ReceivedOnlyMatcherRende
     return "locator";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
       { label: "Expected", value: this.state, group: 3 },
       { label: "Received", value: this.oppositeState, group: 3 },
       { label: "Call log", value: "", group: 3 },
-      { label: "", value: maybeColorize(`  - expect.toBe${this.state[0].toUpperCase()}${this.state.slice(1)} with timeout ${info.matcherSpecific?.timeout}ms`, "darkGrey"), group: 3, raw: true },
-      { label: "", value: maybeColorize(`  - waiting for locator`, "darkGrey"), group: 3, raw: true },
+      {
+        label: "",
+        value: maybeColorize(
+          `  - expect.toBe${this.state[0].toUpperCase()}${
+            this.state.slice(1)
+          } with timeout ${info.matcherSpecific?.timeout}ms`,
+          "darkGrey",
+        ),
+        group: 3,
+        raw: true,
+      },
+      {
+        label: "",
+        value: maybeColorize(`  - waiting for locator`, "darkGrey"),
+        group: 3,
+        raw: true,
+      },
     ];
   }
 }
@@ -331,23 +415,47 @@ export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
     return "toHaveValue";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
       // FIXME (@oleiade): When k6/#4210 is fixed, we can use the locator here.
       // { label: "Locator", value: maybeColorize(`locator('${info.matcherSpecific?.locator}')`, "white"), group: 3 },
-      { label: "Expected", value: maybeColorize(info.expected, "green"), group: 3 },
-      { label: "Received", value: maybeColorize(info.received, "red"), group: 3 },
+      {
+        label: "Expected",
+        value: maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
       { label: "Call log", value: "", group: 3 },
-      { label: "", value: maybeColorize(`  - expect.toHaveValue with timeout ${info.matcherSpecific?.timeout}ms`, "darkGrey"), group: 3, raw: true },
+      {
+        label: "",
+        value: maybeColorize(
+          `  - expect.toHaveValue with timeout ${info.matcherSpecific?.timeout}ms`,
+          "darkGrey",
+        ),
+        group: 3,
+        raw: true,
+      },
       // FIXME (@oleiade): When k6/#4210 is fixed, we can use the locator's selector here.
-      { label: "", value: maybeColorize(`  - waiting for locator`, "darkGrey"), group: 3, raw: true },
+      {
+        label: "",
+        value: maybeColorize(`  - waiting for locator`, "darkGrey"),
+        group: 3,
+        raw: true,
+      },
     ];
   }
 }
 
 /**
  * Implements retry logic for async assertions.
- * 
+ *
  * @param assertion Function that performs the actual check
  * @param options Retry configuration
  * @returns Promise that resolves when assertion passes or rejects if timeout is reached
@@ -358,13 +466,14 @@ export async function withRetry(
     // Optional test hooks - only used in testing
     _now?: () => number;
     _sleep?: (ms: number) => Promise<void>;
-  } = {}
+  } = {},
 ): Promise<boolean> {
   const timeout: number = options.timeout ?? DEFAULT_RETRY_OPTIONS.timeout;
   const interval: number = options.interval ?? DEFAULT_RETRY_OPTIONS.interval;
   const getNow = options._now ?? (() => Date.now());
-  const sleep = options._sleep ?? ((ms: number) => new Promise(resolve => setTimeout(resolve, ms)));
-  
+  const sleep = options._sleep ??
+    ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
+
   const startTime: number = getNow();
 
   while (getNow() - startTime < timeout) {
@@ -378,7 +487,9 @@ export async function withRetry(
     await sleep(interval);
   }
 
-  throw new RetryTimeoutError(`Expect condition not met within ${timeout}ms timeout`);
+  throw new RetryTimeoutError(
+    `Expect condition not met within ${timeout}ms timeout`,
+  );
 }
 
 /**
@@ -387,6 +498,6 @@ export async function withRetry(
 export class RetryTimeoutError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'RetryTimeoutError';
+    this.name = "RetryTimeoutError";
   }
 }

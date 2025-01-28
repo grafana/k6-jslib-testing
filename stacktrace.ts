@@ -55,7 +55,7 @@ export function parseStackTrace(stack?: string): Stacktrace {
     const fileProtocolIndex = lineStr.indexOf("file://");
 
     if (fileProtocolIndex === 0) {
-      functionName = '<anonymous>';
+      functionName = "<anonymous>";
       fileInfo = lineStr.slice(fileProtocolIndex);
     } else if (firstParenIndex >= 0) {
       functionName = lineStr.slice(0, firstParenIndex).trim() || "<anonymous>";

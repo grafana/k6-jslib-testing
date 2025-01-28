@@ -30,8 +30,7 @@ export interface ExpectFunction {
    * If the value argument provided to it is a Locator, the expect function will
    * return a (asynchronous) RetryingExpectation, otherwise it will return a NonRetryingExpectation.
    */
-  <T>(value: T): T extends Locator
-    ? RetryingExpectation
+  <T>(value: T): T extends Locator ? RetryingExpectation
     : NonRetryingExpectation;
 
   /**
@@ -39,7 +38,7 @@ export interface ExpectFunction {
    * without terminating the test if the assertion is not met.
    */
   soft<T>(
-    value: T
+    value: T,
   ): T extends Locator ? RetryingExpectation : NonRetryingExpectation;
 
   /**
@@ -69,46 +68,46 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
 
   return Object.assign(
     function <T>(
-      value: T
+      value: T,
     ): T extends Locator ? RetryingExpectation : NonRetryingExpectation {
       if (isLocator(value)) {
         return createRetryingExpectation(
           value as Locator,
-          mergedConfig
+          mergedConfig,
         ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
       } else {
         return createNonRetryingExpectation(
           value,
-          mergedConfig
+          mergedConfig,
         ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
       }
     },
     {
       soft<T>(
-        value: T
+        value: T,
       ): T extends Locator ? RetryingExpectation : NonRetryingExpectation {
         if (isLocator(value)) {
           return createRetryingExpectation(
             value as Locator,
-            { ...mergedConfig, soft: true }
+            { ...mergedConfig, soft: true },
           ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
         } else {
           return createNonRetryingExpectation(
             value,
-            { ...mergedConfig, soft: true }
+            { ...mergedConfig, soft: true },
           ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
         }
       },
       configure(newConfig: Partial<ExpectConfig>): ExpectFunction {
         return makeExpect({ ...mergedConfig, ...newConfig });
       },
-    }
+    },
   );
 }
 
 /**
  * Checks if the given value is a browser Locator.
- * 
+ *
  * If it quacks like a duck, it's a duck.
  *
  * @param value The value to check.

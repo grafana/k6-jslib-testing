@@ -21,7 +21,7 @@ export interface ExpectConfig extends RenderConfig, RetryConfig {
 
 /**
  * Creates a default configuration for the expect function.
- * 
+ *
  * @returns the default configuration
  */
 export function makeDefaultConfig(): ExpectConfig {
@@ -53,9 +53,9 @@ export interface RetryConfig {
 
 export const DEFAULT_RETRY_OPTIONS: Required<RetryConfig> = {
   // 5 seconds default timeout
-  timeout: 5000, 
+  timeout: 5000,
   // 100ms between retries
-  interval: 100, 
+  interval: 100,
 };
 
 /**
@@ -83,7 +83,7 @@ export interface RenderConfig {
 
 /**
  * The display format to use.
- * 
+ *
  * "pretty" is the default format and outputs in a human readable format with aligned columns.
  * "inline" is a logfmt style format that outputs in a single line.
  */

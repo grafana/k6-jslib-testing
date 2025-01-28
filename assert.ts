@@ -37,13 +37,13 @@ export function assert(condition: boolean, message: string, soft?: boolean) {
 
 /**
  * This indicates that an assertion failed.
- * 
+ *
  * It is used to express a soft assertion's failure, as throwing will not abort the
  * test, and will instead fail the iteration.
  */
 export class AssertionFailedError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'AssertionFailedError';
+    this.name = "AssertionFailedError";
   }
 }

@@ -3,13 +3,13 @@ import type { ANSI_COLORS } from "./colors.ts";
 import type { ExpectConfig } from "./config.ts";
 import { captureExecutionContext } from "./execution.ts";
 import { parseStackTrace } from "./stacktrace.ts";
-import { 
-  type MatcherErrorInfo,
-  MatcherErrorRendererRegistry,
+import {
   DefaultMatcherErrorRenderer,
   ExpectedReceivedMatcherRenderer,
+  type LineGroup,
+  type MatcherErrorInfo,
+  MatcherErrorRendererRegistry,
   ReceivedOnlyMatcherRenderer,
-  type LineGroup
 } from "./render.ts";
 
 export interface NonRetryingExpectation {
@@ -133,24 +133,66 @@ export function createExpectation(
   const usedAssert = config.assertFn ?? assert;
 
   // Configure the renderer with the colorize option.
-  MatcherErrorRendererRegistry.configure({ colorize: config.colorize, display: config.display });
+  MatcherErrorRendererRegistry.configure({
+    colorize: config.colorize,
+    display: config.display,
+  });
 
   // Register renderers specific to each matchers at initialization time.
-  MatcherErrorRendererRegistry.register("toBe", new DefaultMatcherErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeCloseTo", new ToBeCloseToErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeDefined", new ToBeDefinedErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeFalsy", new ToBeFalsyErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeGreaterThan", new ToBeGreaterThanErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeGreaterThanOrEqual", new ToBeGreaterThanOrEqualErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeInstanceOf", new ToBeInstanceOfErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeLessThan", new ToBeLessThanErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeLessThanOrEqual", new ToBeLessThanOrEqualErrorRenderer());
+  MatcherErrorRendererRegistry.register(
+    "toBe",
+    new DefaultMatcherErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeCloseTo",
+    new ToBeCloseToErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeDefined",
+    new ToBeDefinedErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeFalsy",
+    new ToBeFalsyErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeGreaterThan",
+    new ToBeGreaterThanErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeGreaterThanOrEqual",
+    new ToBeGreaterThanOrEqualErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeInstanceOf",
+    new ToBeInstanceOfErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeLessThan",
+    new ToBeLessThanErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeLessThanOrEqual",
+    new ToBeLessThanOrEqualErrorRenderer(),
+  );
   MatcherErrorRendererRegistry.register("toBeNaN", new ToBeNaNErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeNull", new ToBeNullErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeTruthy", new ToBeTruthyErrorRenderer());
-  MatcherErrorRendererRegistry.register("toBeUndefined", new ToBeUndefinedErrorRenderer());
+  MatcherErrorRendererRegistry.register(
+    "toBeNull",
+    new ToBeNullErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeTruthy",
+    new ToBeTruthyErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toBeUndefined",
+    new ToBeUndefinedErrorRenderer(),
+  );
   MatcherErrorRendererRegistry.register("toEqual", new ToEqualErrorRenderer());
-  MatcherErrorRendererRegistry.register("toHaveLength", new ToHaveLengthErrorRenderer());
+  MatcherErrorRendererRegistry.register(
+    "toHaveLength",
+    new ToHaveLengthErrorRenderer(),
+  );
 
   const matcherConfig = {
     usedAssert,
@@ -169,7 +211,8 @@ export function createExpectation(
     },
 
     toBeCloseTo(expected: number, precision: number = 2): void {
-      const tolerance = Math.pow(10, -precision) * Math.max(Math.abs(received as number), Math.abs(expected));
+      const tolerance = Math.pow(10, -precision) *
+        Math.max(Math.abs(received as number), Math.abs(expected));
       const diff = Math.abs((received as number) - expected);
 
       createMatcher(
@@ -177,14 +220,14 @@ export function createExpectation(
         () => diff < tolerance,
         expected,
         received,
-        { 
+        {
           ...matcherConfig,
           matcherSpecific: {
             precision,
             difference: diff,
             expectedDifference: tolerance,
-          }
-        }
+          },
+        },
       );
     },
 
@@ -194,7 +237,7 @@ export function createExpectation(
         () => received !== undefined,
         "defined",
         JSON.stringify(received),
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -204,7 +247,7 @@ export function createExpectation(
         () => !received,
         "falsy",
         JSON.stringify(received),
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -214,7 +257,7 @@ export function createExpectation(
         () => (received as number) > expected,
         expected,
         received,
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -224,7 +267,7 @@ export function createExpectation(
         () => (received as number) >= expected,
         expected,
         received,
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -235,7 +278,7 @@ export function createExpectation(
         () => received instanceof expected,
         expected.name,
         (received as { constructor: { name: string } }).constructor.name,
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -245,7 +288,7 @@ export function createExpectation(
         () => (received as number) < expected,
         expected,
         received,
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -255,7 +298,7 @@ export function createExpectation(
         () => (received as number) <= expected,
         expected,
         received,
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -265,7 +308,7 @@ export function createExpectation(
         () => isNaN(received as number),
         "NaN",
         JSON.stringify(received),
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -275,7 +318,7 @@ export function createExpectation(
         () => received === null,
         "null",
         JSON.stringify(received),
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -285,7 +328,7 @@ export function createExpectation(
         () => !!received,
         "truthy",
         JSON.stringify(received),
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -295,7 +338,7 @@ export function createExpectation(
         () => received === undefined,
         "undefined",
         JSON.stringify(received),
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -305,7 +348,7 @@ export function createExpectation(
         () => isDeepEqual(received, expected),
         JSON.stringify(expected),
         JSON.stringify(received),
-        matcherConfig
+        matcherConfig,
       );
     },
 
@@ -315,7 +358,7 @@ export function createExpectation(
         () => (received as Array<unknown>).length === expected,
         expected.toString(),
         (received as Array<unknown>).length.toString(),
-        matcherConfig
+        matcherConfig,
       );
     },
   };
@@ -335,14 +378,22 @@ function createMatcher(
     usedAssert: typeof assert;
     isSoft: boolean;
     matcherSpecific?: Record<string, unknown>;
-  }
+  },
 ): void {
-  const info = createMatcherInfo(matcherName, expected, received, matcherSpecific);
+  const info = createMatcherInfo(
+    matcherName,
+    expected,
+    received,
+    matcherSpecific,
+  );
 
   usedAssert(
     checkFn(),
-    MatcherErrorRendererRegistry.getRenderer(matcherName).render(info, MatcherErrorRendererRegistry.getConfig()),
-    isSoft
+    MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+      info,
+      MatcherErrorRendererRegistry.getConfig(),
+    ),
+    isSoft,
   );
 }
 
@@ -350,11 +401,11 @@ function createMatcherInfo(
   matcherName: string,
   expected: string | unknown,
   received: unknown,
-  matcherSpecific: Record<string, unknown> = {}
+  matcherSpecific: Record<string, unknown> = {},
 ): MatcherErrorInfo {
   const stacktrace = parseStackTrace(new Error().stack);
   const executionContext = captureExecutionContext(stacktrace);
-  
+
   if (!executionContext) {
     throw new Error("k6 failed to capture execution context");
   }
@@ -362,12 +413,13 @@ function createMatcherInfo(
   return {
     executionContext,
     matcherName,
-    expected: typeof expected === 'string' ? expected : JSON.stringify(expected),
+    expected: typeof expected === "string"
+      ? expected
+      : JSON.stringify(expected),
     received: JSON.stringify(received),
     matcherSpecific,
   };
 }
-
 
 /**
  * A matcher error renderer for the `toBeCloseTo` matcher.
@@ -377,26 +429,44 @@ export class ToBeCloseToErrorRenderer extends ExpectedReceivedMatcherRenderer {
     return "toBeCloseTo";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
-    const matcherInfo = info.matcherSpecific as { 
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
+    const matcherInfo = info.matcherSpecific as {
       precision: number;
       difference: number;
       expectedDifference: number;
     };
 
     return [
-      { label: "Expected precision", value: maybeColorize(matcherInfo.precision.toString(), "green"), group: 3},
-      { label: "Expected difference", value: '< ' + maybeColorize(`${matcherInfo.expectedDifference}`, "green"), group: 3},
-      { label: "Received difference", value: maybeColorize(matcherInfo.difference.toString(), "red"), group: 3},
+      {
+        label: "Expected precision",
+        value: maybeColorize(matcherInfo.precision.toString(), "green"),
+        group: 3,
+      },
+      {
+        label: "Expected difference",
+        value: "< " +
+          maybeColorize(`${matcherInfo.expectedDifference}`, "green"),
+        group: 3,
+      },
+      {
+        label: "Received difference",
+        value: maybeColorize(matcherInfo.difference.toString(), "red"),
+        group: 3,
+      },
     ];
   }
 
-  protected override renderMatcherArgs(maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): string {
-    return maybeColorize(`(`, "darkGrey") + 
-           maybeColorize(`expected`, "green") + 
-           maybeColorize(`, `, "darkGrey") + 
-           maybeColorize(`precision`, "white") + 
-           maybeColorize(`)`, "darkGrey");
+  protected override renderMatcherArgs(
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): string {
+    return maybeColorize(`(`, "darkGrey") +
+      maybeColorize(`expected`, "green") +
+      maybeColorize(`, `, "darkGrey") +
+      maybeColorize(`precision`, "white") +
+      maybeColorize(`)`, "darkGrey");
   }
 }
 
@@ -421,15 +491,27 @@ export class ToBeFalsyErrorRenderer extends ReceivedOnlyMatcherRenderer {
 /**
  * A matcher error renderer for the `toBeGreaterThan` matcher.
  */
-export class ToBeGreaterThanErrorRenderer extends ExpectedReceivedMatcherRenderer {
+export class ToBeGreaterThanErrorRenderer
+  extends ExpectedReceivedMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeGreaterThan";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
-      { label: "Expected", value: '> ' + maybeColorize(info.expected, "green"), group: 3},
-      { label: "Received", value: maybeColorize(info.received, "red"), group: 3},
+      {
+        label: "Expected",
+        value: "> " + maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
     ];
   }
 }
@@ -437,15 +519,27 @@ export class ToBeGreaterThanErrorRenderer extends ExpectedReceivedMatcherRendere
 /**
  * A matcher error renderer for the `toBeGreaterThanOrEqual` matcher.
  */
-export class ToBeGreaterThanOrEqualErrorRenderer extends ExpectedReceivedMatcherRenderer {
+export class ToBeGreaterThanOrEqualErrorRenderer
+  extends ExpectedReceivedMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeGreaterThanOrEqual";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
-      { label: "Expected", value: '>= ' + maybeColorize(info.expected, "green"), group: 3},
-      { label: "Received", value: maybeColorize(info.received, "red"), group: 3},
+      {
+        label: "Expected",
+        value: ">= " + maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
     ];
   }
 }
@@ -453,15 +547,27 @@ export class ToBeGreaterThanOrEqualErrorRenderer extends ExpectedReceivedMatcher
 /**
  * A matcher error renderer for the `toBeInstanceOf` matcher.
  */
-export class ToBeInstanceOfErrorRenderer extends ExpectedReceivedMatcherRenderer {
+export class ToBeInstanceOfErrorRenderer
+  extends ExpectedReceivedMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeInstanceOf";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
-      { label: "Expected constructor", value: maybeColorize(info.expected, "green"), group: 3},
-      { label: "Received constructor", value: maybeColorize(info.received, "red"), group: 3},
+      {
+        label: "Expected constructor",
+        value: maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received constructor",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
     ];
   }
 }
@@ -474,10 +580,21 @@ export class ToBeLessThanErrorRenderer extends ExpectedReceivedMatcherRenderer {
     return "toBeLessThan";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
-      { label: "Expected", value: '< ' + maybeColorize(info.expected, "green"), group: 3},
-      { label: "Received", value: maybeColorize(info.received, "red"), group: 3},
+      {
+        label: "Expected",
+        value: "< " + maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
     ];
   }
 }
@@ -485,15 +602,27 @@ export class ToBeLessThanErrorRenderer extends ExpectedReceivedMatcherRenderer {
 /**
  * A matcher error renderer for the `toBeLessThanOrEqual` matcher.
  */
-export class ToBeLessThanOrEqualErrorRenderer extends ExpectedReceivedMatcherRenderer {
+export class ToBeLessThanOrEqualErrorRenderer
+  extends ExpectedReceivedMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeLessThanOrEqual";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
-      { label: "Expected", value: '<= ' + maybeColorize(info.expected, "green"), group: 3},
-      { label: "Received", value: maybeColorize(info.received, "red"), group: 3},
+      {
+        label: "Expected",
+        value: "<= " + maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
     ];
   }
 }
@@ -542,10 +671,21 @@ export class ToEqualErrorRenderer extends ExpectedReceivedMatcherRenderer {
     return "toEqual";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
-      { label: "Expected", value: maybeColorize(info.expected, "green"), group: 3},
-      { label: "Received", value: maybeColorize(info.received, "red"), group: 3},
+      {
+        label: "Expected",
+        value: maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
     ];
   }
 }
@@ -558,29 +698,49 @@ export class ToHaveLengthErrorRenderer extends ExpectedReceivedMatcherRenderer {
     return "toHaveLength";
   }
 
-  protected override getSpecificLines(info: MatcherErrorInfo, maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string): LineGroup[] {
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
     return [
-      { label: "Expected length", value: maybeColorize(info.expected, "green"), group: 3},
-      { label: "Received length", value: maybeColorize(info.received, "red"), group: 3},
-      { label: "Received array", value: maybeColorize(info.matcherSpecific?.receivedArray as string, "red"), group: 3},
+      {
+        label: "Expected length",
+        value: maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received length",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
+      {
+        label: "Received array",
+        value: maybeColorize(
+          info.matcherSpecific?.receivedArray as string,
+          "red",
+        ),
+        group: 3,
+      },
     ];
   }
 }
 
-
 function isDeepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  
+
   if (a === null || b === null) return false;
-  if (typeof a !== 'object' || typeof b !== 'object') return false;
-  
+  if (typeof a !== "object" || typeof b !== "object") return false;
+
   const keysA = Object.keys(a as object);
   const keysB = Object.keys(b as object);
-  
+
   if (keysA.length !== keysB.length) return false;
-  
-  return keysA.every(key => {
-    return keysB.includes(key) && 
-      isDeepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]);
+
+  return keysA.every((key) => {
+    return keysB.includes(key) &&
+      isDeepEqual(
+        (a as Record<string, unknown>)[key],
+        (b as Record<string, unknown>)[key],
+      );
   });
 }

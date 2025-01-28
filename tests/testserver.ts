@@ -1,10 +1,9 @@
 import { serveFile } from "jsr:@std/http/file-server";
 
-
 Deno.serve((req: Request) => {
   const pathname = new URL(req.url).pathname;
-  if (pathname === '/') {
-    const filepath = new URL('./test.html', import.meta.url).pathname;
+  if (pathname === "/") {
+    const filepath = new URL("./test.html", import.meta.url).pathname;
 
     // Try to read the file content to verify it exists and has content
     try {
