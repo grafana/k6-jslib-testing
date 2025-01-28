@@ -1,0 +1,26 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+        - uses: actions/checkout@v4
+
+        - name: Setup Deno
+          uses: denoland/setup-deno@v2
+          with:
+           deno-version: v2.x
+
+        - name: Run Integration Tests
+          run: deno task test 
