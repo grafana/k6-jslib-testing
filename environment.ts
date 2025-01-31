@@ -5,7 +5,7 @@ export declare const __ENV: Record<string, string | undefined>;
  * Environment interface that matches the shape of k6's __ENV object.
  */
 export interface Environment {
-    [key: string]: string | undefined;
+  [key: string]: string | undefined;
 }
 
 function getEnvironment(): Environment {

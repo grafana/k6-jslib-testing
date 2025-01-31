@@ -106,10 +106,10 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
       },
       configure(newConfig: Partial<ExpectConfig>): ExpectFunction {
         const colorDeactivated = env.NO_COLOR !== undefined;
-        return makeExpect({ 
-          ...mergedConfig, 
+        return makeExpect({
+          ...mergedConfig,
           ...newConfig,
-          ...(colorDeactivated ? { colorize: false } : {})
+          ...(colorDeactivated ? { colorize: false } : {}),
         });
       },
       get config(): ExpectConfig {
