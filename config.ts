@@ -1,4 +1,5 @@
 import { assert } from "./assert.ts";
+import { env } from "./environment.ts";
 
 /**
  * Options that can be set for the expect function.
@@ -25,11 +26,13 @@ export interface ExpectConfig extends RenderConfig, RetryConfig {
  * @returns the default configuration
  */
 export function makeDefaultConfig(): ExpectConfig {
+  const noColor = env.NO_COLOR !== undefined;
+
   return {
     ...DEFAULT_RETRY_OPTIONS,
     soft: false,
     display: "pretty",
-    colorize: true,
+    colorize: !noColor,
     assertFn: assert,
   };
 }

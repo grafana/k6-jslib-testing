@@ -1,5 +1,6 @@
 import type { Locator } from "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/refs/heads/master/types/k6/browser/index.d.ts";
 import { type ExpectConfig, makeDefaultConfig } from "./config.ts";
+import { env } from "./environment.ts";
 import {
   createExpectation as createNonRetryingExpectation,
   type NonRetryingExpectation,
@@ -45,6 +46,11 @@ export interface ExpectFunction {
    * Creates a new expect instance with the given configuration.
    */
   configure(newConfig: Partial<ExpectConfig>): ExpectFunction;
+
+  /**
+   * The configuration used by the expect function.
+   */
+  readonly config: ExpectConfig;
 }
 
 /**
@@ -99,7 +105,15 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
         }
       },
       configure(newConfig: Partial<ExpectConfig>): ExpectFunction {
-        return makeExpect({ ...mergedConfig, ...newConfig });
+        const colorDeactivated = env.NO_COLOR !== undefined;
+        return makeExpect({
+          ...mergedConfig,
+          ...newConfig,
+          ...(colorDeactivated ? { colorize: false } : {}),
+        });
+      },
+      get config(): ExpectConfig {
+        return { ...mergedConfig };
       },
     },
   );
