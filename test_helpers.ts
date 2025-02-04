@@ -4,6 +4,9 @@ import { env } from "./environment.ts";
 export function withEnv(key: string, value: string, fn: () => void) {
   const originalValue = env[key];
   env[key] = value;
-  fn();
-  env[key] = originalValue;
+  try {
+    fn();
+  } finally {
+    env[key] = originalValue;
+  }
 }
