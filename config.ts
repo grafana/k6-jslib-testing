@@ -128,21 +128,16 @@ export class ConfigLoader {
       );
     }
 
+    // Load timeout from environment variable
+    if (envParser.hasValue("K6_TESTING_TIMEOUT")) {
+      config.timeout = envParser.number("K6_TESTING_TIMEOUT");
+    }
+
+    // Load interval from environment variable
+    if (envParser.hasValue("K6_TESTING_INTERVAL")) {
+      config.interval = envParser.number("K6_TESTING_INTERVAL");
+    }
+
     return config;
   }
-}
-
-/**
- * Creates a default configuration for the expect function.
- *
- * @returns the default configuration
- */
-export function makeDefaultConfig(): ExpectConfig {
-  return {
-    ...DEFAULT_RETRY_OPTIONS,
-    soft: false,
-    colorize: true,
-    display: "pretty",
-    assertFn: assert,
-  };
 }
