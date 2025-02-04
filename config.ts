@@ -1,5 +1,5 @@
 import { assert } from "./assert.ts";
-import { env } from "./environment.ts";
+import { envParser } from "./environment.ts";
 
 /**
  * Options that can be set for the expect function.
@@ -18,23 +18,6 @@ export interface ExpectConfig extends RenderConfig, RetryConfig {
    * This function should have the same signature as the assert function.
    */
   assertFn?: (...args: Parameters<typeof import("./assert.ts").assert>) => void;
-}
-
-/**
- * Creates a default configuration for the expect function.
- *
- * @returns the default configuration
- */
-export function makeDefaultConfig(): ExpectConfig {
-  const noColor = env.NO_COLOR !== undefined;
-
-  return {
-    ...DEFAULT_RETRY_OPTIONS,
-    soft: false,
-    display: "pretty",
-    colorize: !noColor,
-    assertFn: assert,
-  };
 }
 
 /**
@@ -91,3 +74,69 @@ export interface RenderConfig {
  * "inline" is a logfmt style format that outputs in a single line.
  */
 export type DisplayFormat = "inline" | "pretty";
+
+/**
+ * Default configuration values, without any environment overrides
+ */
+export const DEFAULT_CONFIG: ExpectConfig = {
+  ...DEFAULT_RETRY_OPTIONS,
+  soft: false,
+  colorize: true,
+  display: "pretty",
+  assertFn: assert,
+};
+
+/**
+ * Configuration loader that handles different sources of configuration
+ * with clear precedence rules
+ */
+export class ConfigLoader {
+  /**
+   * Loads configuration with the following precedence (highest to lowest):
+   * 1. Environment variables
+   * 2. Explicit configuration passed to the function
+   * 3. Default values
+   */
+  static load(explicitConfig: Partial<ExpectConfig> = {}): ExpectConfig {
+    const envConfig = ConfigLoader.loadFromEnv();
+
+    return {
+      ...DEFAULT_CONFIG,
+      ...explicitConfig,
+      ...envConfig,
+    };
+  }
+
+  /**
+   * Loads configuration from environment variables
+   * Returns only the values that are explicitly set in the environment
+   */
+  private static loadFromEnv(): Partial<ExpectConfig> {
+    const config: Partial<ExpectConfig> = {};
+
+    // Load colorize from environment variable
+    if (envParser.hasValue("K6_TESTING_COLORIZE")) {
+      config.colorize = envParser.boolean("K6_TESTING_COLORIZE");
+    }
+
+    // Load display from environment variable
+    if (envParser.hasValue("K6_TESTING_DISPLAY")) {
+      config.display = envParser.enum<DisplayFormat>(
+        "K6_TESTING_DISPLAY",
+        ["inline", "pretty"],
+      );
+    }
+
+    // Load timeout from environment variable
+    if (envParser.hasValue("K6_TESTING_TIMEOUT")) {
+      config.timeout = envParser.number("K6_TESTING_TIMEOUT");
+    }
+
+    // Load interval from environment variable
+    if (envParser.hasValue("K6_TESTING_INTERVAL")) {
+      config.interval = envParser.number("K6_TESTING_INTERVAL");
+    }
+
+    return config;
+  }
+}

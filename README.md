@@ -130,12 +130,23 @@ You can create a new expect instance with the `.configure` method. This will
 allow you to configure the behavior of the assertions. The configuration is
 applied to all assertions made using the expect instance.
 
+##### Available configuration options
+
+The available configuration options are:
+
+| Option     | Default  | Environment variable  | Description                                                                            |
+| ---------- | -------- | --------------------- | -------------------------------------------------------------------------------------- |
+| `colorize` | true     | `K6_TESTING_COLORIZE` | Whether to colorize the output of the expect function.                                 |
+| `display`  | "pretty" | `K6_TESTING_DISPLAY`  | The display format to use. "pretty" (default) or "inline".                             |
+| `timeout`  | 5000     | `K6_TESTING_TIMEOUT`  | Specific to retrying assertions. The timeout for assertions, in milliseconds.          |
+| `interval` | 100      | `K6_TESTING_INTERVAL` | Specific to retrying assertions. The polling interval for assertions, in milliseconds. |
+
 ##### Example with inline display and no colorization
 
 ```javascript
 export default function () {
   // Create a new expect instance with the default configuration
-  const myExpect = new expect().configure({
+  const myExpect = expect.configure({
     // Display assertions using an inline format, aimed towards making them more readable in logs
     display: "inline",
 
@@ -168,17 +179,6 @@ export default function () {
   await myExpect(page.locator(".button")).toBeVisible();
 }
 ```
-
-##### Available configuration options
-
-The available configuration options are:
-
-| Option     | Default  | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `colorize` | true     | Whether to colorize the output of the expect function.                                 |
-| `display`  | "pretty" | The display format to use. "pretty" (default) or "inline".                             |
-| `timeout`  | 5000     | Specific to retrying assertions. The timeout for assertions, in milliseconds.          |
-| `interval` | 100      | Specific to retrying assertions. The polling interval for assertions, in milliseconds. |
 
 ## Examples
 
