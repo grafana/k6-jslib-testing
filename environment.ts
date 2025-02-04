@@ -57,7 +57,7 @@ export const envParser = {
     }
     if (!allowedValues.includes(value)) {
       throw new Error(
-        `Invalid value for ${key}. Must be one of: ${allowedValues.join(", ")}`
+        `Invalid value for ${key}. Must be one of: ${allowedValues.join(", ")}`,
       );
     }
     return value;
@@ -77,11 +77,15 @@ export const envParser = {
 
     const parsed = Number(value);
     if (Number.isNaN(parsed) || !Number.isFinite(parsed)) {
-      throw new Error(`Environment variable ${name} must be a valid number, got: ${value}`);
+      throw new Error(
+        `Environment variable ${name} must be a valid number, got: ${value}`,
+      );
     }
 
     if (parsed < 0) {
-      throw new Error(`Environment variable ${name} must be a non-negative number, got: ${value}`);
+      throw new Error(
+        `Environment variable ${name} must be a non-negative number, got: ${value}`,
+      );
     }
 
     return parsed;

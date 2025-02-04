@@ -1,5 +1,5 @@
 import { assert } from "./assert.ts";
-import { env, envParser } from "./environment.ts";
+import { envParser } from "./environment.ts";
 
 /**
  * Options that can be set for the expect function.
@@ -75,7 +75,6 @@ export interface RenderConfig {
  */
 export type DisplayFormat = "inline" | "pretty";
 
-
 /**
  * Default configuration values, without any environment overrides
  */
@@ -100,7 +99,7 @@ export class ConfigLoader {
    */
   static load(explicitConfig: Partial<ExpectConfig> = {}): ExpectConfig {
     const envConfig = ConfigLoader.loadFromEnv();
-    
+
     return {
       ...DEFAULT_CONFIG,
       ...explicitConfig,
@@ -124,7 +123,7 @@ export class ConfigLoader {
     if (envParser.hasValue("K6_TESTING_DISPLAY")) {
       config.display = envParser.enum<DisplayFormat>(
         "K6_TESTING_DISPLAY",
-        ["inline", "pretty"]
+        ["inline", "pretty"],
       );
     }
 

@@ -180,7 +180,6 @@ export default function () {
 }
 ```
 
-
 ## Examples
 
 ### API Testing

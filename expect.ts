@@ -1,5 +1,5 @@
 import type { Locator } from "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/refs/heads/master/types/k6/browser/index.d.ts";
-import { type ExpectConfig, ConfigLoader } from "./config.ts";
+import { ConfigLoader, type ExpectConfig } from "./config.ts";
 import {
   createExpectation as createNonRetryingExpectation,
   type NonRetryingExpectation,
@@ -99,8 +99,7 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
         }
       },
       configure(newConfig: Partial<ExpectConfig>): ExpectFunction {
-        return makeExpect(newConfig)
-
+        return makeExpect(newConfig);
       },
       get config(): ExpectConfig {
         return { ...config };

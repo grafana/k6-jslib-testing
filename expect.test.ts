@@ -53,4 +53,3 @@ Deno.test("expect.configure", async (t) => {
     },
   );
 });
-
