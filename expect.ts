@@ -1,6 +1,5 @@
 import type { Locator } from "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/refs/heads/master/types/k6/browser/index.d.ts";
-import { type ExpectConfig, makeDefaultConfig } from "./config.ts";
-import { env } from "./environment.ts";
+import { type ExpectConfig, ConfigLoader } from "./config.ts";
 import {
   createExpectation as createNonRetryingExpectation,
   type NonRetryingExpectation,
@@ -63,14 +62,9 @@ export interface ExpectFunction {
  */
 function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
   /**
-   * The default configuration values used by the expect function.
+   * Loads the configuration for the expect function.
    */
-  const defaultConfig = makeDefaultConfig();
-
-  /**
-   * Merges the base configuration with the default configuration.
-   */
-  const mergedConfig = { ...defaultConfig, ...baseConfig };
+  const config = ConfigLoader.load(baseConfig);
 
   return Object.assign(
     function <T>(
@@ -79,12 +73,12 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
       if (isLocator(value)) {
         return createRetryingExpectation(
           value as Locator,
-          mergedConfig,
+          config,
         ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
       } else {
         return createNonRetryingExpectation(
           value,
-          mergedConfig,
+          config,
         ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
       }
     },
@@ -95,25 +89,21 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
         if (isLocator(value)) {
           return createRetryingExpectation(
             value as Locator,
-            { ...mergedConfig, soft: true },
+            { ...config, soft: true },
           ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
         } else {
           return createNonRetryingExpectation(
             value,
-            { ...mergedConfig, soft: true },
+            { ...config, soft: true },
           ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
         }
       },
       configure(newConfig: Partial<ExpectConfig>): ExpectFunction {
-        const colorDeactivated = env.NO_COLOR !== undefined;
-        return makeExpect({
-          ...mergedConfig,
-          ...newConfig,
-          ...(colorDeactivated ? { colorize: false } : {}),
-        });
+        return makeExpect(newConfig)
+
       },
       get config(): ExpectConfig {
-        return { ...mergedConfig };
+        return { ...config };
       },
     },
   );
