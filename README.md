@@ -23,7 +23,7 @@ k6-testing is available as a [k6 jslib](https://jslib.k6.io). It can be directly
 imported as a dependency in your k6 script.
 
 ```sh
-import { expect } from "https://jslib.k6.io/k6-testing/v0.1.0/index.js";
+import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
 ```
 
 ## Quick Start
@@ -37,7 +37,7 @@ To make an assertion, call `expect(value)` and choose a matcher that reflects
 the expectation.
 
 ```javascript
-import { expect } from "https://jslib.k6.io/k6-testing/v0.1.0/index.js";
+import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
 
 export default function () {
   // Simple assertions
@@ -169,7 +169,7 @@ instantiating a new expect instance with the `.configure` method.
 
 ```javascript
 export default function () {
-  const myExpect = new expect().configure({ timeout: 10000, interval: 500 });
+  const myExpect = new expect.configure({ timeout: 10000, interval: 500 });
 
   // Use myExpect instead of expect, and it will use the configured timeout and interval
   // for all assertions.
@@ -185,7 +185,7 @@ export default function () {
 ### API Testing
 
 ```javascript
-import { expect } from "https://jslib.k6.io/k6-testing/v0.1.0/index.js";
+import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
 import http from "k6/http";
 
 export function setup() {
@@ -210,7 +210,7 @@ export default function () {
 ### UI Testing
 
 ```javascript
-import { expect } from "https://jslib.k6.io/k6-testing/v0.1.0/index.js";
+import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
 import { browser } from "k6/browser";
 
 export const options = {
