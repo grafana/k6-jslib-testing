@@ -258,17 +258,23 @@ We welcome contributions! Here's how you can help:
 
 ### Development Setup
 
-The project supports development using [Dev Containers](https://containers.dev/), which provides a consistent, pre-configured development environment with all necessary tools installed. This is the recommended way to develop k6-testing.
+The project supports development using
+[Dev Containers](https://containers.dev/), which provides a consistent,
+pre-configured development environment with all necessary tools installed. This
+is the recommended way to develop k6-testing.
 
 To use the Dev Container:
+
 1. Ensure you have Docker installed
 2. Use a Dev Containers compatible editor:
    - VS Code with the "Remote - Containers" extension
    - JetBrains IDEs with the "Remote Development" plugin
    - Any other editor that supports Dev Containers
-3. Open the project in your editor - it should automatically detect the Dev Container configuration and prompt you to reopen in container
+3. Open the project in your editor - it should automatically detect the Dev
+   Container configuration and prompt you to reopen in container
 
 The Dev Container comes with:
+
 - Deno
 - k6
 - chromium (for browser testing)
