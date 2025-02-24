@@ -1,0 +1,42 @@
+{
+  // Give it a somewhat explicit name
+  "name": "k6-testing devcontainer",
+
+  // Use Debian as a base image
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  "features": {
+    "ghcr.io/devcontainers-community/features/deno": {
+      "version": "2.2.0"
+    },
+    "ghcr.io/snebjorn/devcontainer-feature/chromium:latest": {},
+    "ghcr.io/devcontainers-extra/features/k6:1": {}
+  },
+
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "deno.enable": true,
+        "deno.lint": true,
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "denoland.vscode-deno",
+        "[typescript]": { "editor.defaultFormatter": "denoland.vscode-deno" }
+      },
+      "extensions": [
+        "github.vscode-github-actions",
+        "denoland.vscode-deno"
+      ]
+    }
+  },
+
+  // Use 'runArgs' to pass environment variables to the container.
+  "runArgs": [
+    "--env-file",
+    ".devcontainer/devcontainer.env"
+  ],
+
+  // Ensure `deno install` is ran when the container is created
+  "postCreateCommand": "deno install"
+}
