@@ -37,33 +37,33 @@ To make an assertion, call `expect(value)` and choose a matcher that reflects
 the expectation.
 
 ```javascript
-import { browser } from "k6/browser"
+import { browser } from "k6/browser";
 import http from "k6/http";
 
 import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
 
 export const options = {
-    scenarios: {
-        // Protocol tests
-        protocol: {
-            executor: 'shared-iterations',
-            vus: 1,
-            iterations: 1,
-            exec: 'protocol',
-        },
+  scenarios: {
+    // Protocol tests
+    protocol: {
+      executor: "shared-iterations",
+      vus: 1,
+      iterations: 1,
+      exec: "protocol",
+    },
 
-        // Browser tests
-        ui: {
-            executor: 'shared-iterations',
-            options: {
-                browser: {
-                    type: 'chromium',
-                }
-            },
-            exec: 'ui',
-        }
-    }
-}
+    // Browser tests
+    ui: {
+      executor: "shared-iterations",
+      options: {
+        browser: {
+          type: "chromium",
+        },
+      },
+      exec: "ui",
+    },
+  },
+};
 
 export function protocol() {
   // Get the home page of k6's Quick Pizza app
@@ -78,7 +78,7 @@ export async function ui() {
 
   try {
     await page.goto("https://quickpizza.grafana.com/");
-    await page.waitForLoadState('networkidle'); // waits until the `networkidle` event
+    await page.waitForLoadState("networkidle"); // waits until the `networkidle` event
 
     // Assert the "Pizza Please" button is visible
     await expect(page.locator("button[name=pizza-please]")).toBeVisible();
