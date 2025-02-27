@@ -2,7 +2,7 @@
 
 import { assert } from "jsr:@std/assert";
 import { RetryTimeoutError, withRetry } from "./expectRetrying.ts";
-import { DEFAULT_RETRY_OPTIONS } from "./config.ts";
+import { DEFAULT_RETRY_OPTIONS, type ExpectConfig } from "./config.ts";
 
 Deno.test("withRetry", async (t) => {
   await t.step("succeeds immediately when assertion passes", async () => {
@@ -80,6 +80,129 @@ Deno.test("withRetry", async (t) => {
     );
     const duration = Date.now() - startTime;
     assert(duration >= DEFAULT_RETRY_OPTIONS.timeout);
+  });
+});
+
+Deno.test("negated retrying expectations", async (t) => {
+  await t.step("should invert the result when using .not", async () => {
+    // Mock the locator and assert function
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockLocator = {
+      isVisible: async () => true,
+      isHidden: async () => false,
+      isChecked: async () => true,
+      isDisabled: async () => false,
+      isEnabled: async () => true,
+      isEditable: async () => true,
+      inputValue: async () => "test-value",
+    };
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+      // Don't throw for this test
+    };
+
+    // Import the createExpectation function directly to test it
+    const { createExpectation } = await import("./expectRetrying.ts");
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      timeout: 10,
+      interval: 5,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test with isNegated = true
+    const negatedExpectation = createExpectation(
+      mockLocator as any,
+      config,
+      true,
+    );
+
+    // Test a few matchers
+    await negatedExpectation.toBeVisible();
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false when negated with a true result",
+    );
+
+    assertCalled = false;
+    await negatedExpectation.toBeChecked();
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false when negated with a true result",
+    );
+
+    assertCalled = false;
+    await negatedExpectation.toHaveValue("test-value");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false when negated with a true result",
+    );
+  });
+
+  await t.step("should handle double negation correctly", async () => {
+    // Mock the locator and assert function
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockLocator = {
+      isVisible: async () => true,
+      isHidden: async () => false,
+      isChecked: async () => true,
+      isDisabled: async () => false,
+      isEnabled: async () => true,
+      isEditable: async () => true,
+      inputValue: async () => "test-value",
+    };
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+      // Don't throw for this test
+    };
+
+    // Import the createExpectation function directly to test it
+    const { createExpectation } = await import("./expectRetrying.ts");
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      timeout: 10,
+      interval: 5,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Create an expectation
+    const expectation = createExpectation(
+      mockLocator as any,
+      config,
+      false,
+    );
+
+    // Double negation should be equivalent to no negation
+    const doubleNegated = expectation.not.not;
+
+    await doubleNegated.toBeVisible();
+    assert(assertCalled, "Assert should have been called");
+    assert(assertCondition, "Condition should be true with double negation");
   });
 });
 

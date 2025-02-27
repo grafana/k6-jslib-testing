@@ -4,6 +4,7 @@ import { createMockAssertFn, failTest, passTest } from "./testing.js";
 export default function testExpectNonRetrying() {
   TEST_CASES.forEach(runTest);
   testToBeInstanceOf();
+  testNegation();
 }
 
 const TEST_CASES = [
@@ -172,4 +173,95 @@ function testToBeInstanceOf() {
   }
 
   passTest("toBeInstanceOf");
+}
+
+function testNegation() {
+  // Test cases for negation
+  const negationTestCases = [
+    {
+      name: "not.toBe",
+      value: 1,
+      arg: 2,
+      expectedCondition: true, // 1 is not 2, so this should be true
+    },
+    {
+      name: "not.toEqual",
+      value: { a: 1 },
+      arg: { a: 2 },
+      expectedCondition: true, // Objects are not equal, so this should be true
+    },
+    {
+      name: "not.toBeTruthy",
+      value: false,
+      expectedCondition: true, // false is not truthy, so this should be true
+    },
+    {
+      name: "not.toBeFalsy",
+      value: true,
+      expectedCondition: true, // true is not falsy, so this should be true
+    },
+    {
+      name: "not.toBeNull",
+      value: 1,
+      expectedCondition: true, // 1 is not null, so this should be true
+    },
+    {
+      name: "not.toBeUndefined",
+      value: 1,
+      expectedCondition: true, // 1 is not undefined, so this should be true
+    },
+  ];
+
+  negationTestCases.forEach((testCase) => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Extract the matcher name from the test case name (remove "not.")
+    const matcher = testCase.name.substring(4);
+
+    // Call the matcher with .not
+    if (testCase.arg !== undefined) {
+      testExpect(testCase.value).not[matcher](testCase.arg);
+    } else {
+      testExpect(testCase.value).not[matcher]();
+    }
+
+    // Verify the mock assertions
+    if (!mockAssertFn.called) {
+      failTest(testCase.name, "expected assertFn to be called");
+    }
+
+    if (mockAssertFn.calls.length !== 1) {
+      failTest(testCase.name, "expected assertFn to be called once");
+    }
+
+    if (mockAssertFn.calls[0].condition !== testCase.expectedCondition) {
+      failTest(
+        testCase.name,
+        `expected assertFn condition to be ${testCase.expectedCondition}`,
+      );
+    }
+
+    passTest(testCase.name);
+  });
+
+  // Test double negation
+  const mockAssertFn = createMockAssertFn();
+  const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+  testExpect(1).not.not.toBe(1);
+
+  if (!mockAssertFn.called) {
+    failTest("not.not.toBe", "expected assertFn to be called");
+  }
+
+  if (mockAssertFn.calls.length !== 1) {
+    failTest("not.not.toBe", "expected assertFn to be called once");
+  }
+
+  if (mockAssertFn.calls[0].condition !== true) {
+    failTest("not.not.toBe", "expected assertFn condition to be true");
+  }
+
+  passTest("not.not.toBe");
 }

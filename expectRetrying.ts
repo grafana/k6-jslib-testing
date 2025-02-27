@@ -26,9 +26,14 @@ import type { Locator } from "https://raw.githubusercontent.com/DefinitelyTyped/
  */
 export interface RetryingExpectation {
   /**
+   * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
+   */
+  not: RetryingExpectation;
+
+  /**
    * Ensures the Locator points to a checked input.
    */
-  toBeChecked(options: Partial<RetryConfig>): Promise<void>;
+  toBeChecked(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
    * Ensures the Locator points to a disabled element.
@@ -37,34 +42,34 @@ export interface RetryingExpectation {
    * Note that only native control elements such as HTML button, input, select, textarea, option, optgroup can be disabled by setting "disabled" attribute.
    * "disabled" attribute on other elements is ignored by the browser.
    */
-  toBeDisabled(options: Partial<RetryConfig>): Promise<void>;
+  toBeDisabled(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
    * Ensures the Locator points to an editable element.
    */
-  toBeEditable(options: Partial<RetryConfig>): Promise<void>;
+  toBeEditable(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
    * Ensures the Locator points to an enabled element.
    */
-  toBeEnabled(options: Partial<RetryConfig>): Promise<void>;
+  toBeEnabled(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
    * Ensures that Locator either does not resolve to any DOM node, or resolves to a non-visible one.
    */
-  toBeHidden(options: Partial<RetryConfig>): Promise<void>;
+  toBeHidden(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
    * Ensures that Locator points to an attached and visible DOM node.
    */
-  toBeVisible(options: Partial<RetryConfig>): Promise<void>;
+  toBeVisible(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
    * Ensures the Locator points to an element with the given input value. You can use regular expressions for the value as well.
    *
    * @param value {string} the expected value of the input
    */
-  toHaveValue(value: string, options: Partial<RetryConfig>): Promise<void>;
+  toHaveValue(value: string, options?: Partial<RetryConfig>): Promise<void>;
 }
 
 /**
@@ -75,13 +80,14 @@ export interface RetryingExpectation {
  * API, and have matchers return `Promise<void>`, as opposed to `Promise<boolean>`.
  *
  * @param locator the value to create an expectation for
- * @param isSoft whether the expectation should be a soft assertion
- * @param assertFn optional custom assertion function
+ * @param config the configuration for the expectation
+ * @param isNegated whether the expectation is negated
  * @returns an expectation object over the given value exposing the Expectation set of methods
  */
 export function createExpectation(
   locator: Locator,
   config: ExpectConfig,
+  isNegated: boolean = false,
 ): RetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -136,9 +142,14 @@ export function createExpectation(
     retryConfig,
     usedAssert,
     isSoft,
+    isNegated,
   };
 
-  return {
+  const expectation: RetryingExpectation = {
+    get not(): RetryingExpectation {
+      return createExpectation(locator, config, !isNegated);
+    },
+
     async toBeChecked(
       options: Partial<RetryConfig> = retryConfig,
     ): Promise<void> {
@@ -226,13 +237,18 @@ export function createExpectation(
         matcherName: "toHaveValue",
         expected: expectedValue,
         received: "unknown",
+        matcherSpecific: { isNegated },
       };
 
       try {
         await withRetry(async () => {
           const actualValue = await locator.inputValue();
+          const result = expectedValue === actualValue;
+          // If isNegated is true, we want to invert the result
+          const finalResult = isNegated ? !result : result;
+
           usedAssert(
-            expectedValue === actualValue,
+            finalResult,
             MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
               info,
               MatcherErrorRendererRegistry.getConfig(),
@@ -252,6 +268,8 @@ export function createExpectation(
       }
     },
   };
+
+  return expectation;
 }
 
 // Helper function to create common matcher error info
@@ -288,12 +306,14 @@ async function createMatcher(
     retryConfig,
     usedAssert,
     isSoft,
+    isNegated = false,
     options = {},
   }: {
     locator: Locator;
     retryConfig: RetryConfig;
     usedAssert: typeof assert;
     isSoft: boolean;
+    isNegated?: boolean;
     options?: Partial<RetryConfig>;
   },
 ): Promise<void> {
@@ -301,18 +321,22 @@ async function createMatcher(
     matcherSpecific: {
       locator,
       timeout: options.timeout,
+      isNegated,
     },
   });
 
   try {
     await withRetry(async () => {
       const result = await checkFn();
-      if (!result) {
+      // If isNegated is true, we want to invert the result
+      const finalResult = isNegated ? !result : result;
+
+      if (!finalResult) {
         throw new Error("matcher failed");
       }
 
       usedAssert(
-        result,
+        finalResult,
         MatcherErrorRendererRegistry.getRenderer(matcherName).render(
           info,
           MatcherErrorRendererRegistry.getConfig(),

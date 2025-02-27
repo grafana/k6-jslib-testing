@@ -14,6 +14,11 @@ import {
 
 export interface NonRetryingExpectation {
   /**
+   * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
+   */
+  not: NonRetryingExpectation;
+
+  /**
    * Asserts that the value is equal to the expected value.
    *
    * @param expected the expected value
@@ -118,12 +123,14 @@ export interface NonRetryingExpectation {
  * implementation of the matchers attached to the expectation object.
  *
  * @param received the value to create an expectation for
- * @param isSoft whether the expectation should be a soft assertion
+ * @param config the configuration for the expectation
+ * @param isNegated whether the expectation is negated
  * @returns an expectation object over the given value exposing the Expectation set of methods
  */
 export function createExpectation(
   received: unknown,
   config: ExpectConfig,
+  isNegated: boolean = false,
 ): NonRetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -197,9 +204,14 @@ export function createExpectation(
   const matcherConfig = {
     usedAssert,
     isSoft: config.soft,
+    isNegated,
   };
 
-  return {
+  const expectation: NonRetryingExpectation = {
+    get not(): NonRetryingExpectation {
+      return createExpectation(received, config, !isNegated);
+    },
+
     toBe(expected: unknown): void {
       createMatcher(
         "toBe",
@@ -362,6 +374,8 @@ export function createExpectation(
       );
     },
   };
+
+  return expectation;
 }
 
 // Helper function to handle common matcher logic
@@ -373,10 +387,12 @@ function createMatcher(
   {
     usedAssert,
     isSoft,
+    isNegated = false,
     matcherSpecific = {},
   }: {
     usedAssert: typeof assert;
     isSoft: boolean;
+    isNegated?: boolean;
     matcherSpecific?: Record<string, unknown>;
   },
 ): void {
@@ -384,11 +400,15 @@ function createMatcher(
     matcherName,
     expected,
     received,
-    matcherSpecific,
+    { ...matcherSpecific, isNegated },
   );
 
+  const result = checkFn();
+  // If isNegated is true, we want to invert the result
+  const finalResult = isNegated ? !result : result;
+
   usedAssert(
-    checkFn(),
+    finalResult,
     MatcherErrorRendererRegistry.getRenderer(matcherName).render(
       info,
       MatcherErrorRendererRegistry.getConfig(),
