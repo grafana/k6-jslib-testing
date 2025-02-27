@@ -1,6 +1,6 @@
 import { expect } from "../dist/index.js";
 import { browser } from "k6/browser";
-import { passTest } from "./testing.js";
+import { failTest, passTest } from "./testing.js";
 export const options = {
   scenarios: {
     browser: {
@@ -14,7 +14,8 @@ export const options = {
   },
 };
 
-const testCases = [
+// First run the standard tests
+const standardTestCases = [
   {
     name: "toBeChecked",
     selector: "#toBeCheckedCheckbox",
@@ -70,16 +71,90 @@ const testCases = [
   },
 ];
 
+// Then run the negation tests
+const negationTestCases = [
+  {
+    name: "not.toBeChecked",
+    selector: "#notToBeCheckedCheckbox",
+    assertion: async (locator) => {
+      // This checkbox should remain unchecked
+      await expect(locator).not.toBeChecked({ timeout: 1000 });
+    },
+  },
+  {
+    name: "not.toBeDisabled",
+    selector: "#toBeEnabledInput",
+    assertion: async (locator) => {
+      await expect(locator).not.toBeDisabled();
+    },
+  },
+  {
+    name: "not.toBeEditable",
+    selector: "#toBeDisabledInput",
+    assertion: async (locator) => {
+      await expect(locator).not.toBeEditable();
+    },
+  },
+  {
+    name: "not.toBeEnabled",
+    selector: "#toBeDisabledInput",
+    assertion: async (locator) => {
+      await expect(locator).not.toBeEnabled();
+    },
+  },
+  {
+    name: "not.toBeHidden",
+    selector: "#toBeVisibleText",
+    assertion: async (locator) => {
+      await expect(locator).not.toBeHidden();
+    },
+  },
+  {
+    name: "not.toBeVisible",
+    selector: "#toBeHiddenText",
+    assertion: async (locator) => {
+      await expect(locator).not.toBeVisible();
+    },
+  },
+  {
+    name: "not.toHaveValue",
+    selector: "#toHaveValueInput",
+    assertion: async (locator) => {
+      await expect(locator).not.toHaveValue("wrong-value");
+    },
+  },
+];
+
 export default async function testExpectRetrying() {
   const context = await browser.newContext();
 
-  for (const testCase of testCases) {
+  // First run standard tests
+  for (const testCase of standardTestCases) {
     const page = await context.newPage();
     try {
       await page.goto("http://localhost:8000");
       const locator = page.locator(testCase.selector);
       await testCase.assertion(locator);
       passTest(testCase.name);
+    } catch (error) {
+      console.error(`Test case "${testCase.name}" failed: ${error.message}`);
+      failTest(testCase.name, error.message);
+    } finally {
+      await page.close();
+    }
+  }
+
+  // Then run negation tests
+  for (const testCase of negationTestCases) {
+    const page = await context.newPage();
+    try {
+      await page.goto("http://localhost:8000");
+      const locator = page.locator(testCase.selector);
+      await testCase.assertion(locator);
+      passTest(testCase.name);
+    } catch (error) {
+      console.error(`Test case "${testCase.name}" failed: ${error.message}`);
+      failTest(testCase.name, error.message);
     } finally {
       await page.close();
     }
