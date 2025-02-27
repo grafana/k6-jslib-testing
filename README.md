@@ -99,8 +99,6 @@ k6 run --no-summary --quiet examples/browser.js
 echo $status
 ```
 
-### UI Testing
-
 ## Features
 
 ### 1. Playwright-Compatible Expectations
@@ -164,7 +162,30 @@ These assertions allow to test any conditions, but do not auto-retry.
 | `toEqual(expected)`               | Deep equality comparison                                |
 | `toHaveLength(expected)`          | Asserts a value has a length property equal to expected |
 
-#### 4. Configuration
+#### 4. Negating matchers
+
+You can negate any matcher by adding `.not` before the matcher method. This inverts the assertion, checking that the condition is false rather than true:
+
+```javascript
+// Standard assertions
+expect(response.status).not.toBe(404);       // Assert status is NOT 404
+expect(response.json().items).not.toBeEmpty(); // Assert items array is not empty
+expect(user.permissions).not.toContain('admin'); // Assert user doesn't have admin permission
+
+// Retrying assertions (must be awaited)
+await expect(page.locator('.error-message')).not.toBeVisible(); // Assert error is not shown
+await expect(page.locator('button[type="submit"]')).not.toBeDisabled(); // Assert button is not disabled
+```
+
+Negation is particularly useful in k6 testing scenarios such as:
+
+- Verifying error conditions aren't present: `await expect(page.locator('.error')).not.toBeVisible()`
+- Ensuring unauthorized access is blocked: `expect(response.status).not.toBe(200)`
+- Confirming elements are removed after an action: `await expect(page.locator('#item-1')).not.toBeVisible()`
+
+**Note:** When using negated retrying assertions, the assertion will keep retrying until the condition becomes false or the timeout is reached. For example, `await expect(locator).not.toBeVisible()` will pass immediately if the element is hidden, but will retry until timeout if the element is visible, hoping it will disappear.
+
+#### 5. Configuration
 
 You can create a new expect instance with the `.configure` method. This will
 allow you to configure the behavior of the assertions. The configuration is
