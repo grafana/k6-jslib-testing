@@ -132,6 +132,16 @@ export interface NonRetryingExpectation {
    * @param expected The item to check for deep equality within the collection
    */
   toContainEqual(expected: unknown): void;
+
+  /**
+   * Ensures that property at provided `keyPath` exists on the object and optionally checks
+   * that property is equal to the expected. Equality is checked recursively, similarly to expect(value).toEqual().
+   *
+   * @param keyPath Path to the property. Use dot notation a.b to check nested properties
+   *                and indexed a[2] notation to check nested array items.
+   * @param expected Optional expected value to compare the property to.
+   */
+  toHaveProperty(keyPath: string, expected?: unknown): void;
 }
 
 /**
@@ -225,6 +235,10 @@ export function createExpectation(
   MatcherErrorRendererRegistry.register(
     "toContainEqual",
     new ToContainEqualErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toHaveProperty",
+    new ToHavePropertyErrorRenderer(),
   );
 
   const matcherConfig = {
@@ -472,6 +486,40 @@ export function createExpectation(
           ...matcherConfig,
           matcherSpecific: {
             receivedType,
+          },
+        },
+      );
+    },
+
+    toHaveProperty(keyPath: string, expected?: unknown): void {
+      if (typeof received !== "object" || received === null) {
+        throw new Error(
+          "toHaveProperty is only supported for objects",
+        );
+      }
+
+      const hasProperty = () => {
+        try {
+          const value = getPropertyByPath(
+            received as Record<string, unknown>,
+            keyPath,
+          );
+          return expected !== undefined ? isDeepEqual(value, expected) : true;
+        } catch (_) {
+          return false;
+        }
+      };
+
+      createMatcher(
+        "toHaveProperty",
+        hasProperty,
+        expected !== undefined ? expected : keyPath,
+        received,
+        {
+          ...matcherConfig,
+          matcherSpecific: {
+            keyPath,
+            hasExpectedValue: expected !== undefined,
           },
         },
       );
@@ -915,6 +963,75 @@ export class ToContainEqualErrorRenderer
   }
 }
 
+/**
+ * A matcher error renderer for the `toHaveProperty` matcher.
+ */
+export class ToHavePropertyErrorRenderer
+  extends ExpectedReceivedMatcherRenderer {
+  protected getMatcherName(): string {
+    return "toHaveProperty";
+  }
+
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
+    const isNegated = info.matcherSpecific?.isNegated as boolean;
+    const keyPath = info.matcherSpecific?.keyPath as string;
+    const hasExpectedValue = info.matcherSpecific?.hasExpectedValue as boolean;
+
+    const lines: LineGroup[] = [
+      {
+        label: "Property path",
+        value: maybeColorize(keyPath, "white"),
+        group: 3,
+      },
+    ];
+
+    if (hasExpectedValue) {
+      lines.push(
+        {
+          label: isNegated
+            ? "Expected property not to equal"
+            : "Expected property to equal",
+          value: maybeColorize(info.expected, "green"),
+          group: 3,
+        },
+      );
+    } else {
+      lines.push(
+        {
+          label: isNegated
+            ? "Expected property not to exist"
+            : "Expected property to exist",
+          value: "",
+          group: 3,
+        },
+      );
+    }
+
+    lines.push(
+      {
+        label: "Received object",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
+    );
+
+    return lines;
+  }
+
+  protected override renderMatcherArgs(
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): string {
+    return maybeColorize(`(`, "darkGrey") +
+      maybeColorize(`keyPath`, "white") +
+      maybeColorize(`, `, "darkGrey") +
+      maybeColorize(`expected?`, "green") +
+      maybeColorize(`)`, "darkGrey");
+  }
+}
+
 function isDeepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
 
@@ -933,4 +1050,89 @@ function isDeepEqual(a: unknown, b: unknown): boolean {
         (b as Record<string, unknown>)[key],
       );
   });
+}
+
+/**
+ * Gets a property value from an object using a path string.
+ * Supports dot notation (obj.prop) and array indexing (obj[0] or obj.array[0]).
+ *
+ * @param obj The object to get the property from
+ * @param path The path to the property (e.g. "a.b[0].c")
+ * @returns The value at the specified path
+ * @throws Error if the property doesn't exist
+ */
+function getPropertyByPath(
+  obj: Record<string, unknown>,
+  path: string,
+): unknown {
+  // Parse the path into segments
+  const segments: string[] = [];
+  let currentSegment = "";
+  let inBrackets = false;
+
+  for (let i = 0; i < path.length; i++) {
+    const char = path[i];
+
+    if (char === "." && !inBrackets) {
+      if (currentSegment) {
+        segments.push(currentSegment);
+        currentSegment = "";
+      }
+    } else if (char === "[") {
+      if (currentSegment) {
+        segments.push(currentSegment);
+        currentSegment = "";
+      }
+      inBrackets = true;
+    } else if (char === "]") {
+      if (inBrackets) {
+        segments.push(currentSegment);
+        currentSegment = "";
+        inBrackets = false;
+      } else {
+        throw new Error(`Invalid path: ${path}`);
+      }
+    } else {
+      currentSegment += char;
+    }
+  }
+
+  // Add the last segment if there is one
+  if (currentSegment) {
+    segments.push(currentSegment);
+  }
+
+  // Traverse the object using the segments
+  let current: unknown = obj;
+
+  for (const segment of segments) {
+    if (current === null || current === undefined) {
+      throw new Error(`Property ${path} does not exist`);
+    }
+
+    if (typeof segment === "string" && !isNaN(Number(segment))) {
+      // If segment is a numeric string, treat it as an array index
+      const index = Number(segment);
+      if (!Array.isArray(current)) {
+        throw new Error(`Cannot access index ${segment} of non-array`);
+      }
+      if (index >= (current as unknown[]).length) {
+        throw new Error(`Index ${segment} out of bounds`);
+      }
+      current = (current as unknown[])[index];
+    } else {
+      // Otherwise treat it as an object property
+      if (typeof current !== "object") {
+        throw new Error(`Cannot access property ${segment} of non-object`);
+      }
+
+      if (!Object.prototype.hasOwnProperty.call(current, segment)) {
+        throw new Error(`Property ${segment} does not exist on object`);
+      }
+
+      current = (current as Record<string, unknown>)[segment];
+    }
+  }
+
+  return current;
 }
