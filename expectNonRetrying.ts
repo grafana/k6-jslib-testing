@@ -1065,6 +1065,10 @@ function getPropertyByPath(
   obj: Record<string, unknown>,
   path: string,
 ): unknown {
+  if (path === "") {
+    throw new Error("Invalid path: empty string");
+  }
+
   // Parse the path into segments
   const segments: string[] = [];
   let currentSegment = "";
