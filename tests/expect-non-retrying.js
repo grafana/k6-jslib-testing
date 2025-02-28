@@ -5,6 +5,7 @@ export default function testExpectNonRetrying() {
   TEST_CASES.forEach(runTest);
   testToBeInstanceOf();
   testToContain();
+  testToContainEqual();
   testNegation();
 }
 
@@ -127,6 +128,20 @@ const TEST_CASES = [
     matcher: "toContain",
     value: new Set([1, 2, 3]),
     arg: 2,
+    expectedCondition: true,
+  },
+  {
+    name: "toContainEqual with Array",
+    matcher: "toContainEqual",
+    value: [{ id: 1 }, { id: 2 }],
+    arg: { id: 1 },
+    expectedCondition: true,
+  },
+  {
+    name: "toContainEqual with Set",
+    matcher: "toContainEqual",
+    value: new Set([{ id: 1 }, { id: 2 }]),
+    arg: { id: 1 },
     expectedCondition: true,
   },
 ];
@@ -340,6 +355,155 @@ function testToContain() {
   unsupportedTest();
 }
 
+function testToContainEqual() {
+  // Test with array
+  const arrayTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case with primitives
+    testExpect([1, 2, 3]).toContainEqual(2);
+    if (!mockAssertFn.called) {
+      failTest("toContainEqual with array", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toContainEqual with array",
+        "expected condition to be true for array containing primitive item",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case
+    testExpect([1, 2, 3]).toContainEqual(4);
+    if (!mockAssertFn.called) {
+      failTest("toContainEqual with array", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toContainEqual with array",
+        "expected condition to be false for array not containing item",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test with objects (deep equality)
+    testExpect([{ id: 2 }, { id: 1 }, { id: 3 }]).toContainEqual({ id: 1 });
+    if (!mockAssertFn.called) {
+      failTest(
+        "toContainEqual with array objects",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toContainEqual with array objects",
+        "expected condition to be true for array containing object with same content",
+      );
+    }
+
+    passTest("toContainEqual with array");
+  };
+
+  // Test with Set
+  const setTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case with primitives
+    testExpect(new Set([1, 2, 3])).toContainEqual(2);
+    if (!mockAssertFn.called) {
+      failTest("toContainEqual with Set", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toContainEqual with Set",
+        "expected condition to be true for Set containing primitive item",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case
+    testExpect(new Set([1, 2, 3])).toContainEqual(4);
+    if (!mockAssertFn.called) {
+      failTest("toContainEqual with Set", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toContainEqual with Set",
+        "expected condition to be false for Set not containing item",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test with objects (deep equality)
+    testExpect(new Set([{ id: 2 }, { id: 1 }, { id: 3 }])).toContainEqual({
+      id: 1,
+    });
+    if (!mockAssertFn.called) {
+      failTest(
+        "toContainEqual with Set objects",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toContainEqual with Set objects",
+        "expected condition to be true for Set containing object with same content",
+      );
+    }
+
+    passTest("toContainEqual with Set");
+  };
+
+  // Test with unsupported type
+  const unsupportedTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    try {
+      testExpect("string").toContainEqual("s");
+      failTest(
+        "toContainEqual with unsupported type",
+        "expected to throw an error",
+      );
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        failTest(
+          "toContainEqual with unsupported type",
+          "expected to throw an Error",
+        );
+      }
+      if (
+        !error.message.includes("only supported for arrays and sets")
+      ) {
+        failTest(
+          "toContainEqual with unsupported type",
+          "expected error message to mention supported types",
+        );
+      }
+      passTest("toContainEqual with unsupported type");
+    }
+  };
+
+  // Run all tests
+  arrayTest();
+  setTest();
+  unsupportedTest();
+}
+
 function testNegation() {
   // Test cases for negation
   const negationTestCases = [
@@ -395,6 +559,20 @@ function testNegation() {
       value: new Set([1, 2, 3]),
       arg: 4,
       expectedCondition: true, // new Set([1, 2, 3]) does not contain 4, so this should be true
+    },
+    {
+      name: "not.toContainEqual with array",
+      matcher: "toContainEqual",
+      value: [{ id: 1 }, { id: 2 }],
+      arg: { id: 3 },
+      expectedCondition: true, // [{ id: 1 }, { id: 2 }] does not contain { id: 3 }, so this should be true
+    },
+    {
+      name: "not.toContainEqual with set",
+      matcher: "toContainEqual",
+      value: new Set([{ id: 1 }, { id: 2 }]),
+      arg: { id: 3 },
+      expectedCondition: true, // new Set([{ id: 1 }, { id: 2 }]) does not contain { id: 3 }, so this should be true
     },
   ];
 
