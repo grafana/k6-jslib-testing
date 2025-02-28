@@ -4,6 +4,7 @@ import { createMockAssertFn, failTest, passTest } from "./testing.js";
 export default function testExpectNonRetrying() {
   TEST_CASES.forEach(runTest);
   testToBeInstanceOf();
+  testToContain();
   testNegation();
 }
 
@@ -107,6 +108,27 @@ const TEST_CASES = [
     arg: 3,
     expectedCondition: true,
   },
+  {
+    name: "toContain with String",
+    matcher: "toContain",
+    value: "hello world",
+    arg: "world",
+    expectedCondition: true,
+  },
+  {
+    name: "toContain with Array",
+    matcher: "toContain",
+    value: [1, 2, 3],
+    arg: 2,
+    expectedCondition: true,
+  },
+  {
+    name: "toContain with Set",
+    matcher: "toContain",
+    value: new Set([1, 2, 3]),
+    arg: 2,
+    expectedCondition: true,
+  },
 ];
 
 function runTest(testCase) {
@@ -175,6 +197,149 @@ function testToBeInstanceOf() {
   passTest("toBeInstanceOf");
 }
 
+function testToContain() {
+  // Test with string
+  const stringTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case
+    testExpect("hello world").toContain("world");
+    if (!mockAssertFn.called) {
+      failTest("toContain with string", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toContain with string",
+        "expected condition to be true for string containing substring",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case
+    testExpect("hello world").toContain("universe");
+    if (!mockAssertFn.called) {
+      failTest("toContain with string", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toContain with string",
+        "expected condition to be false for string not containing substring",
+      );
+    }
+
+    passTest("toContain with string");
+  };
+
+  // Test with array
+  const arrayTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case
+    testExpect([1, 2, 3]).toContain(2);
+    if (!mockAssertFn.called) {
+      failTest("toContain with array", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toContain with array",
+        "expected condition to be true for array containing item",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case
+    testExpect([1, 2, 3]).toContain(4);
+    if (!mockAssertFn.called) {
+      failTest("toContain with array", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toContain with array",
+        "expected condition to be false for array not containing item",
+      );
+    }
+
+    passTest("toContain with array");
+  };
+
+  // Test with Set
+  const setTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case
+    testExpect(new Set([1, 2, 3])).toContain(2);
+    if (!mockAssertFn.called) {
+      failTest("toContain with Set", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toContain with Set",
+        "expected condition to be true for Set containing item",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case
+    testExpect(new Set([1, 2, 3])).toContain(4);
+    if (!mockAssertFn.called) {
+      failTest("toContain with Set", "expected assertFn to be called");
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toContain with Set",
+        "expected condition to be false for Set not containing item",
+      );
+    }
+
+    passTest("toContain with Set");
+  };
+
+  // Test with unsupported type
+  const unsupportedTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    try {
+      testExpect(123).toContain(2);
+      failTest("toContain with unsupported type", "expected to throw an error");
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        failTest(
+          "toContain with unsupported type",
+          "expected to throw an Error",
+        );
+      }
+      if (
+        !error.message.includes("only supported for strings, arrays, and sets")
+      ) {
+        failTest(
+          "toContain with unsupported type",
+          "expected error message to mention supported types",
+        );
+      }
+      passTest("toContain with unsupported type");
+    }
+  };
+
+  // Run all tests
+  stringTest();
+  arrayTest();
+  setTest();
+  unsupportedTest();
+}
+
 function testNegation() {
   // Test cases for negation
   const negationTestCases = [
@@ -210,14 +375,35 @@ function testNegation() {
       value: 1,
       expectedCondition: true, // 1 is not undefined, so this should be true
     },
+    {
+      name: "not.toContain with string",
+      matcher: "toContain",
+      value: "hello world",
+      arg: "universe",
+      expectedCondition: true, // "hello world" does not contain "universe", so this should be true
+    },
+    {
+      name: "not.toContain with array",
+      matcher: "toContain",
+      value: [1, 2, 3],
+      arg: 4,
+      expectedCondition: true, // [1, 2, 3] does not contain 4, so this should be true
+    },
+    {
+      name: "not.toContain with set",
+      matcher: "toContain",
+      value: new Set([1, 2, 3]),
+      arg: 4,
+      expectedCondition: true, // new Set([1, 2, 3]) does not contain 4, so this should be true
+    },
   ];
 
   negationTestCases.forEach((testCase) => {
     const mockAssertFn = createMockAssertFn();
     const testExpect = expect.configure({ assertFn: mockAssertFn });
 
-    // Extract the matcher name from the test case name (remove "not.")
-    const matcher = testCase.name.substring(4);
+    // Extract the matcher name from the test case name or use the provided matcher property
+    const matcher = testCase.matcher || testCase.name.substring(4);
 
     // Call the matcher with .not
     if (testCase.arg !== undefined) {
