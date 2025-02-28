@@ -6,6 +6,7 @@ export default function testExpectNonRetrying() {
   testToBeInstanceOf();
   testToContain();
   testToContainEqual();
+  testToHaveProperty();
   testNegation();
 }
 
@@ -142,6 +143,48 @@ const TEST_CASES = [
     matcher: "toContainEqual",
     value: new Set([{ id: 1 }, { id: 2 }]),
     arg: { id: 1 },
+    expectedCondition: true,
+  },
+  {
+    name: "toHaveProperty with simple property",
+    matcher: "toHaveProperty",
+    value: { a: 1 },
+    arg: "a",
+    expectedCondition: true,
+  },
+  {
+    name: "toHaveProperty with nested property",
+    matcher: "toHaveProperty",
+    value: { a: { b: 2 } },
+    arg: "a.b",
+    expectedCondition: true,
+  },
+  {
+    name: "toHaveProperty with array index",
+    matcher: "toHaveProperty",
+    value: { a: [1, 2, 3] },
+    arg: "a[1]",
+    expectedCondition: true,
+  },
+  {
+    name: "toHaveProperty with expected value",
+    matcher: "toHaveProperty",
+    value: { a: 1 },
+    arg: ["a", 1],
+    expectedCondition: true,
+  },
+  {
+    name: "toHaveProperty with nested expected value",
+    matcher: "toHaveProperty",
+    value: { a: { b: 2 } },
+    arg: ["a.b", 2],
+    expectedCondition: true,
+  },
+  {
+    name: "toHaveProperty with array index and expected value",
+    matcher: "toHaveProperty",
+    value: { a: [1, 2, 3] },
+    arg: ["a[1]", 2],
     expectedCondition: true,
   },
 ];
@@ -504,6 +547,372 @@ function testToContainEqual() {
   unsupportedTest();
 }
 
+function testToHaveProperty() {
+  // Test with simple property
+  const simpleTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case
+    testExpect({ a: 1 }).toHaveProperty("a");
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with simple property",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toHaveProperty with simple property",
+        "expected condition to be true for object with property",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case
+    testExpect({ a: 1 }).toHaveProperty("b");
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with missing property",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toHaveProperty with missing property",
+        "expected condition to be false for object without property",
+      );
+    }
+
+    passTest("toHaveProperty with simple property");
+  };
+
+  // Test with nested property
+  const nestedTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case
+    testExpect({ a: { b: 2 } }).toHaveProperty("a.b");
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with nested property",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toHaveProperty with nested property",
+        "expected condition to be true for object with nested property",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case
+    testExpect({ a: { c: 2 } }).toHaveProperty("a.b");
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with missing nested property",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toHaveProperty with missing nested property",
+        "expected condition to be false for object without nested property",
+      );
+    }
+
+    passTest("toHaveProperty with nested property");
+  };
+
+  // Test with array index
+  const arrayTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case
+    testExpect({ a: [1, 2, 3] }).toHaveProperty("a[1]");
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with array index",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toHaveProperty with array index",
+        "expected condition to be true for object with array property",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case - index out of bounds
+    testExpect({ a: [1, 2, 3] }).toHaveProperty("a[5]");
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with out of bounds index",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toHaveProperty with out of bounds index",
+        "expected condition to be false for array index out of bounds",
+      );
+    }
+
+    passTest("toHaveProperty with array index");
+  };
+
+  // Test with expected value
+  const expectedValueTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    // Test passing case
+    testExpect({ a: 1 }).toHaveProperty("a", 1);
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with expected value",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toHaveProperty with expected value",
+        "expected condition to be true for matching property value",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test failing case - wrong value
+    testExpect({ a: 1 }).toHaveProperty("a", 2);
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with wrong expected value",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== false) {
+      failTest(
+        "toHaveProperty with wrong expected value",
+        "expected condition to be false for non-matching property value",
+      );
+    }
+
+    passTest("toHaveProperty with expected value");
+  };
+
+  // Test with complex object
+  const complexTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    const complexObj = {
+      a: {
+        b: [
+          { c: 1 },
+          { c: 2 },
+        ],
+      },
+      d: true,
+    };
+
+    // Test passing cases
+    testExpect(complexObj).toHaveProperty("a.b[1].c", 2);
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with complex path",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toHaveProperty with complex path",
+        "expected condition to be true for complex property path",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    testExpect(complexObj).toHaveProperty("d", true);
+    if (!mockAssertFn.called) {
+      failTest(
+        "toHaveProperty with boolean value",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "toHaveProperty with boolean value",
+        "expected condition to be true for boolean property",
+      );
+    }
+
+    passTest("toHaveProperty with complex object");
+  };
+
+  // Test with unsupported type
+  const unsupportedTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    try {
+      testExpect("string").toHaveProperty("length");
+      failTest(
+        "toHaveProperty with unsupported type",
+        "expected to throw an error",
+      );
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        failTest(
+          "toHaveProperty with unsupported type",
+          "expected to throw an Error",
+        );
+      }
+      if (
+        !error.message.includes("only supported for objects")
+      ) {
+        failTest(
+          "toHaveProperty with unsupported type",
+          "expected error message to mention supported types",
+        );
+      }
+      passTest("toHaveProperty with unsupported type");
+    }
+  };
+
+  // Test Playwright examples
+  const playwrightExamplesTest = () => {
+    const mockAssertFn = createMockAssertFn();
+    const testExpect = expect.configure({ assertFn: mockAssertFn });
+
+    const value = {
+      a: {
+        b: [42],
+      },
+      c: true,
+    };
+
+    // Test: expect(value).toHaveProperty('a.b');
+    testExpect(value).toHaveProperty("a.b");
+    if (!mockAssertFn.called) {
+      failTest(
+        "Playwright example 1",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "Playwright example 1",
+        "expected condition to be true for a.b property",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test: expect(value).toHaveProperty('a.b', [42]);
+    testExpect(value).toHaveProperty("a.b", [42]);
+    if (!mockAssertFn.called) {
+      failTest(
+        "Playwright example 2",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "Playwright example 2",
+        "expected condition to be true for a.b property with array value",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test: expect(value).toHaveProperty('a.b[0]', 42);
+    testExpect(value).toHaveProperty("a.b[0]", 42);
+    if (!mockAssertFn.called) {
+      failTest(
+        "Playwright example 3",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "Playwright example 3",
+        "expected condition to be true for a.b[0] property with value 42",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test: expect(value).toHaveProperty('c');
+    testExpect(value).toHaveProperty("c");
+    if (!mockAssertFn.called) {
+      failTest(
+        "Playwright example 4",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "Playwright example 4",
+        "expected condition to be true for c property",
+      );
+    }
+
+    // Reset mock
+    mockAssertFn.calls = [];
+    mockAssertFn.called = false;
+
+    // Test: expect(value).toHaveProperty('c', true);
+    testExpect(value).toHaveProperty("c", true);
+    if (!mockAssertFn.called) {
+      failTest(
+        "Playwright example 5",
+        "expected assertFn to be called",
+      );
+    }
+    if (mockAssertFn.calls[0].condition !== true) {
+      failTest(
+        "Playwright example 5",
+        "expected condition to be true for c property with value true",
+      );
+    }
+
+    passTest("Playwright examples for toHaveProperty");
+  };
+
+  // Run all tests
+  simpleTest();
+  nestedTest();
+  arrayTest();
+  expectedValueTest();
+  complexTest();
+  unsupportedTest();
+  playwrightExamplesTest();
+}
+
 function testNegation() {
   // Test cases for negation
   const negationTestCases = [
@@ -573,6 +982,34 @@ function testNegation() {
       value: new Set([{ id: 1 }, { id: 2 }]),
       arg: { id: 3 },
       expectedCondition: true, // new Set([{ id: 1 }, { id: 2 }]) does not contain { id: 3 }, so this should be true
+    },
+    {
+      name: "not.toHaveProperty with missing property",
+      matcher: "toHaveProperty",
+      value: { a: 1 },
+      arg: "b",
+      expectedCondition: true, // { a: 1 } does not have property 'b', so this should be true
+    },
+    {
+      name: "not.toHaveProperty with existing property but wrong value",
+      matcher: "toHaveProperty",
+      value: { a: 1 },
+      arg: ["a", 2],
+      expectedCondition: true, // { a: 1 } has property 'a' but not with value 2, so this should be true
+    },
+    {
+      name: "not.toHaveProperty with nested missing property",
+      matcher: "toHaveProperty",
+      value: { a: { b: 1 } },
+      arg: "a.c",
+      expectedCondition: true, // { a: { b: 1 } } does not have property 'a.c', so this should be true
+    },
+    {
+      name: "not.toHaveProperty with array index out of bounds",
+      matcher: "toHaveProperty",
+      value: { a: [1, 2, 3] },
+      arg: "a[5]",
+      expectedCondition: true, // { a: [1, 2, 3] } does not have property 'a[5]', so this should be true
     },
   ];
 

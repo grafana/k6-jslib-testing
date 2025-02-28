@@ -144,25 +144,26 @@ await expect(page.locator(".button")).toBeVisible({
 
 These assertions allow to test any conditions, but do not auto-retry.
 
-| Assertion                         | Description                                                                                                                               |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `toBe(expected)`                  | Strict equality comparison                                                                                                                |
-| `toBeCloseTo(number, precision?)` | Number comparison with precision                                                                                                          |
-| `toBeDefined()`                   | Asserts a value is defined                                                                                                                |
-| `toBeFalsy()`                     | Falsy value check                                                                                                                         |
-| `toBeGreaterThan(number)`         | Greater than comparison                                                                                                                   |
-| `toBeGreaterThanOrEqual(number)`  | Greater than or equal comparison                                                                                                          |
-| `toBeInstanceOf(expected)`        | Asserts a value is an instance of a class                                                                                                 |
-| `toBeLessThan(number)`            | Less than comparison                                                                                                                      |
-| `toBeLessThanOrEqual(number)`     | Less than or equal comparison                                                                                                             |
-| `toBeNaN()`                       | Asserts a value is NaN                                                                                                                    |
-| `toBeNull()`                      | Asserts a value is null                                                                                                                   |
-| `toBeTruthy()`                    | Asserts a value is truthy                                                                                                                 |
-| `toBeUndefined()`                 | Asserts a value is undefined                                                                                                              |
-| `toEqual(expected)`               | Deep equality comparison                                                                                                                  |
-| `toHaveLength(expected)`          | Asserts a value has a length property equal to expected                                                                                   |
-| `toContain(expected)`             | When `expected` is a string, asserts the string contains a substring. When `expected` is an Array or Set, asserts it contains an element. |
-| `toContainEqual(expected)`        | Asserts an Array or Set contains a similar element                                                                                        |
+| Assertion                            | Description                                                                                                                               |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `toBe(expected)`                     | Strict equality comparison                                                                                                                |
+| `toBeCloseTo(number, precision?)`    | Number comparison with precision                                                                                                          |
+| `toBeDefined()`                      | Asserts a value is defined                                                                                                                |
+| `toBeFalsy()`                        | Falsy value check                                                                                                                         |
+| `toBeGreaterThan(number)`            | Greater than comparison                                                                                                                   |
+| `toBeGreaterThanOrEqual(number)`     | Greater than or equal comparison                                                                                                          |
+| `toBeInstanceOf(expected)`           | Asserts a value is an instance of a class                                                                                                 |
+| `toBeLessThan(number)`               | Less than comparison                                                                                                                      |
+| `toBeLessThanOrEqual(number)`        | Less than or equal comparison                                                                                                             |
+| `toBeNaN()`                          | Asserts a value is NaN                                                                                                                    |
+| `toBeNull()`                         | Asserts a value is null                                                                                                                   |
+| `toBeTruthy()`                       | Asserts a value is truthy                                                                                                                 |
+| `toBeUndefined()`                    | Asserts a value is undefined                                                                                                              |
+| `toContain(expected)`                | When `expected` is a string, asserts the string contains a substring. When `expected` is an Array or Set, asserts it contains an element. |
+| `toContainEqual(expected)`           | Asserts an Array or Set contains a similar element                                                                                        |
+| `toEqual(expected)`                  | Deep equality comparison                                                                                                                  |
+| `toHaveLength(expected)`             | Asserts a value has a length property equal to expected                                                                                   |
+| `toHaveProperty(keyPath, expected?)` | Ensures that property at provided `keyPath` exists in the object and optionally checks that property is equal to `expected`.              |
 
 #### 4. Negating matchers
 

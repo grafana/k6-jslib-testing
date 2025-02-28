@@ -1435,4 +1435,394 @@ Deno.test("NonRetryingExpectation", async (t) => {
       "Condition should be false for negated matching values",
     );
   });
+
+  await t.step("toHaveProperty with simple property", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case
+    createExpectation({ a: 1 }, config).toHaveProperty("a");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for object with property",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case
+    createExpectation({ a: 1 }, config).toHaveProperty("b");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for object without property",
+    );
+  });
+
+  await t.step("toHaveProperty with nested property", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case
+    createExpectation({ a: { b: 2 } }, config).toHaveProperty("a.b");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for object with nested property",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case
+    createExpectation({ a: { c: 2 } }, config).toHaveProperty("a.b");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for object without nested property",
+    );
+  });
+
+  await t.step("toHaveProperty with array index", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case
+    createExpectation({ a: [1, 2, 3] }, config).toHaveProperty("a[1]");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for object with array property",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case - index out of bounds
+    createExpectation({ a: [1, 2, 3] }, config).toHaveProperty("a[5]");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for array index out of bounds",
+    );
+  });
+
+  await t.step("toHaveProperty with expected value", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case
+    createExpectation({ a: 1 }, config).toHaveProperty("a", 1);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for matching property value",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case - wrong value
+    createExpectation({ a: 1 }, config).toHaveProperty("a", 2);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for non-matching property value",
+    );
+  });
+
+  await t.step("toHaveProperty with complex object", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    const complexObj = {
+      a: {
+        b: [
+          { c: 1 },
+          { c: 2 },
+        ],
+      },
+      d: true,
+    };
+
+    // Test passing cases
+    createExpectation(complexObj, config).toHaveProperty("a.b[1].c", 2);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for complex property path",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    createExpectation(complexObj, config).toHaveProperty("d", true);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for boolean property",
+    );
+  });
+
+  await t.step("toHaveProperty with unsupported type", () => {
+    let errorThrown = false;
+    let errorMessage = "";
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      // This should not be called
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    try {
+      createExpectation("string", config).toHaveProperty("length");
+    } catch (error) {
+      errorThrown = true;
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+    }
+
+    assert(errorThrown, "Error should be thrown for unsupported type");
+    assert(
+      errorMessage.includes("only supported for objects"),
+      "Error message should mention supported types",
+    );
+  });
+
+  await t.step("toHaveProperty with Playwright examples", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    const value = {
+      a: {
+        b: [42],
+      },
+      c: true,
+    };
+
+    // Test: expect(value).toHaveProperty('a.b');
+    createExpectation(value, config).toHaveProperty("a.b");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for a.b property",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test: expect(value).toHaveProperty('a.b', [42]);
+    createExpectation(value, config).toHaveProperty("a.b", [42]);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for a.b property with array value",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test: expect(value).toHaveProperty('a.b[0]', 42);
+    createExpectation(value, config).toHaveProperty("a.b[0]", 42);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for a.b[0] property with value 42",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test: expect(value).toHaveProperty('c');
+    createExpectation(value, config).toHaveProperty("c");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for c property",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test: expect(value).toHaveProperty('c', true);
+    createExpectation(value, config).toHaveProperty("c", true);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for c property with value true",
+    );
+  });
+
+  await t.step("toHaveProperty with negation", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test negation with missing property
+    createExpectation({ a: 1 }, config).not.toHaveProperty("b");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for negated missing property",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test negation with existing property
+    createExpectation({ a: 1 }, config).not.toHaveProperty("a");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for negated existing property",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test negation with expected value
+    createExpectation({ a: 1 }, config).not.toHaveProperty("a", 2);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for negated non-matching property value",
+    );
+  });
+
+  await t.step("not", () => {
+    // ... existing test ...
+  });
 });
