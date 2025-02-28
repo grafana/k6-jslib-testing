@@ -114,6 +114,14 @@ export interface NonRetryingExpectation {
    * @param expected
    */
   toHaveLength(expected: number): void;
+
+  /**
+   * Ensures that a string contains an expected substring using a case-sensitive comparison,
+   * or that an Array or Set contains an expected item.
+   *
+   * @param expected The substring or item to check for
+   */
+  toContain(expected: unknown): void;
 }
 
 /**
@@ -199,6 +207,10 @@ export function createExpectation(
   MatcherErrorRendererRegistry.register(
     "toHaveLength",
     new ToHaveLengthErrorRenderer(),
+  );
+  MatcherErrorRendererRegistry.register(
+    "toContain",
+    new ToContainErrorRenderer(),
   );
 
   const matcherConfig = {
@@ -371,6 +383,45 @@ export function createExpectation(
         expected.toString(),
         (received as Array<unknown>).length.toString(),
         matcherConfig,
+      );
+    },
+
+    toContain(expected: unknown): void {
+      let receivedType = "";
+      if (typeof received === "string") {
+        receivedType = "string";
+      } else if (Array.isArray(received)) {
+        receivedType = "array";
+      } else if (received instanceof Set) {
+        receivedType = "set";
+      } else {
+        throw new Error(
+          "toContain is only supported for strings, arrays, and sets",
+        );
+      }
+      createMatcher(
+        "toContain",
+        () => {
+          if (typeof received === "string") {
+            return received.includes(expected as string);
+          } else if (Array.isArray(received)) {
+            return received.includes(expected);
+          } else if (received instanceof Set) {
+            return Array.from(received).includes(expected);
+          } else {
+            throw new Error(
+              "toContain is only supported for strings, arrays, and sets",
+            );
+          }
+        },
+        expected,
+        received,
+        {
+          ...matcherConfig,
+          matcherSpecific: {
+            receivedType,
+          },
+        },
       );
     },
   };
@@ -739,6 +790,40 @@ export class ToHaveLengthErrorRenderer extends ExpectedReceivedMatcherRenderer {
           info.matcherSpecific?.receivedArray as string,
           "red",
         ),
+        group: 3,
+      },
+    ];
+  }
+}
+
+/**
+ * A matcher error renderer for the `toContain` matcher.
+ */
+export class ToContainErrorRenderer extends ExpectedReceivedMatcherRenderer {
+  protected getMatcherName(): string {
+    return "toContain";
+  }
+
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
+    const isNegated = info.matcherSpecific?.isNegated as boolean;
+    const receivedType = typeof info.matcherSpecific?.receivedType === "string"
+      ? info.matcherSpecific?.receivedType as string
+      : Array.isArray(JSON.parse(info.received))
+      ? "array"
+      : "string";
+
+    return [
+      {
+        label: isNegated ? "Expected not to contain" : "Expected to contain",
+        value: maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: `Received ${receivedType}`,
+        value: maybeColorize(info.received, "red"),
         group: 3,
       },
     ];

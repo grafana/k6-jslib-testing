@@ -949,6 +949,220 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assert(assertCondition, "Condition should be true for empty string");
   });
 
+  await t.step("toContain with string", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case with string
+    createExpectation("hello world", config).toContain("world");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for string containing substring",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case with string
+    createExpectation("hello world", config).toContain("universe");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for string not containing substring",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test case sensitivity
+    createExpectation("hello World", config).toContain("world");
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for case-sensitive mismatch",
+    );
+  });
+
+  await t.step("toContain with array", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case with array of primitives
+    createExpectation([1, 2, 3], config).toContain(2);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for array containing item",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case with array
+    createExpectation([1, 2, 3], config).toContain(4);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for array not containing item",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test with array of objects (reference equality)
+    const obj = { id: 1 };
+    const array = [{ id: 2 }, obj, { id: 3 }];
+
+    createExpectation(array, config).toContain(obj);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for array containing object reference",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test with array of objects (different reference but same content)
+    createExpectation(array, config).toContain({ id: 1 });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for array not containing object with same content but different reference",
+    );
+  });
+
+  await t.step("toContain with Set", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case with Set
+    const set = new Set([1, 2, 3]);
+    createExpectation(set, config).toContain(2);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for Set containing item",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case with Set
+    createExpectation(set, config).toContain(4);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for Set not containing item",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test with Set of objects (reference equality)
+    const obj = { id: 1 };
+    const objSet = new Set([{ id: 2 }, obj, { id: 3 }]);
+
+    createExpectation(objSet, config).toContain(obj);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for Set containing object reference",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test with Set of objects (different reference but same content)
+    createExpectation(objSet, config).toContain({ id: 1 });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for Set not containing object with same content but different reference",
+    );
+  });
+
+  await t.step("toContain with unsupported type", () => {
+    const config: ExpectConfig = {
+      assertFn: () => {},
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test with unsupported type
+    try {
+      createExpectation(123, config).toContain(2);
+      assert(false, "Should have thrown an error for unsupported type");
+    } catch (error) {
+      assert(
+        error instanceof Error,
+        "Should have thrown an Error for unsupported type",
+      );
+      assert(
+        error.message.includes("only supported for strings, arrays, and sets"),
+        "Error message should mention supported types",
+      );
+    }
+  });
+
   await t.step("negation with .not", () => {
     let assertCalled = false;
     let assertCondition = false;
