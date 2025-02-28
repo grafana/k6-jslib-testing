@@ -1215,4 +1215,224 @@ Deno.test("NonRetryingExpectation", async (t) => {
       "Condition should be true for double negated matching values",
     );
   });
+
+  await t.step("toContainEqual with array", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case with array of primitives
+    createExpectation([1, 2, 3], config).toContainEqual(2);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for array containing primitive item",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case with array
+    createExpectation([1, 2, 3], config).toContainEqual(4);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for array not containing item",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test with array of objects (deep equality)
+    const array = [{ id: 2 }, { id: 1 }, { id: 3 }];
+
+    createExpectation(array, config).toContainEqual({ id: 1 });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for array containing object with same content",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test with nested objects
+    const nestedArray = [
+      { user: { name: "Alice", age: 30 } },
+      { user: { name: "Bob", age: 25 } },
+    ];
+
+    createExpectation(nestedArray, config).toContainEqual({
+      user: { name: "Bob", age: 25 },
+    });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for array containing nested object with same content",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    createExpectation(nestedArray, config).toContainEqual({
+      user: { name: "Bob", age: 26 },
+    });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for array not containing nested object with different content",
+    );
+  });
+
+  await t.step("toContainEqual with Set", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test passing case with Set of primitives
+    const set = new Set([1, 2, 3]);
+    createExpectation(set, config).toContainEqual(2);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for Set containing primitive item",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test failing case with Set
+    createExpectation(set, config).toContainEqual(4);
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for Set not containing item",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test with Set of objects (deep equality)
+    const objSet = new Set([{ id: 2 }, { id: 1 }, { id: 3 }]);
+
+    createExpectation(objSet, config).toContainEqual({ id: 1 });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for Set containing object with same content",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test with nested objects
+    const nestedSet = new Set([
+      { user: { name: "Alice", age: 30 } },
+      { user: { name: "Bob", age: 25 } },
+    ]);
+
+    createExpectation(nestedSet, config).toContainEqual({
+      user: { name: "Bob", age: 25 },
+    });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for Set containing nested object with same content",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    createExpectation(nestedSet, config).toContainEqual({
+      user: { name: "Bob", age: 26 },
+    });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for Set not containing nested object with different content",
+    );
+  });
+
+  await t.step("toContainEqual with negation", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      colorize: false,
+      display: "inline",
+    };
+
+    // Test negated passing case
+    createExpectation([{ id: 1 }, { id: 2 }], config).not.toContainEqual({
+      id: 3,
+    });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      assertCondition,
+      "Condition should be true for negated non-matching values",
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+
+    // Test negated failing case
+    createExpectation([{ id: 1 }, { id: 2 }], config).not.toContainEqual({
+      id: 1,
+    });
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for negated matching values",
+    );
+  });
 });

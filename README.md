@@ -162,6 +162,7 @@ These assertions allow to test any conditions, but do not auto-retry.
 | `toEqual(expected)`               | Deep equality comparison                                                                                                                  |
 | `toHaveLength(expected)`          | Asserts a value has a length property equal to expected                                                                                   |
 | `toContain(expected)`             | When `expected` is a string, asserts the string contains a substring. When `expected` is an Array or Set, asserts it contains an element. |
+| `toContainEqual(expected)`        | Asserts an Array or Set contains a similar element                                                                                        |
 
 #### 4. Negating matchers
 
