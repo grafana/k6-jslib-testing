@@ -30,7 +30,7 @@ export interface ExpectFunction {
    * If the value argument provided to it is a Locator, the expect function will
    * return a (asynchronous) RetryingExpectation, otherwise it will return a NonRetryingExpectation.
    */
-  <T>(value: T): T extends Locator ? RetryingExpectation
+  <T>(value: T, message?: string): T extends Locator ? RetryingExpectation
     : NonRetryingExpectation;
 
   /**
@@ -39,6 +39,7 @@ export interface ExpectFunction {
    */
   soft<T>(
     value: T,
+    message?: string,
   ): T extends Locator ? RetryingExpectation : NonRetryingExpectation;
 
   /**
@@ -69,32 +70,38 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
   return Object.assign(
     function <T>(
       value: T,
+      message?: string,
     ): T extends Locator ? RetryingExpectation : NonRetryingExpectation {
       if (isLocator(value)) {
         return createRetryingExpectation(
           value as Locator,
           config,
+          message,
         ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
       } else {
         return createNonRetryingExpectation(
           value,
           config,
+          message,
         ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
       }
     },
     {
       soft<T>(
         value: T,
+        message?: string,
       ): T extends Locator ? RetryingExpectation : NonRetryingExpectation {
         if (isLocator(value)) {
           return createRetryingExpectation(
             value as Locator,
             { ...config, soft: true },
+            message,
           ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
         } else {
           return createNonRetryingExpectation(
             value,
             { ...config, soft: true },
+            message,
           ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
         }
       },
