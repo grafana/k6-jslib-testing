@@ -125,6 +125,7 @@ Deno.test("negated retrying expectations", async (t) => {
     const negatedExpectation = createExpectation(
       mockLocator as any,
       config,
+      undefined,
       true,
     );
 
@@ -194,6 +195,7 @@ Deno.test("negated retrying expectations", async (t) => {
     const expectation = createExpectation(
       mockLocator as any,
       config,
+      undefined,
       false,
     );
 
