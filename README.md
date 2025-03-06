@@ -198,14 +198,20 @@ hoping it will disappear.
 
 #### 5. Custom expect messages
 
-When writing tests, clear and informative error messages can significantly speed up debugging. You can specify a custom error message as the second argument to the expect function. This message will be displayed whenever the assertion fails, providing additional context about the failure.
+When writing tests, clear and informative error messages can significantly speed
+up debugging. You can specify a custom error message as the second argument to
+the expect function. This message will be displayed whenever the assertion
+fails, providing additional context about the failure.
 
 **Example:**
+
 ```javascript
 expect(value, "Custom message").toHaveProperty("a.b[0]", 43);
 ```
 
-If this assertion fails, the error message will clearly indicate the issue along with your custom message:
+If this assertion fails, the error message will clearly indicate the issue along
+with your custom message:
+
 ```
                      Error: Custom message
                         At: /Users/me/myProject/expectNonRetrying.ts:555:15
