@@ -81,12 +81,14 @@ export interface RetryingExpectation {
  *
  * @param locator the value to create an expectation for
  * @param config the configuration for the expectation
+ * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
  * @returns an expectation object over the given value exposing the Expectation set of methods
  */
 export function createExpectation(
   locator: Locator,
   config: ExpectConfig,
+  message?: string,
   isNegated: boolean = false,
 ): RetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
@@ -143,11 +145,12 @@ export function createExpectation(
     usedAssert,
     isSoft,
     isNegated,
+    message,
   };
 
   const expectation: RetryingExpectation = {
     get not(): RetryingExpectation {
-      return createExpectation(locator, config, !isNegated);
+      return createExpectation(locator, config, message, !isNegated);
     },
 
     async toBeChecked(
@@ -238,6 +241,7 @@ export function createExpectation(
         expected: expectedValue,
         received: "unknown",
         matcherSpecific: { isNegated },
+        customMessage: message,
       };
 
       try {
@@ -272,12 +276,13 @@ export function createExpectation(
   return expectation;
 }
 
-// Helper function to create common matcher error info
+// Helper function to create common matcher info
 function createMatcherInfo(
   matcherName: string,
   expected: string,
   received: string,
   additionalInfo = {},
+  customMessage?: string,
 ): MatcherErrorInfo {
   const stacktrace = parseStackTrace(new Error().stack);
   const executionContext = captureExecutionContext(stacktrace);
@@ -291,6 +296,7 @@ function createMatcherInfo(
     matcherName,
     expected,
     received,
+    customMessage,
     ...additionalInfo,
   };
 }
@@ -308,6 +314,7 @@ async function createMatcher(
     isSoft,
     isNegated = false,
     options = {},
+    message,
   }: {
     locator: Locator;
     retryConfig: RetryConfig;
@@ -315,6 +322,7 @@ async function createMatcher(
     isSoft: boolean;
     isNegated?: boolean;
     options?: Partial<RetryConfig>;
+    message?: string;
   },
 ): Promise<void> {
   const info = createMatcherInfo(matcherName, expected, received, {
@@ -323,7 +331,7 @@ async function createMatcher(
       timeout: options.timeout,
       isNegated,
     },
-  });
+  }, message);
 
   try {
     await withRetry(async () => {

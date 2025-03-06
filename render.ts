@@ -17,6 +17,7 @@ export interface MatcherErrorRenderer {
  */
 export interface MatcherErrorInfo extends RenderedErrorInfo {
   matcherSpecific?: Record<string, unknown>;
+  customMessage?: string;
 }
 
 /**
@@ -88,11 +89,15 @@ export abstract class BaseMatcherErrorRenderer implements MatcherErrorRenderer {
   protected abstract getMatcherName(): string;
 
   protected renderErrorLine(
-    _: RenderedErrorInfo,
+    info: RenderedErrorInfo,
     config: RenderConfig,
   ): string {
     const maybeColorize = (text: string, color: keyof typeof ANSI_COLORS) =>
       config.colorize ? colorize(text, color) : text;
+
+    if ("customMessage" in info && typeof info.customMessage === "string") {
+      return maybeColorize(info.customMessage, "white");
+    }
 
     return maybeColorize(`expect(`, "darkGrey") +
       maybeColorize(this.getReceivedPlaceholder(), "red") +

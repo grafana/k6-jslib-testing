@@ -152,12 +152,14 @@ export interface NonRetryingExpectation {
  *
  * @param received the value to create an expectation for
  * @param config the configuration for the expectation
+ * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
  * @returns an expectation object over the given value exposing the Expectation set of methods
  */
 export function createExpectation(
   received: unknown,
   config: ExpectConfig,
+  message?: string,
   isNegated: boolean = false,
 ): NonRetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
@@ -245,11 +247,12 @@ export function createExpectation(
     usedAssert,
     isSoft: config.soft,
     isNegated,
+    message,
   };
 
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
-      return createExpectation(received, config, !isNegated);
+      return createExpectation(received, config, message, !isNegated);
     },
 
     toBe(expected: unknown): void {
@@ -540,11 +543,13 @@ function createMatcher(
     isSoft,
     isNegated = false,
     matcherSpecific = {},
+    message,
   }: {
     usedAssert: typeof assert;
     isSoft: boolean;
     isNegated?: boolean;
     matcherSpecific?: Record<string, unknown>;
+    message?: string;
   },
 ): void {
   const info = createMatcherInfo(
@@ -552,6 +557,7 @@ function createMatcher(
     expected,
     received,
     { ...matcherSpecific, isNegated },
+    message,
   );
 
   const result = checkFn();
@@ -573,6 +579,7 @@ function createMatcherInfo(
   expected: string | unknown,
   received: unknown,
   matcherSpecific: Record<string, unknown> = {},
+  customMessage?: string,
 ): MatcherErrorInfo {
   const stacktrace = parseStackTrace(new Error().stack);
   const executionContext = captureExecutionContext(stacktrace);
@@ -589,6 +596,7 @@ function createMatcherInfo(
       : JSON.stringify(expected),
     received: JSON.stringify(received),
     matcherSpecific,
+    customMessage,
   };
 }
 
