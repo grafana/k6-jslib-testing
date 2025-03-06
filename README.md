@@ -196,7 +196,29 @@ example, `await expect(locator).not.toBeVisible()` will pass immediately if the
 element is hidden, but will retry until timeout if the element is visible,
 hoping it will disappear.
 
-#### 5. Configuration
+#### 5. Custom expect messages
+
+When writing tests, clear and informative error messages can significantly speed up debugging. You can specify a custom error message as the second argument to the expect function. This message will be displayed whenever the assertion fails, providing additional context about the failure.
+
+**Example:**
+```javascript
+expect(value, "Custom message").toHaveProperty("a.b[0]", 43);
+```
+
+If this assertion fails, the error message will clearly indicate the issue along with your custom message:
+```
+                     Error: Custom message
+                        At: /Users/me/myProject/expectNonRetrying.ts:555:15
+
+             Property path: a.b[0]
+Expected property to equal: 43
+           Received object: {"a":{"b":[42]},"c":true}
+
+                  Filename: expectNonRetrying.ts
+                      Line: 555
+```
+
+#### 6. Configuration
 
 You can create a new expect instance with the `.configure` method. This will
 allow you to configure the behavior of the assertions. The configuration is
