@@ -23,7 +23,7 @@ k6-testing is available as a [k6 jslib](https://jslib.k6.io). It can be directly
 imported as a dependency in your k6 script.
 
 ```sh
-import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
+import { expect } from "https://jslib.k6.io/k6-testing/0.3.0/index.js";
 ```
 
 ## Quick Start
@@ -40,7 +40,7 @@ the expectation.
 import { browser } from "k6/browser";
 import http from "k6/http";
 
-import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
+import { expect } from "https://jslib.k6.io/k6-testing/0.3.0/index.js";
 
 export const options = {
   scenarios: {
@@ -285,7 +285,7 @@ export default function () {
 ### API Testing
 
 ```javascript
-import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
+import { expect } from "https://jslib.k6.io/k6-testing/0.3.0/index.js";
 import http from "k6/http";
 
 export function setup() {
@@ -310,7 +310,7 @@ export default function () {
 ### UI Testing
 
 ```javascript
-import { expect } from "https://jslib.k6.io/k6-testing/0.2.0/index.js";
+import { expect } from "https://jslib.k6.io/k6-testing/0.3.0/index.js";
 import { browser } from "k6/browser";
 
 export const options = {
