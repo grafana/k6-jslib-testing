@@ -54,7 +54,7 @@ export function captureExecutionContext(
     return undefined;
   }
 
-  const stackFrame: StackFrame = st[1];
+  const stackFrame: StackFrame = st[st.length - 1];
 
   const filePath = stackFrame.filePath;
   const fileName = stackFrame.fileName;
