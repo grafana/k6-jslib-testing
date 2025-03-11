@@ -46,10 +46,6 @@ export interface ExecutionContext {
 export function captureExecutionContext(
   st: Stacktrace,
 ): ExecutionContext | undefined {
-  // In order to capture a useful execution context, we need at least 2 stack frames.
-  // The first frame is the current function, the second frame is the one that called it.
-  // In most cases, the first frame will be the matcher function itself, which is not useful to users.
-  // What we want is the second frame, which is the one that called the matcher.
   if (!st || st.length <= 1) {
     return undefined;
   }
