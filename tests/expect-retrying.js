@@ -82,6 +82,15 @@ const standardTestCases = [
         },
       },
       {
+        name: "string must be exact match",
+        selector: "#toHaveText",
+        assertion: async (locator) => {
+          await expect(locator).not.toHaveText(
+            "text with elements, new lines and",
+          );
+        },
+      },
+      {
         name: "regexp",
         selector: "#toHaveText",
         assertion: async (locator) => {
@@ -152,6 +161,89 @@ const standardTestCases = [
       },
     ],
   },
+  {
+    suite: "toContainText",
+    children: [
+      {
+        name: "string",
+        selector: "#toContainText",
+        assertion: async (locator) => {
+          await expect(locator).toContainText(
+            "elements, new lines",
+          );
+        },
+      },
+      {
+        name: "regexp",
+        selector: "#toContainText",
+        assertion: async (locator) => {
+          await expect(locator).toContainText(
+            /Some(.*)\n\s+new lines and(\s+)whitespaces/i,
+          );
+        },
+      },
+      {
+        suite: "useInnerText",
+        children: [
+          {
+            name: "string",
+            selector: "#toContainText",
+            assertion: async (locator) => {
+              await expect(locator).toContainText(
+                "elements, new lines",
+                { useInnerText: true },
+              );
+            },
+          },
+          {
+            name: "regexp",
+            selector: "#toContainText",
+            assertion: async (locator) => {
+              await expect(locator).toContainText(
+                /Some(.*)\s+new lines and(\s+)whitespaces/i,
+                { useInnerText: true },
+              );
+            },
+          },
+        ],
+      },
+      {
+        suite: "ignoreCase",
+        children: [
+          {
+            name: "string",
+            selector: "#toContainText",
+            assertion: async (locator) => {
+              await expect(locator).toContainText(
+                "NEW LIneS AND WHItesPACES",
+                { ignoreCase: true },
+              );
+            },
+          },
+          {
+            name: "removes 'i' from regexp",
+            selector: "#toContainText",
+            assertion: async (locator) => {
+              await expect(locator).not.toContainText(
+                /some(.*)\s+new lines and(\s+)whitespaces/i,
+                { ignoreCase: false },
+              );
+            },
+          },
+          {
+            name: "adds 'i' to regexp",
+            selector: "#toContainText",
+            assertion: async (locator) => {
+              await expect(locator).toContainText(
+                /some(.*)\s+new lines and(\s+)whitespaces/,
+                { ignoreCase: true },
+              );
+            },
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 // Then run the negation tests
@@ -204,6 +296,15 @@ const negationTestCases = [
     selector: "#toHaveText",
     assertion: async (locator) => {
       await expect(locator).not.toHaveText("This is not at all what it says!");
+    },
+  },
+  {
+    name: "not.toContainText",
+    selector: "#toContainText",
+    assertion: async (locator) => {
+      await expect(locator).not.toContainText(
+        "This is not at all what it says!",
+      );
     },
   },
   {

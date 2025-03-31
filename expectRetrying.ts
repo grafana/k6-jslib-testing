@@ -90,6 +90,11 @@ export interface RetryingExpectation {
     options?: Partial<ToHaveTextOptions>,
   ): Promise<void>;
 
+  toContainText(
+    expected: RegExp | string,
+    options?: Partial<ToHaveTextOptions>,
+  ): Promise<void>;
+
   /**
    * Ensures the Locator points to an element with the given input value. You can use regular expressions for the value as well.
    *
@@ -174,6 +179,118 @@ export function createExpectation(
     message,
   };
 
+  const createTextMatcher = (
+    matcherName: string,
+    compareFn: (actual: string, expected: string) => boolean,
+  ) => {
+    return async function toHaveText(
+      expected: RegExp | string,
+      options: Partial<ToHaveTextOptions> = {},
+    ): Promise<void> {
+      const stacktrace = parseStackTrace(new Error().stack);
+      const executionContext = captureExecutionContext(stacktrace);
+
+      if (!executionContext) {
+        throw new Error("k6 failed to capture execution context");
+      }
+
+      const checkRegExp = (expected: RegExp, actual: string) => {
+        // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
+        const regexp = options.ignoreCase !== undefined
+          ? new RegExp(expected, options.ignoreCase ? "i" : "")
+          : expected;
+
+        const info: MatcherErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: expected.toString(),
+          received: actual,
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+
+        const result = regexp.test(actual);
+
+        usedAssert(
+          isNegated ? !result : result,
+          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
+            info,
+            MatcherErrorRendererRegistry.getConfig(),
+          ),
+          isSoft,
+        );
+      };
+
+      const checkText = (expected: string, actual: string) => {
+        const normalizedExpected = normalizeWhiteSpace(expected);
+        const normalizedActual = normalizeWhiteSpace(actual);
+
+        const info: MatcherErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: normalizedExpected,
+          received: normalizedActual,
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+
+        const result = options.ignoreCase
+          ? compareFn(
+            normalizedActual.toLowerCase(),
+            normalizedExpected.toLowerCase(),
+          )
+          : compareFn(normalizedActual, normalizedExpected);
+
+        usedAssert(
+          isNegated ? !result : result,
+          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
+            info,
+            MatcherErrorRendererRegistry.getConfig(),
+          ),
+          isSoft,
+        );
+      };
+
+      try {
+        await withRetry(async () => {
+          const actualText = options.useInnerText
+            ? await locator.innerText()
+            : await locator.textContent();
+
+          if (actualText === null) {
+            throw new Error("Element has no text content");
+          }
+
+          if (expected instanceof RegExp) {
+            checkRegExp(expected, actualText);
+
+            return;
+          }
+
+          checkText(expected, actualText);
+        }, { ...retryConfig, ...options });
+      } catch (_) {
+        const info: MatcherErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: expected.toString(),
+          received: "unknown",
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+
+        usedAssert(
+          false,
+          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
+            info,
+            MatcherErrorRendererRegistry.getConfig(),
+          ),
+          isSoft,
+        );
+      }
+    };
+  };
+
   const expectation: RetryingExpectation = {
     get not(): RetryingExpectation {
       return createExpectation(locator, config, message, !isNegated);
@@ -251,109 +368,15 @@ export function createExpectation(
       );
     },
 
-    async toHaveText(
-      expected: RegExp | string,
-      options: Partial<ToHaveTextOptions> = {},
-    ): Promise<void> {
-      const stacktrace = parseStackTrace(new Error().stack);
-      const executionContext = captureExecutionContext(stacktrace);
+    toHaveText: createTextMatcher(
+      "toHaveText",
+      (actual, expected) => actual === expected,
+    ),
 
-      if (!executionContext) {
-        throw new Error("k6 failed to capture execution context");
-      }
-
-      const checkRegExp = (expected: RegExp, actual: string) => {
-        // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
-        const regexp = options.ignoreCase !== undefined
-          ? new RegExp(expected, options.ignoreCase ? "i" : "")
-          : expected;
-
-        const info: MatcherErrorInfo = {
-          executionContext,
-          matcherName: "toHaveText",
-          expected: expected.toString(),
-          received: actual,
-          matcherSpecific: { isNegated },
-          customMessage: message,
-        };
-
-        const result = regexp.test(actual);
-
-        usedAssert(
-          isNegated ? !result : result,
-          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-        );
-      };
-
-      const checkText = (expected: string, actual: string) => {
-        const normalizedExpected = normalizeWhiteSpace(expected);
-        const normalizedActual = normalizeWhiteSpace(actual);
-
-        const info: MatcherErrorInfo = {
-          executionContext,
-          matcherName: "toHaveText",
-          expected: normalizedExpected,
-          received: normalizedActual,
-          matcherSpecific: { isNegated },
-          customMessage: message,
-        };
-
-        const result = options.ignoreCase
-          ? normalizedExpected.toLowerCase() === normalizedActual.toLowerCase()
-          : normalizedExpected === normalizedActual;
-
-        usedAssert(
-          isNegated ? !result : result,
-          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-        );
-      };
-
-      try {
-        await withRetry(async () => {
-          const actualText = options.useInnerText
-            ? await locator.innerText()
-            : await locator.textContent();
-
-          if (actualText === null) {
-            throw new Error("Element has no text content");
-          }
-
-          if (expected instanceof RegExp) {
-            checkRegExp(expected, actualText);
-
-            return;
-          }
-
-          checkText(expected, actualText);
-        }, { ...retryConfig, ...options });
-      } catch (_) {
-        const info: MatcherErrorInfo = {
-          executionContext,
-          matcherName: "toHaveText",
-          expected: expected.toString(),
-          received: "unknown",
-          matcherSpecific: { isNegated },
-          customMessage: message,
-        };
-
-        usedAssert(
-          false,
-          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-        );
-      }
-    },
+    toContainText: createTextMatcher(
+      "toContainText",
+      (actual, expected) => actual.includes(expected),
+    ),
 
     async toHaveValue(
       expectedValue: string,
