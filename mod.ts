@@ -1,2 +1,4 @@
-export { expect } from "./expect.ts";
+import "./matchers/toBe.ts";
+
+export { expect } from "./newExpect.ts";
 export { colorize } from "./colors.ts";

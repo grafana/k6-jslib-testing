@@ -1,6 +1,7 @@
 import type { ExecutionContext } from "./execution.ts";
 import { type ANSI_COLORS, colorize } from "./colors.ts";
 import type { DisplayFormat, RenderConfig } from "./config.ts";
+import type { FailureReason } from "./reason.ts";
 
 /**
  * The interface that all matchers error renderers must implement.
@@ -147,6 +148,37 @@ export abstract class BaseMatcherErrorRenderer implements MatcherErrorRenderer {
     return DisplayFormatRegistry.getFormatter(config.display).renderLines(
       lines,
     );
+  }
+}
+
+export class FailureReasonErrorRenderer extends BaseMatcherErrorRenderer {
+  matcherName: string;
+  reason: FailureReason;
+
+  constructor(matcherName: string, reason: FailureReason) {
+    super();
+
+    this.matcherName = matcherName;
+    this.reason = reason;
+  }
+
+  protected override getMatcherName(): string {
+    return this.matcherName;
+  }
+
+  protected override getSpecificLines(
+    _info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
+    const reason = this.reason.format(maybeColorize);
+
+    return reason.flatMap((keyValues, group) => {
+      return Object.entries(keyValues).map(([key, value]) => ({
+        label: key,
+        value,
+        group: group + 2,
+      }));
+    });
   }
 }
 
