@@ -20,23 +20,39 @@ import {
 } from "./reason.ts";
 import { FailureReasonErrorRenderer, type MatcherErrorInfo } from "./render.ts";
 
-export interface ExpectationFailure {
-  message: Array<Record<string, string>>;
+export interface Pass {
+  passed: true;
 }
 
-export interface Expectation {
-  fail(reason: FailureReason): void;
+export interface Fail {
+  passed: false;
+  reason: FailureReason;
 }
+
+export type PassOrFail = Pass | Fail;
 
 export type MatcherFn<
   Actual = any,
   Expected extends any[] = any[],
+  Return extends Promise<PassOrFail> | PassOrFail = PassOrFail,
+> = (actual: Actual, ...expected: Expected) => Return;
+
+export type AsyncMatcherFn<Actual = any, Expected extends any[] = any[]> =
+  MatcherFn<Actual, Expected, Promise<PassOrFail>>;
+
+export type ExpectFn<
+  Expected extends any[] = any[],
   Return extends Promise<void> | void = Promise<void> | void,
-> = (expectation: Expectation, actual: Actual, ...expected: Expected) => Return;
+> = (
+  ...expected: Expected
+) => Return;
+
+type ToVoid<Return> = Return extends Promise<any> ? Promise<void>
+  : void;
 
 type ToExpectFn<Matcher> = Matcher extends
   MatcherFn<infer _Actual, infer Expected, infer Return>
-  ? (...expected: Expected) => Return
+  ? ExpectFn<Expected, ToVoid<Return>>
   : never;
 
 // deno-lint-ignore no-empty-interface
@@ -90,9 +106,7 @@ export interface GlobalExpectFunction extends ExpectFunction {
   ): void;
 }
 
-class ExpectationContext implements Expectation {
-  reason: FailureReason | null = null;
-
+interface ExpectationContext {
   name: string;
   actual: unknown;
 
@@ -102,59 +116,44 @@ class ExpectationContext implements Expectation {
   message: string | undefined;
 
   executionContext: ExecutionContext;
+}
 
-  constructor(
-    name: string,
-    actual: unknown,
-    negated: boolean,
-    config: ExpectConfig,
-    message: string | undefined,
-    executionContext: ExecutionContext,
-  ) {
-    this.name = name;
-    this.actual = actual;
-    this.negated = negated;
-    this.config = config;
-    this.message = message;
-    this.executionContext = executionContext;
+function handleResult(
+  { name, negated, config, executionContext, message }: ExpectationContext,
+  result: PassOrFail,
+) {
+  console.log("handleResult", negated, result);
+  let reason = !result.passed ? result.reason : undefined;
+
+  if (reason === undefined && negated) {
+    reason = new NegatedAssertionReason();
   }
 
-  fail(reason: FailureReason) {
-    this.reason = this.reason ?? reason;
+  const info: MatcherErrorInfo = {
+    matcherName: name,
+    received: "",
+    expected: "",
+    executionContext: executionContext,
+    customMessage: message,
+  };
 
-    return this;
-  }
+  const errorMessage = reason && new FailureReasonErrorRenderer(name, reason);
 
-  catch(error: unknown) {
-    this.fail(new UncaughtErrorReason(error));
+  const assert = config.assertFn ?? builtinAssert;
+  const passed = negated ? !result.passed : result.passed;
 
-    this.assert();
-  }
+  assert(
+    passed,
+    errorMessage?.render(info, config) ?? "Assertion failed",
+    config.soft,
+  );
+}
 
-  assert() {
-    // If we have a negated expectation and no failure, then we just fail it
-    // before doing any actual asserting.
-    if (this.negated && this.reason === null) {
-      this.fail(new NegatedAssertionReason());
-    }
-
-    const info: MatcherErrorInfo = {
-      matcherName: this.name,
-      executionContext: this.executionContext,
-      received: "",
-      expected: "",
-      customMessage: this.message,
-    };
-
-    const message = this.reason &&
-      new FailureReasonErrorRenderer(this.name, this.reason)
-        .render(info, this.config);
-
-    const assert = this.config.assertFn ?? builtinAssert;
-    const passed = this.negated ? this.reason !== null : this.reason === null;
-
-    assert(passed, message ?? "", this.config.soft);
-  }
+function handleError(context: ExpectationContext, error: unknown) {
+  handleResult(context, {
+    passed: false,
+    reason: new UncaughtErrorReason(error),
+  });
 }
 
 interface MakeApplicableMatchers<Actual> {
@@ -167,13 +166,12 @@ interface MakeApplicableMatchers<Actual> {
 function makeApplicableMatchers<Actual>(
   { actual, negated, config, message }: MakeApplicableMatchers<Actual>,
 ): ApplicableMatchers<Actual> {
-  const matchers: Record<string, MatcherFn> = {};
+  const matchers: Record<string, ExpectFn> = {};
 
   for (const [name, matcher] of Object.entries(expect.matchers)) {
     // Create matcher functions that take the expected value, passes them to the
     // corresponding matcher function and then assert the expectation. For instance,
-    // the `toEqual(expectation, actual, expected)` matcher will be transformed into
-    // `toEqual(expected)`.
+    // the `toEqual(actual, expected)` matcher will be transformed into `toEqual(expected)`.
     matchers[name] = (...args: [...unknown[]]) => {
       const stackTrace = parseStackTrace(new Error().stack);
       const executionContext = captureExecutionContext(stackTrace);
@@ -184,34 +182,34 @@ function makeApplicableMatchers<Actual>(
         );
       }
 
-      const expectation = new ExpectationContext(
+      const context: ExpectationContext = {
         name,
         actual,
         negated,
         config,
         message,
         executionContext,
-      );
+      };
 
       try {
-        const promise = matcher(expectation, actual, ...args);
+        const result = matcher(actual, ...args);
 
         // If the matcher returned a promise then we need wait for it to resolve
         // before asserting the expectation. The promise is returned to the caller
         // so that they can await it in their code.
-        if (promise instanceof Promise) {
-          return promise
-            .then(() => {
-              expectation.assert();
+        if (result instanceof Promise) {
+          return result
+            .then((result) => {
+              handleResult(context, result);
             })
             .catch((error) => {
-              expectation.catch(error);
+              handleError(context, error);
             });
         }
 
-        expectation.assert();
+        handleResult(context, result);
       } catch (error) {
-        expectation.catch(error);
+        handleError(context, error);
       }
     };
   }
@@ -283,6 +281,14 @@ function makeGlobalExpect(): GlobalExpectFunction {
       matchers[name] = matcher;
     },
   });
+}
+
+export function pass(): Pass {
+  return { passed: true };
+}
+
+export function fail(reason: FailureReason): Fail {
+  return { passed: false, reason };
 }
 
 export const expect = makeGlobalExpect();

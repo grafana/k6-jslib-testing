@@ -1,17 +1,19 @@
-import { expect } from "../newExpect.ts";
+import { expect, fail, pass } from "../newExpect.ts";
 
 declare module "../newExpect.ts" {
   export interface Matchers<Actual> {
-    toBe: MatcherFn<unknown, [unknown], void>;
+    toBe: (actual: Actual, expected: unknown) => void;
   }
 }
 
-expect.register("toBe", (expectation, actual, expected) => {
-  if (!Object.is(actual, expected)) {
-    expectation.fail({
-      format() {
-        return [];
-      },
-    });
+expect.register("toBe", (actual, expected) => {
+  if (Object.is(actual, expected)) {
+    return pass();
   }
+
+  return fail({
+    format() {
+      return [];
+    },
+  });
 });
