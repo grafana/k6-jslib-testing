@@ -153,13 +153,6 @@ function handleResult(
   );
 }
 
-function handleError(context: ExpectationContext, error: unknown) {
-  handleResult(context, {
-    passed: false,
-    reason: new UncaughtErrorReason(error),
-  });
-}
-
 interface MakeApplicableMatchers<Actual> {
   actual: Actual;
   negated: boolean;
