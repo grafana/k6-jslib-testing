@@ -87,12 +87,19 @@ export interface RetryingExpectation {
    */
   toHaveText(
     expected: RegExp | string,
-    options?: Partial<ToHaveTextOptions>,
+    options?: Partial<ToHaveTextOptions>
   ): Promise<void>;
 
+  /**
+   * Ensures that the Locator points to an element that contains the given text.
+   *
+   * If the type of `expected` is a string, both the expected and actual text will have any zero-width
+   * characters removed and whitespace characters collapsed to a single space. If the type of `expected`
+   * is a regular expression, the content of the element will be matched against the regular expression as-is.
+   */
   toContainText(
     expected: RegExp | string,
-    options?: Partial<ToHaveTextOptions>,
+    options?: Partial<ToHaveTextOptions>
   ): Promise<void>;
 
   /**
@@ -120,7 +127,7 @@ export function createExpectation(
   locator: Locator,
   config: ExpectConfig,
   message?: string,
-  isNegated: boolean = false,
+  isNegated: boolean = false
 ): RetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -143,31 +150,31 @@ export function createExpectation(
   // Register renderers specific to each matchers at initialization time.
   MatcherErrorRendererRegistry.register(
     "toBeChecked",
-    new ToBeCheckedErrorRenderer(),
+    new ToBeCheckedErrorRenderer()
   );
   MatcherErrorRendererRegistry.register(
     "toBeDisabled",
-    new ToBeDisabledErrorRenderer(),
+    new ToBeDisabledErrorRenderer()
   );
   MatcherErrorRendererRegistry.register(
     "toBeEditable",
-    new ToBeEditableErrorRenderer(),
+    new ToBeEditableErrorRenderer()
   );
   MatcherErrorRendererRegistry.register(
     "toBeEnabled",
-    new ToBeEnabledErrorRenderer(),
+    new ToBeEnabledErrorRenderer()
   );
   MatcherErrorRendererRegistry.register(
     "toBeHidden",
-    new ToBeHiddenErrorRenderer(),
+    new ToBeHiddenErrorRenderer()
   );
   MatcherErrorRendererRegistry.register(
     "toBeVisible",
-    new ToBeVisibleErrorRenderer(),
+    new ToBeVisibleErrorRenderer()
   );
   MatcherErrorRendererRegistry.register(
     "toHaveValue",
-    new ToHaveValueErrorRenderer(),
+    new ToHaveValueErrorRenderer()
   );
 
   const matcherConfig = {
@@ -181,11 +188,11 @@ export function createExpectation(
 
   const createTextMatcher = (
     matcherName: string,
-    compareFn: (actual: string, expected: string) => boolean,
+    compareFn: (actual: string, expected: string) => boolean
   ) => {
     return async function toHaveText(
       expected: RegExp | string,
-      options: Partial<ToHaveTextOptions> = {},
+      options: Partial<ToHaveTextOptions> = {}
     ): Promise<void> {
       const stacktrace = parseStackTrace(new Error().stack);
       const executionContext = captureExecutionContext(stacktrace);
@@ -196,9 +203,10 @@ export function createExpectation(
 
       const checkRegExp = (expected: RegExp, actual: string) => {
         // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
-        const regexp = options.ignoreCase !== undefined
-          ? new RegExp(expected, options.ignoreCase ? "i" : "")
-          : expected;
+        const regexp =
+          options.ignoreCase !== undefined
+            ? new RegExp(expected, options.ignoreCase ? "i" : "")
+            : expected;
 
         const info: MatcherErrorInfo = {
           executionContext,
@@ -213,11 +221,11 @@ export function createExpectation(
 
         usedAssert(
           isNegated ? !result : result,
-          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
+          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
             info,
-            MatcherErrorRendererRegistry.getConfig(),
+            MatcherErrorRendererRegistry.getConfig()
           ),
-          isSoft,
+          isSoft
         );
       };
 
@@ -236,39 +244,42 @@ export function createExpectation(
 
         const result = options.ignoreCase
           ? compareFn(
-            normalizedActual.toLowerCase(),
-            normalizedExpected.toLowerCase(),
-          )
+              normalizedActual.toLowerCase(),
+              normalizedExpected.toLowerCase()
+            )
           : compareFn(normalizedActual, normalizedExpected);
 
         usedAssert(
           isNegated ? !result : result,
-          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
+          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
             info,
-            MatcherErrorRendererRegistry.getConfig(),
+            MatcherErrorRendererRegistry.getConfig()
           ),
-          isSoft,
+          isSoft
         );
       };
 
       try {
-        await withRetry(async () => {
-          const actualText = options.useInnerText
-            ? await locator.innerText()
-            : await locator.textContent();
+        await withRetry(
+          async () => {
+            const actualText = options.useInnerText
+              ? await locator.innerText()
+              : await locator.textContent();
 
-          if (actualText === null) {
-            throw new Error("Element has no text content");
-          }
+            if (actualText === null) {
+              throw new Error("Element has no text content");
+            }
 
-          if (expected instanceof RegExp) {
-            checkRegExp(expected, actualText);
+            if (expected instanceof RegExp) {
+              checkRegExp(expected, actualText);
 
-            return;
-          }
+              return;
+            }
 
-          checkText(expected, actualText);
-        }, { ...retryConfig, ...options });
+            checkText(expected, actualText);
+          },
+          { ...retryConfig, ...options }
+        );
       } catch (_) {
         const info: MatcherErrorInfo = {
           executionContext,
@@ -283,9 +294,9 @@ export function createExpectation(
           false,
           MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
             info,
-            MatcherErrorRendererRegistry.getConfig(),
+            MatcherErrorRendererRegistry.getConfig()
           ),
-          isSoft,
+          isSoft
         );
       }
     };
@@ -297,90 +308,89 @@ export function createExpectation(
     },
 
     async toBeChecked(
-      options: Partial<RetryConfig> = retryConfig,
+      options: Partial<RetryConfig> = retryConfig
     ): Promise<void> {
       await createMatcher(
         "toBeChecked",
         async () => await locator.isChecked(),
         "checked",
         "unchecked",
-        { ...matcherConfig, options },
+        { ...matcherConfig, options }
       );
     },
 
     async toBeDisabled(
-      options: Partial<RetryConfig> = retryConfig,
+      options: Partial<RetryConfig> = retryConfig
     ): Promise<void> {
       await createMatcher(
         "toBeDisabled",
         async () => await locator.isDisabled(),
         "disabled",
         "enabled",
-        { ...matcherConfig, options },
+        { ...matcherConfig, options }
       );
     },
 
     async toBeEditable(
-      options: Partial<RetryConfig> = retryConfig,
+      options: Partial<RetryConfig> = retryConfig
     ): Promise<void> {
       await createMatcher(
         "toBeEditable",
         async () => await locator.isEditable(),
         "editable",
         "uneditable",
-        { ...matcherConfig, options },
+        { ...matcherConfig, options }
       );
     },
 
     async toBeEnabled(
-      options: Partial<RetryConfig> = retryConfig,
+      options: Partial<RetryConfig> = retryConfig
     ): Promise<void> {
       await createMatcher(
         "toBeEnabled",
         async () => await locator.isEnabled(),
         "enabled",
         "disabled",
-        { ...matcherConfig, options },
+        { ...matcherConfig, options }
       );
     },
 
     async toBeHidden(
-      options: Partial<RetryConfig> = retryConfig,
+      options: Partial<RetryConfig> = retryConfig
     ): Promise<void> {
       await createMatcher(
         "toBeHidden",
         async () => await locator.isHidden(),
         "hidden",
         "visible",
-        { ...matcherConfig, options },
+        { ...matcherConfig, options }
       );
     },
 
     async toBeVisible(
-      options: Partial<RetryConfig> = retryConfig,
+      options: Partial<RetryConfig> = retryConfig
     ): Promise<void> {
       await createMatcher(
         "toBeVisible",
         async () => await locator.isVisible(),
         "visible",
         "hidden",
-        { ...matcherConfig, options },
+        { ...matcherConfig, options }
       );
     },
 
     toHaveText: createTextMatcher(
       "toHaveText",
-      (actual, expected) => actual === expected,
+      (actual, expected) => actual === expected
     ),
 
-    toContainText: createTextMatcher(
-      "toContainText",
-      (actual, expected) => actual.includes(expected),
+    toContainText: createTextMatcher("toContainText", (actual, expected) =>
+      actual.includes(expected)
     ),
 
     async toHaveValue(
       expectedValue: string,
-      options: Partial<RetryConfig> = retryConfig,
+      options: Partial<RetryConfig> = retryConfig
     ): Promise<void> {
       const stacktrace = parseStackTrace(new Error().stack);
       const executionContext = captureExecutionContext(stacktrace);
@@ -398,29 +408,32 @@ export function createExpectation(
       };
 
       try {
-        await withRetry(async () => {
-          const actualValue = await locator.inputValue();
-          const result = expectedValue === actualValue;
-          // If isNegated is true, we want to invert the result
-          const finalResult = isNegated ? !result : result;
+        await withRetry(
+          async () => {
+            const actualValue = await locator.inputValue();
+            const result = expectedValue === actualValue;
+            // If isNegated is true, we want to invert the result
+            const finalResult = isNegated ? !result : result;
 
-          usedAssert(
-            finalResult,
-            MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
-              info,
-              MatcherErrorRendererRegistry.getConfig(),
-            ),
-            isSoft,
-          );
-        }, { ...retryConfig, ...options });
+            usedAssert(
+              finalResult,
+              MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
+                info,
+                MatcherErrorRendererRegistry.getConfig()
+              ),
+              isSoft
+            );
+          },
+          { ...retryConfig, ...options }
+        );
       } catch (_) {
         usedAssert(
           false,
           MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
             info,
-            MatcherErrorRendererRegistry.getConfig(),
+            MatcherErrorRendererRegistry.getConfig()
           ),
-          isSoft,
+          isSoft
         );
       }
     },
@@ -435,7 +448,7 @@ function createMatcherInfo(
   expected: string,
   received: string,
   additionalInfo = {},
-  customMessage?: string,
+  customMessage?: string
 ): MatcherErrorInfo {
   const stacktrace = parseStackTrace(new Error().stack);
   const executionContext = captureExecutionContext(stacktrace);
@@ -476,43 +489,52 @@ async function createMatcher(
     isNegated?: boolean;
     options?: Partial<RetryConfig>;
     message?: string;
-  },
+  }
 ): Promise<void> {
-  const info = createMatcherInfo(matcherName, expected, received, {
-    matcherSpecific: {
-      locator,
-      timeout: options.timeout,
-      isNegated,
+  const info = createMatcherInfo(
+    matcherName,
+    expected,
+    received,
+    {
+      matcherSpecific: {
+        locator,
+        timeout: options.timeout,
+        isNegated,
+      },
     },
-  }, message);
+    message
+  );
 
   try {
-    await withRetry(async () => {
-      const result = await checkFn();
-      // If isNegated is true, we want to invert the result
-      const finalResult = isNegated ? !result : result;
+    await withRetry(
+      async () => {
+        const result = await checkFn();
+        // If isNegated is true, we want to invert the result
+        const finalResult = isNegated ? !result : result;
 
-      if (!finalResult) {
-        throw new Error("matcher failed");
-      }
+        if (!finalResult) {
+          throw new Error("matcher failed");
+        }
 
-      usedAssert(
-        finalResult,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-      );
-    }, { ...retryConfig, ...options });
+        usedAssert(
+          finalResult,
+          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+            info,
+            MatcherErrorRendererRegistry.getConfig()
+          ),
+          isSoft
+        );
+      },
+      { ...retryConfig, ...options }
+    );
   } catch (_) {
     usedAssert(
       false,
       MatcherErrorRendererRegistry.getRenderer(matcherName).render(
         info,
-        MatcherErrorRendererRegistry.getConfig(),
+        MatcherErrorRendererRegistry.getConfig()
       ),
-      isSoft,
+      isSoft
     );
   }
 }
@@ -520,8 +542,7 @@ async function createMatcher(
 /**
  * Base class for boolean state matchers (checked, disabled, etc.)
  */
-export abstract class BooleanStateErrorRenderer
-  extends ReceivedOnlyMatcherRenderer {
+export abstract class BooleanStateErrorRenderer extends ReceivedOnlyMatcherRenderer {
   protected abstract state: string;
   protected abstract oppositeState: string;
 
@@ -535,7 +556,7 @@ export abstract class BooleanStateErrorRenderer
 
   protected override getSpecificLines(
     info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string
   ): LineGroup[] {
     return [
       { label: "Expected", value: this.state, group: 3 },
@@ -544,10 +565,10 @@ export abstract class BooleanStateErrorRenderer
       {
         label: "",
         value: maybeColorize(
-          `  - expect.toBe${this.state[0].toUpperCase()}${
-            this.state.slice(1)
-          } with timeout ${info.matcherSpecific?.timeout}ms`,
-          "darkGrey",
+          `  - expect.toBe${this.state[0].toUpperCase()}${this.state.slice(
+            1
+          )} with timeout ${info.matcherSpecific?.timeout}ms`,
+          "darkGrey"
         ),
         group: 3,
         raw: true,
@@ -602,7 +623,7 @@ export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
 
   protected override getSpecificLines(
     info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string
   ): LineGroup[] {
     return [
       // FIXME (@oleiade): When k6/#4210 is fixed, we can use the locator here.
@@ -622,7 +643,7 @@ export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
         label: "",
         value: maybeColorize(
           `  - expect.toHaveValue with timeout ${info.matcherSpecific?.timeout}ms`,
-          "darkGrey",
+          "darkGrey"
         ),
         group: 3,
         raw: true,
@@ -651,12 +672,13 @@ export async function withRetry(
     // Optional test hooks - only used in testing
     _now?: () => number;
     _sleep?: (ms: number) => Promise<void>;
-  } = {},
-): Promise<void> {
+  } = {}
+): Promise<boolean> {
   const timeout: number = options.timeout ?? DEFAULT_RETRY_OPTIONS.timeout;
   const interval: number = options.interval ?? DEFAULT_RETRY_OPTIONS.interval;
   const getNow = options._now ?? (() => Date.now());
-  const sleep = options._sleep ??
+  const sleep =
+    options._sleep ??
     ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
 
   const startTime: number = getNow();
@@ -665,7 +687,7 @@ export async function withRetry(
     try {
       await assertion();
 
-      return;
+      return true;
     } catch (_error) {
       // Ignore error and continue retrying
     }
@@ -674,7 +696,7 @@ export async function withRetry(
   }
 
   throw new RetryTimeoutError(
-    `Expect condition not met within ${timeout}ms timeout`,
+    `Expect condition not met within ${timeout}ms timeout`
   );
 }
 
