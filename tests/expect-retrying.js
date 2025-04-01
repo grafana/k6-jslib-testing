@@ -74,10 +74,10 @@ const standardTestCases = [
     children: [
       {
         name: "string",
-        selector: "#toHaveText",
+        selector: "section",
         assertion: async (locator) => {
           await expect(locator).toHaveText(
-            "Some text with elements, new lines and whitespaces",
+            "Some text with elements, new lines and whitespaces"
           );
         },
       },
@@ -86,7 +86,7 @@ const standardTestCases = [
         selector: "#toHaveText",
         assertion: async (locator) => {
           await expect(locator).not.toHaveText(
-            "text with elements, new lines and",
+            "text with elements, new lines and"
           );
         },
       },
@@ -95,7 +95,7 @@ const standardTestCases = [
         selector: "#toHaveText",
         assertion: async (locator) => {
           await expect(locator).toHaveText(
-            /Some(.*)\n\s+new lines and(\s+)whitespaces/i,
+            /Some(.*)\n\s+new lines and(\s+)whitespaces/i
           );
         },
       },
@@ -108,7 +108,7 @@ const standardTestCases = [
             assertion: async (locator) => {
               await expect(locator).toHaveText(
                 "Some text with elements, new lines and whitespaces",
-                { useInnerText: true },
+                { useInnerText: true }
               );
             },
           },
@@ -118,7 +118,7 @@ const standardTestCases = [
             assertion: async (locator) => {
               await expect(locator).toHaveText(
                 /Some(.*)\s+new lines and(\s+)whitespaces/i,
-                { useInnerText: true },
+                { useInnerText: true }
               );
             },
           },
@@ -133,7 +133,7 @@ const standardTestCases = [
             assertion: async (locator) => {
               await expect(locator).toHaveText(
                 "SOmE TEXt wITH ELEmENTS, NEW LIneS AND WHItesPACES",
-                { ignoreCase: true },
+                { ignoreCase: true }
               );
             },
           },
@@ -143,7 +143,7 @@ const standardTestCases = [
             assertion: async (locator) => {
               await expect(locator).not.toHaveText(
                 /some(.*)\s+new lines and(\s+)whitespaces/i,
-                { ignoreCase: false },
+                { ignoreCase: false }
               );
             },
           },
@@ -153,7 +153,7 @@ const standardTestCases = [
             assertion: async (locator) => {
               await expect(locator).toHaveText(
                 /some(.*)\s+new lines and(\s+)whitespaces/,
-                { ignoreCase: true },
+                { ignoreCase: true }
               );
             },
           },
@@ -168,9 +168,7 @@ const standardTestCases = [
         name: "string",
         selector: "#toContainText",
         assertion: async (locator) => {
-          await expect(locator).toContainText(
-            "elements, new lines",
-          );
+          await expect(locator).toContainText("elements, new lines");
         },
       },
       {
@@ -178,7 +176,7 @@ const standardTestCases = [
         selector: "#toContainText",
         assertion: async (locator) => {
           await expect(locator).toContainText(
-            /Some(.*)\n\s+new lines and(\s+)whitespaces/i,
+            /Some(.*)\n\s+new lines and(\s+)whitespaces/i
           );
         },
       },
@@ -189,10 +187,9 @@ const standardTestCases = [
             name: "string",
             selector: "#toContainText",
             assertion: async (locator) => {
-              await expect(locator).toContainText(
-                "elements, new lines",
-                { useInnerText: true },
-              );
+              await expect(locator).toContainText("elements, new lines", {
+                useInnerText: true,
+              });
             },
           },
           {
@@ -201,7 +198,7 @@ const standardTestCases = [
             assertion: async (locator) => {
               await expect(locator).toContainText(
                 /Some(.*)\s+new lines and(\s+)whitespaces/i,
-                { useInnerText: true },
+                { useInnerText: true }
               );
             },
           },
@@ -214,10 +211,9 @@ const standardTestCases = [
             name: "string",
             selector: "#toContainText",
             assertion: async (locator) => {
-              await expect(locator).toContainText(
-                "NEW LIneS AND WHItesPACES",
-                { ignoreCase: true },
-              );
+              await expect(locator).toContainText("NEW LIneS AND WHItesPACES", {
+                ignoreCase: true,
+              });
             },
           },
           {
@@ -226,7 +222,7 @@ const standardTestCases = [
             assertion: async (locator) => {
               await expect(locator).not.toContainText(
                 /some(.*)\s+new lines and(\s+)whitespaces/i,
-                { ignoreCase: false },
+                { ignoreCase: false }
               );
             },
           },
@@ -236,7 +232,7 @@ const standardTestCases = [
             assertion: async (locator) => {
               await expect(locator).toContainText(
                 /some(.*)\s+new lines and(\s+)whitespaces/,
-                { ignoreCase: true },
+                { ignoreCase: true }
               );
             },
           },
@@ -303,7 +299,7 @@ const negationTestCases = [
     selector: "#toContainText",
     assertion: async (locator) => {
       await expect(locator).not.toContainText(
-        "This is not at all what it says!",
+        "This is not at all what it says!"
       );
     },
   },

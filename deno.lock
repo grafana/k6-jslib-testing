@@ -13,7 +13,7 @@
     "jsr:@std/net@^1.0.4": "1.0.4",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/streams@^1.0.8": "1.0.8",
-    "npm:@types/k6@^1.0.2": "1.0.2",
+    "npm:@types/k6@~0.57.1": "0.57.1",
     "npm:@types/node@*": "18.16.19",
     "npm:create-playwright@*": "1.17.134",
     "npm:esbuild@0.25": "0.25.0",
@@ -144,8 +144,8 @@
     "@esbuild/win32-x64@0.25.0": {
       "integrity": "sha512-ZENoHJBxA20C2zFzh6AI4fT6RraMzjYw4xKWemRTRmRVtN9c5DcH9r/f2ihEkMjOW5eGgrwCslG/+Y/3bL+DHQ=="
     },
-    "@types/k6@1.0.2": {
-      "integrity": "sha512-bpja1c7OXIJk06aPGN+Aw5f3QhP0PjvgX2Fwfa3rJUaUI+O1ZE3491g9hMjhH21ZlTaAhz7h6veyxaz/RqPUTg=="
+    "@types/k6@0.57.1": {
+      "integrity": "sha512-S/p2RQAYUBXyYROkR2fgeON/LaxJ0YR+KIlnPQW/TOeLBXD7tX4RfDSWaIecuDTWKblmc6UwANyP0e5QDZPhMw=="
     },
     "@types/node@18.16.19": {
       "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA=="
@@ -256,7 +256,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@^1.0.11",
-      "npm:@types/k6@^1.0.2",
+      "npm:@types/k6@~0.57.1",
       "npm:esbuild@0.25",
       "npm:k6@^0.0.0"
     ]
