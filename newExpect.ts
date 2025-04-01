@@ -63,7 +63,11 @@ export interface Matchers<Actual> {
 }
 
 export type AnyMatchers = {
-  [Name in keyof Matchers<any>]: MatcherFn<unknown, unknown[]>;
+  [Name in keyof Matchers<any>]: MatcherFn<
+    unknown,
+    unknown[],
+    PassOrFail | Promise<PassOrFail>
+  >;
 };
 
 export type ApplicableMatchers<Actual> =
@@ -122,7 +126,6 @@ function handleResult(
   { name, negated, config, executionContext, message }: ExpectationContext,
   result: PassOrFail,
 ) {
-  console.log("handleResult", negated, result);
   let reason = !result.passed ? result.reason : undefined;
 
   if (reason === undefined && negated) {
@@ -138,10 +141,11 @@ function handleResult(
   };
 
   const errorMessage = reason && new FailureReasonErrorRenderer(name, reason);
-
+  console.log("negated", negated);
   const assert = config.assertFn ?? builtinAssert;
   const passed = negated ? !result.passed : result.passed;
-
+  console.log("result", result);
+  console.log("passed", passed);
   assert(
     passed,
     errorMessage?.render(info, config) ?? "Assertion failed",
@@ -191,26 +195,28 @@ function makeApplicableMatchers<Actual>(
         executionContext,
       };
 
+      let result: Promise<PassOrFail> | PassOrFail = pass();
+
       try {
-        const result = matcher(actual, ...args);
-
-        // If the matcher returned a promise then we need wait for it to resolve
-        // before asserting the expectation. The promise is returned to the caller
-        // so that they can await it in their code.
-        if (result instanceof Promise) {
-          return result
-            .then((result) => {
-              handleResult(context, result);
-            })
-            .catch((error) => {
-              handleError(context, error);
-            });
-        }
-
-        handleResult(context, result);
+        result = matcher(actual, ...args);
       } catch (error) {
-        handleError(context, error);
+        result = fail(new UncaughtErrorReason(error));
       }
+
+      // If the matcher returned a promise then we need wait for it to resolve
+      // before asserting the expectation. The promise is returned to the caller
+      // so that they can await it in their code.
+      if (result instanceof Promise) {
+        return result
+          .catch((error) => {
+            return fail(new UncaughtErrorReason(error));
+          })
+          .then((result) => {
+            handleResult(context, result);
+          });
+      }
+
+      handleResult(context, result);
     };
   }
 
