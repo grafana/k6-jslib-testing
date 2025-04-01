@@ -17,7 +17,7 @@ const TEST_CASES = [
     value: true,
     arg: true,
     expectedCondition: true,
-  }, 
+  },
   {
     name: "toBeCloseTo",
     matcher: "toBeCloseTo",
