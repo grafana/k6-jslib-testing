@@ -408,24 +408,21 @@ export function createExpectation(
       };
 
       try {
-        await withRetry(
-          async () => {
-            const actualValue = await locator.inputValue();
-            const result = expectedValue === actualValue;
-            // If isNegated is true, we want to invert the result
-            const finalResult = isNegated ? !result : result;
+        await withRetry(async () => {
+          const actualValue = await locator.inputValue();
+          const result = expectedValue === actualValue;
+          // If isNegated is true, we want to invert the result
+          const finalResult = isNegated ? !result : result;
 
-            usedAssert(
-              finalResult,
-              MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
-                info,
-                MatcherErrorRendererRegistry.getConfig(),
-              ),
-              isSoft,
-            );
-          },
-          { ...retryConfig, ...options },
-        );
+          usedAssert(
+            finalResult,
+            MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
+              info,
+              MatcherErrorRendererRegistry.getConfig(),
+            ),
+            isSoft,
+          );
+        }, { ...retryConfig, ...options });
       } catch (_) {
         usedAssert(
           false,
@@ -491,42 +488,33 @@ async function createMatcher(
     message?: string;
   },
 ): Promise<void> {
-  const info = createMatcherInfo(
-    matcherName,
-    expected,
-    received,
-    {
-      matcherSpecific: {
-        locator,
-        timeout: options.timeout,
-        isNegated,
-      },
+  const info = createMatcherInfo(matcherName, expected, received, {
+    matcherSpecific: {
+      locator,
+      timeout: options.timeout,
+      isNegated,
     },
-    message,
-  );
+  }, message);
 
   try {
-    await withRetry(
-      async () => {
-        const result = await checkFn();
-        // If isNegated is true, we want to invert the result
-        const finalResult = isNegated ? !result : result;
+    await withRetry(async () => {
+      const result = await checkFn();
+      // If isNegated is true, we want to invert the result
+      const finalResult = isNegated ? !result : result;
 
-        if (!finalResult) {
-          throw new Error("matcher failed");
-        }
+      if (!finalResult) {
+        throw new Error("matcher failed");
+      }
 
-        usedAssert(
-          finalResult,
-          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-        );
-      },
-      { ...retryConfig, ...options },
-    );
+      usedAssert(
+        finalResult,
+        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
+        ),
+        isSoft,
+      );
+    }, { ...retryConfig, ...options });
   } catch (_) {
     usedAssert(
       false,
@@ -567,9 +555,7 @@ export abstract class BooleanStateErrorRenderer
         label: "",
         value: maybeColorize(
           `  - expect.toBe${this.state[0].toUpperCase()}${
-            this.state.slice(
-              1,
-            )
+            this.state.slice(1)
           } with timeout ${info.matcherSpecific?.timeout}ms`,
           "darkGrey",
         ),
@@ -688,7 +674,6 @@ export async function withRetry(
   while (getNow() - startTime < timeout) {
     try {
       await assertion();
-
       return true;
     } catch (_error) {
       // Ignore error and continue retrying
