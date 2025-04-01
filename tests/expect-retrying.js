@@ -74,7 +74,7 @@ const standardTestCases = [
     children: [
       {
         name: "string",
-        selector: "section",
+        selector: "#toHaveText",
         assertion: async (locator) => {
           await expect(locator).toHaveText(
             "Some text with elements, new lines and whitespaces",
