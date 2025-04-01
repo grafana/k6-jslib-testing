@@ -14,7 +14,7 @@ import {
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 import { parseStackTrace } from "./stacktrace.ts";
-import type { Locator } from "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/refs/heads/master/types/k6/browser/index.d.ts";
+import type { Locator } from "k6/browser";
 
 /**
  * RetryingExpectation is an interface that defines the methods that can be used to create a retrying expectation.
