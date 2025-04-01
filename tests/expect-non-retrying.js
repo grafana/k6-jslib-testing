@@ -212,14 +212,14 @@ function runTest(testCase) {
   if (mockAssertFn.calls[0].condition !== testCase.expectedCondition) {
     failTest(
       testCase.name,
-      `expected assertFn condition to be ${testCase.expectedCondition}`
+      `expected assertFn condition to be ${testCase.expectedCondition}`,
     );
   }
 
   if (mockAssertFn.calls[0].soft !== false) {
     failTest(
       testCase.name,
-      "expected assertFn to be called with soft === false"
+      "expected assertFn to be called with soft === false",
     );
   }
 
@@ -248,7 +248,7 @@ function testToBeInstanceOf() {
   if (mockAssertFn.calls[0].soft !== false) {
     failTest(
       "toBeInstanceOf",
-      "expected assertFn to be called with soft === false"
+      "expected assertFn to be called with soft === false",
     );
   }
 
@@ -269,7 +269,7 @@ function testToContain() {
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toContain with string",
-        "expected condition to be true for string containing substring"
+        "expected condition to be true for string containing substring",
       );
     }
 
@@ -285,7 +285,7 @@ function testToContain() {
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toContain with string",
-        "expected condition to be false for string not containing substring"
+        "expected condition to be false for string not containing substring",
       );
     }
 
@@ -305,7 +305,7 @@ function testToContain() {
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toContain with array",
-        "expected condition to be true for array containing item"
+        "expected condition to be true for array containing item",
       );
     }
 
@@ -321,7 +321,7 @@ function testToContain() {
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toContain with array",
-        "expected condition to be false for array not containing item"
+        "expected condition to be false for array not containing item",
       );
     }
 
@@ -341,7 +341,7 @@ function testToContain() {
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toContain with Set",
-        "expected condition to be true for Set containing item"
+        "expected condition to be true for Set containing item",
       );
     }
 
@@ -357,7 +357,7 @@ function testToContain() {
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toContain with Set",
-        "expected condition to be false for Set not containing item"
+        "expected condition to be false for Set not containing item",
       );
     }
 
@@ -376,7 +376,7 @@ function testToContain() {
       if (!(error instanceof Error)) {
         failTest(
           "toContain with unsupported type",
-          "expected to throw an Error"
+          "expected to throw an Error",
         );
       }
       if (
@@ -384,7 +384,7 @@ function testToContain() {
       ) {
         failTest(
           "toContain with unsupported type",
-          "expected error message to mention supported types"
+          "expected error message to mention supported types",
         );
       }
       passTest("toContain with unsupported type");
@@ -412,7 +412,7 @@ function testToContainEqual() {
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toContainEqual with array",
-        "expected condition to be true for array containing primitive item"
+        "expected condition to be true for array containing primitive item",
       );
     }
 
@@ -428,7 +428,7 @@ function testToContainEqual() {
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toContainEqual with array",
-        "expected condition to be false for array not containing item"
+        "expected condition to be false for array not containing item",
       );
     }
 
@@ -441,13 +441,13 @@ function testToContainEqual() {
     if (!mockAssertFn.called) {
       failTest(
         "toContainEqual with array objects",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toContainEqual with array objects",
-        "expected condition to be true for array containing object with same content"
+        "expected condition to be true for array containing object with same content",
       );
     }
 
@@ -467,7 +467,7 @@ function testToContainEqual() {
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toContainEqual with Set",
-        "expected condition to be true for Set containing primitive item"
+        "expected condition to be true for Set containing primitive item",
       );
     }
 
@@ -483,7 +483,7 @@ function testToContainEqual() {
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toContainEqual with Set",
-        "expected condition to be false for Set not containing item"
+        "expected condition to be false for Set not containing item",
       );
     }
 
@@ -498,13 +498,13 @@ function testToContainEqual() {
     if (!mockAssertFn.called) {
       failTest(
         "toContainEqual with Set objects",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toContainEqual with Set objects",
-        "expected condition to be true for Set containing object with same content"
+        "expected condition to be true for Set containing object with same content",
       );
     }
 
@@ -520,19 +520,21 @@ function testToContainEqual() {
       testExpect("string").toContainEqual("s");
       failTest(
         "toContainEqual with unsupported type",
-        "expected to throw an error"
+        "expected to throw an error",
       );
     } catch (error) {
       if (!(error instanceof Error)) {
         failTest(
           "toContainEqual with unsupported type",
-          "expected to throw an Error"
+          "expected to throw an Error",
         );
       }
-      if (!error.message.includes("only supported for arrays and sets")) {
+      if (
+        !error.message.includes("only supported for arrays and sets")
+      ) {
         failTest(
           "toContainEqual with unsupported type",
-          "expected error message to mention supported types"
+          "expected error message to mention supported types",
         );
       }
       passTest("toContainEqual with unsupported type");
@@ -556,13 +558,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with simple property",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toHaveProperty with simple property",
-        "expected condition to be true for object with property"
+        "expected condition to be true for object with property",
       );
     }
 
@@ -575,13 +577,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with missing property",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toHaveProperty with missing property",
-        "expected condition to be false for object without property"
+        "expected condition to be false for object without property",
       );
     }
 
@@ -598,13 +600,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with nested property",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toHaveProperty with nested property",
-        "expected condition to be true for object with nested property"
+        "expected condition to be true for object with nested property",
       );
     }
 
@@ -617,13 +619,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with missing nested property",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toHaveProperty with missing nested property",
-        "expected condition to be false for object without nested property"
+        "expected condition to be false for object without nested property",
       );
     }
 
@@ -640,13 +642,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with array index",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toHaveProperty with array index",
-        "expected condition to be true for object with array property"
+        "expected condition to be true for object with array property",
       );
     }
 
@@ -659,13 +661,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with out of bounds index",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toHaveProperty with out of bounds index",
-        "expected condition to be false for array index out of bounds"
+        "expected condition to be false for array index out of bounds",
       );
     }
 
@@ -682,13 +684,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with expected value",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toHaveProperty with expected value",
-        "expected condition to be true for matching property value"
+        "expected condition to be true for matching property value",
       );
     }
 
@@ -701,13 +703,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with wrong expected value",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== false) {
       failTest(
         "toHaveProperty with wrong expected value",
-        "expected condition to be false for non-matching property value"
+        "expected condition to be false for non-matching property value",
       );
     }
 
@@ -721,7 +723,10 @@ function testToHaveProperty() {
 
     const complexObj = {
       a: {
-        b: [{ c: 1 }, { c: 2 }],
+        b: [
+          { c: 1 },
+          { c: 2 },
+        ],
       },
       d: true,
     };
@@ -731,13 +736,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with complex path",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toHaveProperty with complex path",
-        "expected condition to be true for complex property path"
+        "expected condition to be true for complex property path",
       );
     }
 
@@ -749,13 +754,13 @@ function testToHaveProperty() {
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with boolean value",
-        "expected assertFn to be called"
+        "expected assertFn to be called",
       );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "toHaveProperty with boolean value",
-        "expected condition to be true for boolean property"
+        "expected condition to be true for boolean property",
       );
     }
 
@@ -771,19 +776,21 @@ function testToHaveProperty() {
       testExpect("string").toHaveProperty("length");
       failTest(
         "toHaveProperty with unsupported type",
-        "expected to throw an error"
+        "expected to throw an error",
       );
     } catch (error) {
       if (!(error instanceof Error)) {
         failTest(
           "toHaveProperty with unsupported type",
-          "expected to throw an Error"
+          "expected to throw an Error",
         );
       }
-      if (!error.message.includes("only supported for objects")) {
+      if (
+        !error.message.includes("only supported for objects")
+      ) {
         failTest(
           "toHaveProperty with unsupported type",
-          "expected error message to mention supported types"
+          "expected error message to mention supported types",
         );
       }
       passTest("toHaveProperty with unsupported type");
@@ -805,12 +812,15 @@ function testToHaveProperty() {
     // Test: expect(value).toHaveProperty('a.b');
     testExpect(value).toHaveProperty("a.b");
     if (!mockAssertFn.called) {
-      failTest("Playwright example 1", "expected assertFn to be called");
+      failTest(
+        "Playwright example 1",
+        "expected assertFn to be called",
+      );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "Playwright example 1",
-        "expected condition to be true for a.b property"
+        "expected condition to be true for a.b property",
       );
     }
 
@@ -821,12 +831,15 @@ function testToHaveProperty() {
     // Test: expect(value).toHaveProperty('a.b', [42]);
     testExpect(value).toHaveProperty("a.b", [42]);
     if (!mockAssertFn.called) {
-      failTest("Playwright example 2", "expected assertFn to be called");
+      failTest(
+        "Playwright example 2",
+        "expected assertFn to be called",
+      );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "Playwright example 2",
-        "expected condition to be true for a.b property with array value"
+        "expected condition to be true for a.b property with array value",
       );
     }
 
@@ -837,12 +850,15 @@ function testToHaveProperty() {
     // Test: expect(value).toHaveProperty('a.b[0]', 42);
     testExpect(value).toHaveProperty("a.b[0]", 42);
     if (!mockAssertFn.called) {
-      failTest("Playwright example 3", "expected assertFn to be called");
+      failTest(
+        "Playwright example 3",
+        "expected assertFn to be called",
+      );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "Playwright example 3",
-        "expected condition to be true for a.b[0] property with value 42"
+        "expected condition to be true for a.b[0] property with value 42",
       );
     }
 
@@ -853,12 +869,15 @@ function testToHaveProperty() {
     // Test: expect(value).toHaveProperty('c');
     testExpect(value).toHaveProperty("c");
     if (!mockAssertFn.called) {
-      failTest("Playwright example 4", "expected assertFn to be called");
+      failTest(
+        "Playwright example 4",
+        "expected assertFn to be called",
+      );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "Playwright example 4",
-        "expected condition to be true for c property"
+        "expected condition to be true for c property",
       );
     }
 
@@ -869,12 +888,15 @@ function testToHaveProperty() {
     // Test: expect(value).toHaveProperty('c', true);
     testExpect(value).toHaveProperty("c", true);
     if (!mockAssertFn.called) {
-      failTest("Playwright example 5", "expected assertFn to be called");
+      failTest(
+        "Playwright example 5",
+        "expected assertFn to be called",
+      );
     }
     if (mockAssertFn.calls[0].condition !== true) {
       failTest(
         "Playwright example 5",
-        "expected condition to be true for c property with value true"
+        "expected condition to be true for c property with value true",
       );
     }
 
@@ -1017,7 +1039,7 @@ function testNegation() {
     if (mockAssertFn.calls[0].condition !== testCase.expectedCondition) {
       failTest(
         testCase.name,
-        `expected assertFn condition to be ${testCase.expectedCondition}`
+        `expected assertFn condition to be ${testCase.expectedCondition}`,
       );
     }
 
