@@ -291,4 +291,4 @@ export function fail(reason: FailureReason): Fail {
   return { passed: false, reason };
 }
 
-export const expect = makeGlobalExpect();
+export const expect: GlobalExpectFunction = makeGlobalExpect();
