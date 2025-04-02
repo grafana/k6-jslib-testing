@@ -22,20 +22,15 @@
         "deno.lint": true,
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "denoland.vscode-deno",
-        "[typescript]": { "editor.defaultFormatter": "denoland.vscode-deno" }
+        "[typescript]": { "editor.defaultFormatter": "denoland.vscode-deno" },
+        "[javascript]": { "editor.defaultFormatter": "denoland.vscode-deno" }
       },
-      "extensions": [
-        "github.vscode-github-actions",
-        "denoland.vscode-deno"
-      ]
+      "extensions": ["github.vscode-github-actions", "denoland.vscode-deno"]
     }
   },
 
   // Use 'runArgs' to pass environment variables to the container.
-  "runArgs": [
-    "--env-file",
-    ".devcontainer/devcontainer.env"
-  ],
+  "runArgs": ["--env-file", ".devcontainer/devcontainer.env"],
 
   // Ensure `deno install` is ran when the container is created
   "postCreateCommand": "deno install"
