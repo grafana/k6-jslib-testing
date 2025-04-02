@@ -206,14 +206,14 @@ export function createExpectation(
         const regexp = options.ignoreCase !== undefined
           ? new RegExp(
             expected.source,
-            expected.flags.replace("i", "") + options.ignoreCase ? "i" : "",
+            expected.flags.replace("i", "") + (options.ignoreCase ? "i" : ""),
           )
           : expected;
 
         const info: MatcherErrorInfo = {
           executionContext,
           matcherName,
-          expected: expected.toString(),
+          expected: regexp.toString(),
           received: actual,
           matcherSpecific: { isNegated },
           customMessage: message,
