@@ -1,4 +1,4 @@
-import type { Locator } from "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/refs/heads/master/types/k6/browser/index.d.ts";
+import type { Locator } from "k6/browser";
 import { ConfigLoader, type ExpectConfig } from "./config.ts";
 import {
   createExpectation as createNonRetryingExpectation,
