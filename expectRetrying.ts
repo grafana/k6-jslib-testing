@@ -204,7 +204,10 @@ export function createExpectation(
       const checkRegExp = (expected: RegExp, actual: string) => {
         // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
         const regexp = options.ignoreCase !== undefined
-          ? new RegExp(expected, options.ignoreCase ? "i" : "")
+          ? new RegExp(
+            expected.source,
+            expected.flags.replace("i", "") + options.ignoreCase ? "i" : "",
+          )
           : expected;
 
         const info: MatcherErrorInfo = {
