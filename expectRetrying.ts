@@ -14,7 +14,21 @@ import {
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 import { parseStackTrace } from "./stacktrace.ts";
-import type { Locator } from "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/refs/heads/master/types/k6/browser/index.d.ts";
+import type { Locator } from "k6/browser";
+import { normalizeWhiteSpace } from "./utils/string.ts";
+
+interface ToHaveTextOptions extends RetryConfig {
+  /**
+   * If true, comparison will be case-insensitive. If defined, this option will override the `i` flag of
+   * regular expressions. Defaults to `undefined`.
+   */
+  ignoreCase?: boolean;
+
+  /**
+   * If true, the text will be compared using `innerText()` instead of `textContent()`. Defaults to `false`.
+   */
+  useInnerText?: boolean;
+}
 
 /**
  * RetryingExpectation is an interface that defines the methods that can be used to create a retrying expectation.
@@ -63,6 +77,30 @@ export interface RetryingExpectation {
    * Ensures that Locator points to an attached and visible DOM node.
    */
   toBeVisible(options?: Partial<RetryConfig>): Promise<void>;
+
+  /**
+   * Ensures that the Locator points to an element with the given text.
+   *
+   * If the type of `expected` is a string, both the expected and actual text will have any zero-width
+   * characters removed and whitespace characters collapsed to a single space. If the type of `expected`
+   * is a regular expression, the content of the element will be matched against the regular expression as-is.
+   */
+  toHaveText(
+    expected: RegExp | string,
+    options?: Partial<ToHaveTextOptions>,
+  ): Promise<void>;
+
+  /**
+   * Ensures that the Locator points to an element that contains the given text.
+   *
+   * If the type of `expected` is a string, both the expected and actual text will have any zero-width
+   * characters removed and whitespace characters collapsed to a single space. If the type of `expected`
+   * is a regular expression, the content of the element will be matched against the regular expression as-is.
+   */
+  toContainText(
+    expected: RegExp | string,
+    options?: Partial<ToHaveTextOptions>,
+  ): Promise<void>;
 
   /**
    * Ensures the Locator points to an element with the given input value. You can use regular expressions for the value as well.
@@ -148,6 +186,124 @@ export function createExpectation(
     message,
   };
 
+  const createTextMatcher = (
+    matcherName: string,
+    compareFn: (actual: string, expected: string) => boolean,
+  ) => {
+    return async function toHaveText(
+      expected: RegExp | string,
+      options: Partial<ToHaveTextOptions> = {},
+    ): Promise<void> {
+      const stacktrace = parseStackTrace(new Error().stack);
+      const executionContext = captureExecutionContext(stacktrace);
+
+      if (!executionContext) {
+        throw new Error("k6 failed to capture execution context");
+      }
+
+      const checkRegExp = (expected: RegExp, actual: string) => {
+        // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
+        const regexp = options.ignoreCase !== undefined
+          ? new RegExp(
+            expected.source,
+            expected.flags.replace("i", "") + (options.ignoreCase ? "i" : ""),
+          )
+          : expected;
+
+        const info: MatcherErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: regexp.toString(),
+          received: actual,
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+
+        const result = regexp.test(actual);
+
+        usedAssert(
+          isNegated ? !result : result,
+          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+            info,
+            MatcherErrorRendererRegistry.getConfig(),
+          ),
+          isSoft,
+        );
+      };
+
+      const checkText = (expected: string, actual: string) => {
+        const normalizedExpected = normalizeWhiteSpace(expected);
+        const normalizedActual = normalizeWhiteSpace(actual);
+
+        const info: MatcherErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: normalizedExpected,
+          received: normalizedActual,
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+
+        const result = options.ignoreCase
+          ? compareFn(
+            normalizedActual.toLowerCase(),
+            normalizedExpected.toLowerCase(),
+          )
+          : compareFn(normalizedActual, normalizedExpected);
+
+        usedAssert(
+          isNegated ? !result : result,
+          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+            info,
+            MatcherErrorRendererRegistry.getConfig(),
+          ),
+          isSoft,
+        );
+      };
+
+      try {
+        await withRetry(
+          async () => {
+            const actualText = options.useInnerText
+              ? await locator.innerText()
+              : await locator.textContent();
+
+            if (actualText === null) {
+              throw new Error("Element has no text content");
+            }
+
+            if (expected instanceof RegExp) {
+              checkRegExp(expected, actualText);
+
+              return;
+            }
+
+            checkText(expected, actualText);
+          },
+          { ...retryConfig, ...options },
+        );
+      } catch (_) {
+        const info: MatcherErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: expected.toString(),
+          received: "unknown",
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+
+        usedAssert(
+          false,
+          MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
+            info,
+            MatcherErrorRendererRegistry.getConfig(),
+          ),
+          isSoft,
+        );
+      }
+    };
+  };
+
   const expectation: RetryingExpectation = {
     get not(): RetryingExpectation {
       return createExpectation(locator, config, message, !isNegated);
@@ -224,6 +380,16 @@ export function createExpectation(
         { ...matcherConfig, options },
       );
     },
+
+    toHaveText: createTextMatcher(
+      "toHaveText",
+      (actual, expected) => actual === expected,
+    ),
+
+    toContainText: createTextMatcher(
+      "toContainText",
+      (actual, expected) => actual.includes(expected),
+    ),
 
     async toHaveValue(
       expectedValue: string,
