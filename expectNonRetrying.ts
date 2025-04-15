@@ -1,4 +1,4 @@
-import { assert } from "./assert.ts";
+import { assert, type SoftMode } from "./assert.ts";
 import type { ANSI_COLORS } from "./colors.ts";
 import type { ExpectConfig } from "./config.ts";
 import { captureExecutionContext } from "./execution.ts";
@@ -248,6 +248,7 @@ export function createExpectation(
     isSoft: config.soft,
     isNegated,
     message,
+    softMode: config.softMode,
   };
 
   const expectation: NonRetryingExpectation = {
@@ -544,12 +545,14 @@ function createMatcher(
     isNegated = false,
     matcherSpecific = {},
     message,
+    softMode,
   }: {
     usedAssert: typeof assert;
     isSoft: boolean;
     isNegated?: boolean;
     matcherSpecific?: Record<string, unknown>;
     message?: string;
+    softMode?: SoftMode;
   },
 ): void {
   const info = createMatcherInfo(
@@ -571,6 +574,7 @@ function createMatcher(
       MatcherErrorRendererRegistry.getConfig(),
     ),
     isSoft,
+    softMode,
   );
 }
 

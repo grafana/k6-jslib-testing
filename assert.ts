@@ -12,6 +12,14 @@
 import exec from "k6-execution-shim";
 
 /**
+ * SoftMode defines how soft assertions should be handled when they fail.
+ *
+ * - 'throw': The assertion will throw an AssertionFailedError, which will fail the iteration but continue the test.
+ * - 'fail': The assertion will mark the test as failed using exec.test.fail, but will continue execution.
+ */
+export type SoftMode = "throw" | "fail";
+
+/**
  * assert is a function that checks a condition and fails the test if the condition is false.
  *
  * As a default, a failing assertion will immediately abort the whole test, exit with code 108, and
@@ -21,12 +29,24 @@ import exec from "k6-execution-shim";
  * @param condition condition to assert the truthyness of
  * @param message the message to display if the condition is false
  * @param soft if true, the assertion will mark the test as failed without interrupting the execution
+ * @param softMode defines how soft assertions should be handled when they fail (defaults to 'throw')
  */
-export function assert(condition: boolean, message: string, soft?: boolean) {
+export function assert(
+  condition: boolean,
+  message: string,
+  soft?: boolean,
+  softMode: SoftMode = "throw",
+) {
   if (condition) return;
 
   if (soft) {
-    throw new AssertionFailedError(message);
+    if (softMode === "fail") {
+      // Mark the test as failed but continue execution
+      exec.test.fail(message);
+    } else {
+      // Default behavior: throw an error to fail the current iteration
+      throw new AssertionFailedError(message);
+    }
   } else {
     // This will the k6-execution-shim module's abort method in the Deno runtime.
     // It will instead be replaced with the k6/execution module's abort method
