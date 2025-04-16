@@ -117,7 +117,8 @@ Deno.test("negated retrying expectations", async (t) => {
       assertFn: mockAssert,
       timeout: 10,
       interval: 5,
-      soft: false, softMode: "throw",
+      soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -187,7 +188,8 @@ Deno.test("negated retrying expectations", async (t) => {
       assertFn: mockAssert,
       timeout: 10,
       interval: 5,
-      soft: false, softMode: "throw",
+      soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
