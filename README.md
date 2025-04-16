@@ -196,6 +196,32 @@ example, `await expect(locator).not.toBeVisible()` will pass immediately if the
 element is hidden, but will retry until timeout if the element is visible,
 hoping it will disappear.
 
+#### 5. Soft assertions
+
+By default, failed assertions will terminate the test execution. The k6 testing library also supports *soft assertions*: failed soft assertions **do not** terminate the test execution, but mark the test as failed, leading k6 to eventually exit with code `110`.
+
+```javascript
+import exec from "k6/execution";
+import { expect } from "https://jslib.k6.io/k6-testing/0.4.0/index.js";
+
+export const options = {
+  vus: 2,
+  iterations: 10,
+};
+
+export default function () {
+  // Iteration 3 will mark the test as failed, but the test execution
+  // will keep going until its end condition, and eventually exit with
+  // code 110.
+  if (exec.scenario.iterationInInstance === 3) {
+    expect.soft(false).toBeTruthy();
+  }
+}
+```
+
+Note that soft assertions can be [configured to throw an exception](#6-configuration), and effectively failing the iteration where it happens instead. 
+
+
 #### 5. Custom expect messages
 
 When writing tests, clear and informative error messages can significantly speed
@@ -240,6 +266,7 @@ The available configuration options are:
 | `display`  | "pretty" | `K6_TESTING_DISPLAY`  | The display format to use. "pretty" (default) or "inline".                             |
 | `timeout`  | 5000     | `K6_TESTING_TIMEOUT`  | Specific to retrying assertions. The timeout for assertions, in milliseconds.          |
 | `interval` | 100      | `K6_TESTING_INTERVAL` | Specific to retrying assertions. The polling interval for assertions, in milliseconds. |
+| `softMode` | "fail"   | `K6_TESTING_SOFT_MODE`| Customize soft assertions behavior: `fail`(default) will mark the test as failed, `throw` will throw an exception and fail the iteration instead. |
 
 ##### Example with inline display and no colorization
 
