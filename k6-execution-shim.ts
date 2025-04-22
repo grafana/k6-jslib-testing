@@ -16,6 +16,9 @@ export default {
     abort(message: string): void {
       throw new AbortedTestError(`Test aborted: ${message}`);
     },
+    fail(message: string): void {
+      throw new Error(`Test marked as failed: ${message}`);
+    },
   },
 };
 

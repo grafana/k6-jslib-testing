@@ -1,4 +1,4 @@
-import { assert } from "./assert.ts";
+import { assert, type SoftMode } from "./assert.ts";
 import { envParser } from "./environment.ts";
 
 /**
@@ -11,6 +11,16 @@ export interface ExpectConfig extends RenderConfig, RetryConfig {
    * is not met.
    */
   soft: boolean;
+
+  /**
+   * Controls how soft assertions behave when they fail.
+   *
+   * - 'throw': The assertion will throw an AssertionFailedError which will fail the iteration but continue the test.
+   * - 'fail': The assertion will mark the test as failed using exec.test.fail but will continue execution.
+   *
+   * @default 'throw'
+   */
+  softMode: SoftMode;
 
   /**
    * Optional custom assertion function to be used instead of the default assert function.
@@ -81,6 +91,7 @@ export type DisplayFormat = "inline" | "pretty";
 export const DEFAULT_CONFIG: ExpectConfig = {
   ...DEFAULT_RETRY_OPTIONS,
   soft: false,
+  softMode: "throw",
   colorize: true,
   display: "pretty",
   assertFn: assert,
@@ -135,6 +146,14 @@ export class ConfigLoader {
     // Load interval from environment variable
     if (envParser.hasValue("K6_TESTING_INTERVAL")) {
       config.interval = envParser.number("K6_TESTING_INTERVAL");
+    }
+
+    // Load softMode from environment variable
+    if (envParser.hasValue("K6_TESTING_SOFT_MODE")) {
+      config.softMode = envParser.enum<SoftMode>(
+        "K6_TESTING_SOFT_MODE",
+        ["throw", "fail"],
+      );
     }
 
     return config;

@@ -1,6 +1,7 @@
 // deno-lint-ignore-file
 
 import { assert } from "jsr:@std/assert";
+import type { SoftMode } from "./assert.ts";
 import { RetryTimeoutError, withRetry } from "./expectRetrying.ts";
 import { DEFAULT_RETRY_OPTIONS, type ExpectConfig } from "./config.ts";
 
@@ -117,6 +118,7 @@ Deno.test("negated retrying expectations", async (t) => {
       timeout: 10,
       interval: 5,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -187,6 +189,7 @@ Deno.test("negated retrying expectations", async (t) => {
       timeout: 10,
       interval: 5,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };

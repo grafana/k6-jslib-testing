@@ -1,4 +1,4 @@
-import { assert } from "./assert.ts";
+import { assert, type SoftMode } from "./assert.ts";
 import type { ANSI_COLORS } from "./colors.ts";
 import {
   DEFAULT_RETRY_OPTIONS,
@@ -184,6 +184,7 @@ export function createExpectation(
     isSoft,
     isNegated,
     message,
+    softMode: config.softMode,
   };
 
   const matchText = async (
@@ -226,6 +227,7 @@ export function createExpectation(
           MatcherErrorRendererRegistry.getConfig(),
         ),
         isSoft,
+        config.softMode,
       );
     };
 
@@ -256,6 +258,7 @@ export function createExpectation(
           MatcherErrorRendererRegistry.getConfig(),
         ),
         isSoft,
+        config.softMode,
       );
     };
 
@@ -297,6 +300,7 @@ export function createExpectation(
           MatcherErrorRendererRegistry.getConfig(),
         ),
         isSoft,
+        config.softMode,
       );
     }
   };
@@ -435,6 +439,7 @@ export function createExpectation(
               MatcherErrorRendererRegistry.getConfig(),
             ),
             isSoft,
+            config.softMode,
           );
         }, { ...retryConfig, ...options });
       } catch (_) {
@@ -445,6 +450,7 @@ export function createExpectation(
             MatcherErrorRendererRegistry.getConfig(),
           ),
           isSoft,
+          config.softMode,
         );
       }
     },
@@ -492,6 +498,7 @@ async function createMatcher(
     isNegated = false,
     options = {},
     message,
+    softMode,
   }: {
     locator: Locator;
     retryConfig: RetryConfig;
@@ -500,6 +507,7 @@ async function createMatcher(
     isNegated?: boolean;
     options?: Partial<RetryConfig>;
     message?: string;
+    softMode?: SoftMode;
   },
 ): Promise<void> {
   const info = createMatcherInfo(matcherName, expected, received, {
@@ -527,6 +535,7 @@ async function createMatcher(
           MatcherErrorRendererRegistry.getConfig(),
         ),
         isSoft,
+        softMode,
       );
     }, { ...retryConfig, ...options });
   } catch (_) {
@@ -537,6 +546,7 @@ async function createMatcher(
         MatcherErrorRendererRegistry.getConfig(),
       ),
       isSoft,
+      softMode,
     );
   }
 }

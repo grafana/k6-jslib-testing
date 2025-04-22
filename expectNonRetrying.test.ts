@@ -3,6 +3,18 @@
 import { assert } from "jsr:@std/assert";
 import { createExpectation } from "./expectNonRetrying.ts";
 import type { ExpectConfig } from "./config.ts";
+import type { SoftMode } from "./assert.ts";
+
+// Helper function to create a test config with correct defaults
+function createTestConfig(config: Partial<ExpectConfig> = {}): ExpectConfig {
+  return {
+    assertFn: config.assertFn !== undefined ? config.assertFn : undefined,
+    soft: config.soft !== undefined ? config.soft : false,
+    softMode: config.softMode !== undefined ? config.softMode : "throw",
+    colorize: config.colorize !== undefined ? config.colorize : false,
+    display: config.display !== undefined ? config.display : "inline",
+  };
+}
 
 Deno.test("NonRetryingExpectation", async (t) => {
   await t.step("toBe", () => {
@@ -21,12 +33,9 @@ Deno.test("NonRetryingExpectation", async (t) => {
       assertSoft = !!soft;
     };
 
-    const config: ExpectConfig = {
+    const config = createTestConfig({
       assertFn: mockAssert,
-      soft: false,
-      colorize: false,
-      display: "inline",
-    };
+    });
 
     // Test passing case
     const expectation = createExpectation(true, config);
@@ -65,6 +74,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -138,6 +148,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -204,6 +215,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -259,6 +271,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -294,6 +307,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -329,6 +343,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -365,6 +380,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -403,6 +419,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -447,6 +464,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -488,6 +506,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -526,6 +545,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -570,6 +590,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -605,6 +626,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -640,6 +662,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -675,6 +698,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -711,6 +735,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -746,6 +771,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -790,6 +816,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -846,6 +873,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -893,6 +921,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -965,6 +994,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1018,6 +1048,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1086,6 +1117,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1143,6 +1175,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: () => {},
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1179,6 +1212,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1232,6 +1266,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1319,6 +1354,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1407,6 +1443,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1452,6 +1489,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1493,6 +1531,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1534,6 +1573,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1575,6 +1615,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1616,6 +1657,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1665,6 +1707,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1701,6 +1744,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
@@ -1785,6 +1829,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config: ExpectConfig = {
       assertFn: mockAssert,
       soft: false,
+      softMode: "throw",
       colorize: false,
       display: "inline",
     };
