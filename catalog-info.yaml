@@ -6,7 +6,6 @@ metadata:
   description: |
     A seamless way to write functional tests in k6 with Playwright-compatible assertions.
   annotations:
-    backstage.io/techdocs-ref: dir:.
     github.com/project-slug: grafana/k6-jslib-testing
 spec:
   type: library
