@@ -10,13 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
 
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install Deno v2
-        uses: denolib/setup-deno@v2
+        uses: denolib/setup-deno@909cc5acb0fdd60627fb858598759246509fa755 # v2.0.2
         with:
           deno-version: v2.x
 
