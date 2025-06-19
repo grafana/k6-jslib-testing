@@ -1,6 +1,10 @@
 # Ignore dist folder
 dist/
 
+# But track the iife
+!/dist/index.iife.js
+!/dist/embed.go
+
 # Sensitive files
 .env*
 *config*.json
