@@ -1,7 +1,8 @@
 import { build } from "esbuild";
 import * as process from "node:process";
 
-const buildOptions = {
+// ESM configuration (default, exposed as jslib)
+const esmConfig = {
   // Map source code typescript files to their output files (dist/*.js)
   entryPoints: [{ in: "mod.ts", out: "index" }],
 
@@ -46,17 +47,65 @@ const buildOptions = {
   minify: false,
 };
 
-// Determine if this is a release build or a development build
-if (process.env.NODE_ENV === "production") {
-  // Setup release build options
-  Object.assign(buildOptions, {
-    // Minify the output files
-    minify: true,
+// IIFE configuration (fed to embed.go and embedded in k6's runtime on `import { expect } from k6/test`)
+const embedConfig = {
+  // Inherit from the ESM configuration, and override some options for embedding in k6
+  ...esmConfig,
 
-    // Drop debugger and console statements
-    drop: ["debugger", "console"],
+  // Map source code typescript files to their output files (dist/*.js)
+  entryPoints: [{ in: "mod.ts", out: "index.iife" }],
+
+  // Output the IIFE bundle to the embed folder
+  outdir: "embed",
+
+  // Use IIFE format for k6/Sobek compatibility
+  format: "iife",
+
+  // Set a global name so the exports are accessible
+  globalName: "k6Testing",
+
+  // Target ES2018 for k6/Sobek compatibility
+  target: "es2018",
+
+  // k6 JS runtime is browser-like.
+  platform: "neutral",
+
+  // Inline source maps for k6/Sobek compatibility
+  sourcemap: "inline",
+
+  // Add a banner to the output file
+  banner: {
+    js: "// k6-jslib-testing bundle for Sobek runtime",
+  },
+
+  // Add a footer to the output file
+  footer: {
+    js: `
+    // Make expect available globally for k6
+    if (typeof globalThis !== 'undefined') {
+      globalThis.expect = k6Testing.expect;
+    }
+    // Return for module loading compatibility
+    k6Testing;
+    `,
+  },
+};
+
+// Determine if this is a release build or a development build
+if (process.env.DENO_ENV === "production") {
+  // Setup release build options for both configurations
+  [esmConfig, embedConfig].forEach((config) => {
+    Object.assign(config, {
+      // Minify the output files
+      minify: true,
+
+      // Drop debugger and console statements
+      drop: ["debugger", "console"],
+    });
   });
 }
 
-// Build the project
-build(buildOptions).catch(() => process.exit(1));
+Promise.all([
+  build(esmConfig),
+  build(embedConfig),
+]).catch(() => process.exit(1));
