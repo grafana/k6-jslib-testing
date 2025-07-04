@@ -441,8 +441,8 @@ export function createExpectation(
           const info: MatcherErrorInfo = {
             executionContext,
             matcherName,
-            expected: finalResult.expected,
-            received: finalResult.received,
+            expected: finalResult.detail.expected,
+            received: finalResult.detail.received,
           };
 
           usedAssert(

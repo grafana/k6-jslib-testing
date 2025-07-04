@@ -1,3 +1,11 @@
+export interface ExpectedReceived {
+  type: "expected-received";
+  expected: string;
+  received: string;
+}
+
+export type ExpectationFailedDetail = ExpectedReceived;
+
 export interface ExpectationPassed {
   passed: true;
   negate(): ExpectationFailed;
@@ -5,23 +13,16 @@ export interface ExpectationPassed {
 
 export interface ExpectationFailed {
   passed: false;
-  expected: string;
-  received: string;
+  detail: ExpectationFailedDetail;
   negate(): ExpectationPassed;
 }
 
 export type ExpectationResult = ExpectationPassed | ExpectationFailed;
 
-interface ExpectedReceived {
-  expected: string;
-  received: string;
-}
-
 interface PassOptions {
   negate:
-    | (() => ExpectationFailed | ExpectedReceived)
-    | ExpectedReceived
-    | ExpectationFailed;
+    | (() => ExpectationFailedDetail)
+    | ExpectationFailedDetail;
 }
 
 /**
@@ -48,18 +49,18 @@ export function pass(
  * expectation.
  */
 export function fail(
-  details: ExpectedReceived,
+  detail: ExpectationFailedDetail,
 ): ExpectationFailed {
   // Negating the expectation twice should return the initial failed result.
   // We create this cyclic dependency by naming the variables and capturing
   // them in the closure of the respective negate function.
   const negated = pass({
-    negate: () => failed,
+    negate: () => failed.detail,
   });
 
   const failed: ExpectationFailed = {
-    ...details,
     passed: false,
+    detail,
     negate: () => negated,
   };
 

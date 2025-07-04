@@ -4,6 +4,7 @@ import { isLocator } from "./utils.ts";
 function toHaveSomeValue(attribute: string, actualValue: string | null) {
   if (actualValue === null) {
     return fail({
+      type: "expected-received",
       expected: `Attribute '${attribute}' to be present`,
       received: `Attribute '${attribute}' was not present`,
     });
@@ -12,6 +13,7 @@ function toHaveSomeValue(attribute: string, actualValue: string | null) {
   return pass({
     negate() {
       return {
+        type: "expected-received",
         expected: `Attribute '${attribute}' to not be present`,
         received: `Attribute '${attribute}' was present`,
       };
@@ -26,6 +28,7 @@ function toHaveExactValue(
 ) {
   if (actualValue === null) {
     return fail({
+      type: "expected-received",
       expected: `Attribute '${attribute}' to have value '${expectedValue}'`,
       received: `Attribute '${attribute}' was not present`,
     });
@@ -33,6 +36,7 @@ function toHaveExactValue(
 
   if (actualValue !== expectedValue) {
     return fail({
+      type: "expected-received",
       expected: `Attribute '${attribute}' to have value '${expectedValue}'`,
       received: `Attribute '${attribute}' had value '${actualValue}'`,
     });
@@ -41,6 +45,7 @@ function toHaveExactValue(
   return pass({
     negate() {
       return {
+        type: "expected-received",
         expected:
           `Attribute '${attribute}' to not have value '${expectedValue}'`,
         received: `Attribute '${attribute}' had value '${actualValue}'`,
@@ -56,6 +61,7 @@ export async function toHaveAttribute(
 ): Promise<ExpectationResult> {
   if (!isLocator(actual)) {
     return fail({
+      type: "expected-received",
       expected: "Locator",
       received: actual === null
         ? "null"
