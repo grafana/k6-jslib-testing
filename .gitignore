@@ -12,3 +12,5 @@ credentials.json
 # Ignore dev environment files
 .vscode/
 .idea/
+
+.DS_Store
