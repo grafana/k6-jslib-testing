@@ -1,3 +1,4 @@
+import exp from "node:constants";
 import { type ExpectationResult, fail, pass } from "./result.ts";
 import { isLocator } from "./utils.ts";
 
@@ -59,6 +60,14 @@ export async function toHaveAttribute(
   attribute: string,
   expectedValue: string | undefined,
 ): Promise<ExpectationResult> {
+  if (typeof attribute !== "string" || attribute.trim() === "") {
+    throw new TypeError("Attribute name must be a non-empty string");
+  }
+
+  if (expectedValue !== undefined && typeof expectedValue !== "string") {
+    throw new TypeError("Expected attribute value must be a string");
+  }
+
   if (!isLocator(actual)) {
     return fail({
       type: "expected-received",
