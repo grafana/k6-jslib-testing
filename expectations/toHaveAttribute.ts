@@ -1,4 +1,3 @@
-import exp from "node:constants";
 import { type ExpectationResult, fail, pass } from "./result.ts";
 import { isLocator } from "./utils.ts";
 
