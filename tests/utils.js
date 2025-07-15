@@ -6,7 +6,7 @@ export function dedent(strings) {
   const lines = text.split("\n");
 
   if (/^\s*$/.test(lines[0])) {
-    lines.pop();
+    lines.unshift();
   }
 
   const maxLineWidth = lines.reduce((result, line) => {
