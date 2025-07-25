@@ -598,7 +598,9 @@ function createMatcherInfo(
     expected: typeof expected === "string"
       ? expected
       : JSON.stringify(expected),
-    received: JSON.stringify(received),
+    received: typeof received === "string"
+      ? received
+      : JSON.stringify(received),
     matcherSpecific,
     customMessage,
   };
