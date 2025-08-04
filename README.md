@@ -416,15 +416,15 @@ The Dev Container comes with:
 ### Development Workflow
 
 k6-testing is built with [Deno](https://deno.land), and
-[esbuild](https://esbuild.github.io/). Deno is used for the development of the
+[tsup](https://tsup.egoist.dev/). Deno is used for the development of the
 library itself, as well as unit testing, and the output distributable files are
-built with esbuild.
+built with tsup.
 
 The following commands are used throughout the development process:
 
 - `deno task build` - Build the distributable files
 - `deno task release` - Build the distributable files in release mode
-- `deno test` - Run unit tests
+- `deno test --allow-env` - Run unit tests
 - `deno task test` - Run integration tests
 - `deno lint *.ts` - Report linting errors
 - `deno fmt *.ts` - Format the code
