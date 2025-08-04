@@ -1,9 +1,13 @@
 # Ignore dist folder
 dist/
 
+# Ignore node_modules
+node_modules/
+
 # Sensitive files
 .env*
 *config*.json
+!tsconfig.json
 *secrets*
 *.pem
 *.key

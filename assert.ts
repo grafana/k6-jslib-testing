@@ -9,7 +9,7 @@
 //
 // It allows us to use the `deno test` command and unit tests in the Deno runtime. While
 // still being able to use the `k6 run` command and tests in the k6 runtime.
-import exec from "k6-execution-shim";
+import exec from "k6/execution";
 
 /**
  * SoftMode defines how soft assertions should be handled when they fail.
@@ -48,7 +48,7 @@ export function assert(
       throw new AssertionFailedError(message);
     }
   } else {
-    // This will the k6-execution-shim module's abort method in the Deno runtime.
+    // This will call the k6-execution-shim module's abort method in the Deno runtime.
     // It will instead be replaced with the k6/execution module's abort method
     // in the output bundle file produced by esbuild specifically for the k6 runtime.
     exec.test.abort(message);

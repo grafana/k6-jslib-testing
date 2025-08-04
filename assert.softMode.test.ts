@@ -1,7 +1,7 @@
 // deno-lint-ignore-file
 import { assert as denoAssert } from "jsr:@std/assert";
 import { assert, AssertionFailedError } from "./assert.ts";
-import exec from "k6-execution-shim";
+import exec from "./k6-execution-shim.ts";
 import { expect } from "./expect.ts";
 
 // Store the original functions to restore later

@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": true,
+    "allowImportingTsExtensions": true,
+    "paths": {
+      // k6-exec-shim is a shim for the k6/execution module, meaning that
+      // imports of k6/execution will be replaced with k6-exec-shim in the
+      // Deno runtime.
+      //
+      // NOTE (@oleiade): This allows us to avoid relying on the k6/execution module in the
+      // Deno runtime, which is not compatible with the k6 runtime. Instead
+      // replacing it with a mock implementation that does not abort the test.
+      // While making sure that we use the real k6/execution module
+      // when bundling for the k6 runtime.
+      "k6/execution": [
+        "./k6-execution-shim.ts"
+      ]
+    }
+  },
+  "include": [
+    "*.ts",
+    "**/*.ts",
+    "tsup.mts"
+  ],
+  "exclude": [
+    "*.test.ts"
+  ]
+}

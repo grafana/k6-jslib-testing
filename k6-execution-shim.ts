@@ -4,7 +4,7 @@
  * It is used to avoid relying on the k6/execution module in the Deno runtime,
  * which is not compatible with the k6 runtime. Instead replacing it with a mock
  * implementation that does not abort the test. While making sure that we do replace
- * it with the real k6/execution module when bundling for the k6 runtime (using esbuild).
+ * it with the real k6/execution module when bundling for the k6 runtime.
  *
  * It allows us to use the `deno test` command and unit tests in the Deno runtime. While
  * still being able to use the `k6 run` command and tests in the k6 runtime.
