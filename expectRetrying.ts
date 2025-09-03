@@ -14,7 +14,7 @@ import {
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 import { parseStackTrace } from "./stacktrace.ts";
-import type { Locator } from "k6/browser";
+import type { Locator, Page } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
 
@@ -32,18 +32,14 @@ interface ToHaveTextOptions extends RetryConfig {
 }
 
 /**
- * RetryingExpectation is an interface that defines the methods that can be used to create a retrying expectation.
- *
- * Retrying expectations are used to assert that a condition is met within a given timeout.
- * The provided assertion function is called repeatedly until the condition is met or the timeout is reached.
- *
- * The RetryingExpectation interface is implemented by the createExpectation function.
+ * LocatorExpectation defines methods for asserting on Locator objects (DOM elements).
+ * These assertions retry automatically until they pass or timeout.
  */
-export interface RetryingExpectation {
+export interface LocatorExpectation {
   /**
    * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
    */
-  not: RetryingExpectation;
+  not: LocatorExpectation;
 
   /**
    * Ensures the Locator points to a checked input.
@@ -115,6 +111,33 @@ export interface RetryingExpectation {
    */
   toHaveValue(value: string, options?: Partial<RetryConfig>): Promise<void>;
 }
+
+/**
+ * PageExpectation defines methods for asserting on Page objects (browser pages).
+ * These assertions retry automatically until they pass or timeout.
+ */
+export interface PageExpectation {
+  /**
+   * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
+   */
+  not: PageExpectation;
+
+  /**
+   * Ensures that the Page's title matches the given title.
+   */
+  toHaveTitle(
+    expected: RegExp | string,
+    options?: Partial<RetryConfig>,
+  ): Promise<void>;
+}
+
+/**
+ * RetryingExpectation is a union type that supports both locator-based and page-based expectations.
+ *
+ * Retrying expectations are used to assert that a condition is met within a given timeout.
+ * The provided assertion function is called repeatedly until the condition is met or the timeout is reached.
+ */
+export type RetryingExpectation = LocatorExpectation | PageExpectation;
 
 /**
  * createExpectation is a factory function that creates an expectation object for a given value.
