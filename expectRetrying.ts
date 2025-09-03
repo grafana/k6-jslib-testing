@@ -579,6 +579,12 @@ export function createPageExpectation(
     display: config.display,
   });
 
+  // Register renderers specific to page matchers at initialization time.
+  MatcherErrorRendererRegistry.register(
+    "toHaveTitle",
+    new PageExpectedReceivedMatcherRenderer(),
+  );
+
   const matchPageText = async (
     matcherName: string,
     expected: RegExp | string,
@@ -936,6 +942,49 @@ export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
       {
         label: "",
         value: maybeColorize(`  - waiting for locator`, "darkGrey"),
+        group: 3,
+        raw: true,
+      },
+    ];
+  }
+}
+
+export class PageExpectedReceivedMatcherRenderer
+  extends ExpectedReceivedMatcherRenderer {
+  protected getMatcherName(): string {
+    return "pageExpectedReceived";
+  }
+
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
+    const matcherName = info.matcherName;
+
+    return [
+      {
+        label: "Expected",
+        value: maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
+      { label: "Call log", value: "", group: 3 },
+      {
+        label: "",
+        value: maybeColorize(
+          `  - expect.${matcherName}`,
+          "darkGrey",
+        ),
+        group: 3,
+        raw: true,
+      },
+      {
+        label: "",
+        value: maybeColorize(`  - waiting for page`, "darkGrey"),
         group: 3,
         raw: true,
       },
