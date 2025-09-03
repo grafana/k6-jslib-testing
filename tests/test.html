@@ -1,60 +1,74 @@
 <!-- deno-fmt-ignore-file -->
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>K6 Browser Test Page</title>
-  </head>
 
-  <body>
-    <h1>toBe Matchers</h1>
+<head>
+  <title>K6 Browser Test Page</title>
+</head>
 
-    <section id="toBeChecked">
-      <input type="checkbox" id="toBeCheckedCheckbox">
-      <label for="toBeCheckedCheckbox">Test Checkbox</label>
-    </section>
+<body>
+  <h1>toBe Matchers</h1>
 
-    <section id="notToBeChecked">
-      <input type="checkbox" id="notToBeCheckedCheckbox">
-      <label for="notToBeCheckedCheckbox">Unchecked Checkbox</label>
-    </section>
+  <section id="toBeChecked">
+    <input type="checkbox" id="toBeCheckedCheckbox">
+    <label for="toBeCheckedCheckbox">Test Checkbox</label>
+  </section>
 
-    <section id="toBeDisabled">
-      <input type="text" id="toBeDisabledInput" disabled>
-      <label for="toBeDisabledInput">Test Input</label>
-    </section>
+  <section id="notToBeChecked">
+    <input type="checkbox" id="notToBeCheckedCheckbox">
+    <label for="notToBeCheckedCheckbox">Unchecked Checkbox</label>
+  </section>
 
-    <section id="toBeEditable">
-      <p type="text" id="toBeEditableInput" contenteditable="false">
-        Test Paragraph
-      </p>
-    </section>
+  <section id="toBeDisabled">
+    <input type="text" id="toBeDisabledInput" disabled>
+    <label for="toBeDisabledInput">Test Input</label>
+  </section>
 
-    <section id="toBeEnabled">
-      <input type="text" id="toBeEnabledInput">
-      <label for="toBeEnabledInput">Test Input</label>
-    </section>
+  <section id="toBeEditable">
+    <p type="text" id="toBeEditableInput" contenteditable="false">
+      Test Paragraph
+    </p>
+  </section>
 
-    <section id="toBeHidden">
-      <p id="toBeHiddenText" style="visibility: hidden">Test Paragraph</p>
-    </section>
+  <section id="toBeEnabled">
+    <input type="text" id="toBeEnabledInput">
+    <label for="toBeEnabledInput">Test Input</label>
+  </section>
 
-    <section id="toBeVisible">
-      <p id="toBeVisibleText" style="visibility: visible">Test Paragraph</p>
-    </section>
+  <section id="toBeHidden">
+    <p id="toBeHiddenText" style="visibility: hidden">Test Paragraph</p>
+  </section>
 
-    <section id="toHaveValue">
-      <input type="text" id="toHaveValueInput" value="test-value">
-      <label for="toHaveValueInput">Test Input</label>
-    </section>
+  <section id="toBeVisible">
+    <p id="toBeVisibleText" style="visibility: visible">Test Paragraph</p>
+  </section>
 
-    <section id="toHaveText">  
-      Some text <span>with elements</span>,
-      new lines and          whitespaces
-    </section>
- 
-    <section id="toContainText"> 
-      Some text <span>with elements</span>,
-      new lines and          whitespaces
-    </section>
-  </body>
+  <section id="toHaveValue">
+    <input type="text" id="toHaveValueInput" value="test-value">
+    <label for="toHaveValueInput">Test Input</label>
+  </section>
+
+  <section id="toHaveText">
+    Some text <span>with elements</span>,
+    new lines and whitespaces
+  </section>
+
+  <section id="toContainText">
+    Some text <span>with elements</span>,
+    new lines and whitespaces
+  </section>
+
+  <section id="toBeEmpty">
+    <input type="text" id="toBeEmptyInput" value="">
+    <label for="toBeEmptyInput">Empty input element</label>
+    <p id="toBeEmptyText"></p>
+  </section>
+
+  <section id="notToBeEmpty">
+    <input type="text" id="notToBeEmptyInput" value="Hello World">
+    <label for="notToBeEmptyInput">Not empty input element</label>
+    <p id="notToBeEmptyText">Not empty text</p>
+  </section>
+</body>
+
 </html>
