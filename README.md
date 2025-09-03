@@ -109,6 +109,7 @@ Use the same assertions you know from Playwright:
 // These Playwright assertions work exactly the same in k6
 await expect(page.locator(".button")).toBeVisible();
 await expect(page.locator("input")).toHaveValue("test");
+await expect(page).toHaveTitle("My Page Title");
 ```
 
 ### 2. Auto-Retrying Assertions
@@ -119,6 +120,8 @@ you must await them.
 
 By default, the timeout for assertions is set to 5 seconds, and the polling
 interval is set to 100 milliseconds.
+
+**Element Assertions (for Locators):**
 
 | Assertion                            | Description                                           |
 | ------------------------------------ | ----------------------------------------------------- |
@@ -133,13 +136,25 @@ interval is set to 100 milliseconds.
 | `toHaveText(text, opts?)`            | Element has text.                                     |
 | `toHaveValue(value)`                 | Element has specific value                            |
 
+**Page Assertions (for Pages):**
+
+| Assertion                  | Description                          |
+| -------------------------- | ------------------------------------ |
+| `toHaveTitle(text, opts?)` | Page title matches the expected text |
+
 You can customize these values by passing an options object as the second
 argument to the assertion function:
 
 ```javascript
+// Element assertions on locators
 await expect(page.locator(".button")).toBeVisible({
   timeout: 10000,
   interval: 500,
+});
+
+// Page assertions on page objects
+await expect(page).toHaveTitle("Expected Title", {
+  timeout: 5000,
 });
 ```
 
