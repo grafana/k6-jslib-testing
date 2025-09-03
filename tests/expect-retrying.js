@@ -400,8 +400,14 @@ export default async function testExpectRetrying() {
     const page = await context.newPage();
     try {
       await page.goto("http://localhost:8000");
-      const locator = page.locator(testCase.selector);
-      await testCase.assertion(locator);
+
+      if (testCase.selector) {
+        const locator = page.locator(testCase.selector);
+        await testCase.assertion(locator);
+      } else {
+        await testCase.assertion({ page });
+      }
+
       passTest(testCase.name);
     } catch (error) {
       console.error(`Test case "${testCase.name}" failed: ${error.message}`);
