@@ -1,4 +1,4 @@
-import type { Locator } from "k6/browser";
+import type { Locator, Page } from "k6/browser";
 import { ConfigLoader, type ExpectConfig } from "./config.ts";
 import {
   createExpectation as createNonRetryingExpectation,
@@ -8,7 +8,7 @@ import {
   createExpectation as createRetryingExpectation,
   type RetryingExpectation,
 } from "./expectRetrying.ts";
-import { isLocator } from "./expectations/utils.ts";
+import { isLocator, isPage } from "./expectations/utils.ts";
 
 /**
  * The expect function is used to assert that a value meets certain conditions.
@@ -20,7 +20,7 @@ import { isLocator } from "./expectations/utils.ts";
  * 2. Retrying: The expect function will perform the assertion multiple times, until the assertion
  * is met or the timeout is reached. If the assertion is not met, the test will fail.
  *
- * @param {unknown | Locator} value The value to assert.
+ * @param {unknown | Locator | Page} value The value to assert.
  */
 export const expect: ExpectFunction = makeExpect();
 
@@ -28,10 +28,13 @@ export interface ExpectFunction {
   /**
    * The expect function can be used directly to assert that a value meets certain conditions.
    *
-   * If the value argument provided to it is a Locator, the expect function will
+   * If the value argument provided to it is a Locator or Page, the expect function will
    * return a (asynchronous) RetryingExpectation, otherwise it will return a NonRetryingExpectation.
    */
-  <T>(value: T, message?: string): T extends Locator ? RetryingExpectation
+  <T>(
+    value: T,
+    message?: string,
+  ): T extends Locator | Page ? RetryingExpectation
     : NonRetryingExpectation;
 
   /**
@@ -41,7 +44,7 @@ export interface ExpectFunction {
   soft<T>(
     value: T,
     message?: string,
-  ): T extends Locator ? RetryingExpectation : NonRetryingExpectation;
+  ): T extends Locator | Page ? RetryingExpectation : NonRetryingExpectation;
 
   /**
    * Creates a new expect instance with the given configuration.
@@ -72,38 +75,43 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
     function <T>(
       value: T,
       message?: string,
-    ): T extends Locator ? RetryingExpectation : NonRetryingExpectation {
-      if (isLocator(value)) {
+    ): T extends Locator | Page ? RetryingExpectation : NonRetryingExpectation {
+      if (isLocator(value) || isPage(value)) {
         return createRetryingExpectation(
-          value as Locator,
+          value as Locator | Page,
           config,
           message,
-        ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
+        ) as T extends Locator | Page ? RetryingExpectation
+          : NonRetryingExpectation;
       } else {
         return createNonRetryingExpectation(
           value,
           config,
           message,
-        ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
+        ) as T extends Locator | Page ? RetryingExpectation
+          : NonRetryingExpectation;
       }
     },
     {
       soft<T>(
         value: T,
         message?: string,
-      ): T extends Locator ? RetryingExpectation : NonRetryingExpectation {
-        if (isLocator(value)) {
+      ): T extends Locator | Page ? RetryingExpectation
+        : NonRetryingExpectation {
+        if (isLocator(value) || isPage(value)) {
           return createRetryingExpectation(
-            value as Locator,
+            value as Locator | Page,
             { ...config, soft: true },
             message,
-          ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
+          ) as T extends Locator | Page ? RetryingExpectation
+            : NonRetryingExpectation;
         } else {
           return createNonRetryingExpectation(
             value,
             { ...config, soft: true },
             message,
-          ) as T extends Locator ? RetryingExpectation : NonRetryingExpectation;
+          ) as T extends Locator | Page ? RetryingExpectation
+            : NonRetryingExpectation;
         }
       },
       configure(newConfig: Partial<ExpectConfig>): ExpectFunction {
