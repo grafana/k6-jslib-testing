@@ -165,6 +165,27 @@ const standardTestCases = [
     ],
   },
   {
+    suite: "toHaveTitle",
+    children: [
+      {
+        name: "string",
+        assertion: async ({ page }) => {
+          await expect(page).toHaveTitle(
+            "K6 Browser Test Page",
+          );
+        },
+      },
+      {
+        name: "regexp",
+        assertion: async ({ page }) => {
+          await expect(page).toHaveTitle(
+            /K6 Browser Test Page/i,
+          );
+        },
+      },
+    ],
+  },
+  {
     suite: "toContainText",
     children: [
       {
@@ -296,6 +317,12 @@ const negationTestCases = [
     selector: "#toHaveText",
     assertion: async (locator) => {
       await expect(locator).not.toHaveText("This is not at all what it says!");
+    },
+  },
+  {
+    name: "not.toHaveTitle",
+    assertion: async ({ page }) => {
+      await expect(page).not.toHaveTitle("Hello World");
     },
   },
   {
