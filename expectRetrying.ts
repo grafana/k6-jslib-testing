@@ -390,7 +390,6 @@ export function createExpectation(
             }
 
             return await locator.textContent().then((text) => {
-              console.log(text);
               if (text === null || text === undefined) {
                 return true;
               }
