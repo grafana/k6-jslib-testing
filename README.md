@@ -120,19 +120,19 @@ you must await them.
 By default, the timeout for assertions is set to 5 seconds, and the polling
 interval is set to 100 milliseconds.
 
-| Assertion                            | Description                                                             |
-| ------------------------------------ | ----------------------------------------------------------------------- |
-| `toBeChecked(opts?)`                 | Element is checked                                                      |
-| `toBeDisabled(opts?)`                | Element is disabled                                                     |
-| `toBeEditable(opts?)`                | Element is editable                                                     |
-| `toBeEmpty(opts?)`                   | Input element value is empty, otherwise non-input text content is empty |
-| `toBeEnabled(opts?)`                 | Element is enabled                                                      |
-| `toBeHidden(opts?)`                  | Element is hidden                                                       |
-| `toBeVisible(opts?)`                 | Element is visible                                                      |
-| `toContainText(text, opts?)`         | Element contains text.                                                  |
-| `toHaveAttribute(attribute, value?)` | Element has specific attribute and, optionally, value                   |
-| `toHaveText(text, opts?)`            | Element has text.                                                       |
-| `toHaveValue(value)`                 | Element has specific value                                              |
+| Assertion                            | Description                                           |
+| ------------------------------------ | ----------------------------------------------------- |
+| `toBeChecked(opts?)`                 | Element is checked                                    |
+| `toBeDisabled(opts?)`                | Element is disabled                                   |
+| `toBeEditable(opts?)`                | Element is editable                                   |
+| `toBeEmpty(opts?)`                   | Element is empty                                      |
+| `toBeEnabled(opts?)`                 | Element is enabled                                    |
+| `toBeHidden(opts?)`                  | Element is hidden                                     |
+| `toBeVisible(opts?)`                 | Element is visible                                    |
+| `toContainText(text, opts?)`         | Element contains text.                                |
+| `toHaveAttribute(attribute, value?)` | Element has specific attribute and, optionally, value |
+| `toHaveText(text, opts?)`            | Element has text.                                     |
+| `toHaveValue(value)`                 | Element has specific value                            |
 
 You can customize these values by passing an options object as the second
 argument to the assertion function:
