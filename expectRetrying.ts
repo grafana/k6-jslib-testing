@@ -33,6 +33,14 @@ interface ToHaveTextOptions extends RetryConfig {
 }
 
 /**
+ * RetryingExpectation is a union type that supports both locator-based and page-based expectations.
+ *
+ * Retrying expectations are used to assert that a condition is met within a given timeout.
+ * The provided assertion function is called repeatedly until the condition is met or the timeout is reached.
+ */
+export type RetryingExpectation = LocatorExpectation | PageExpectation;
+
+/**
  * LocatorExpectation defines methods for asserting on Locator objects (DOM elements).
  * These assertions retry automatically until they pass or timeout.
  */
@@ -131,14 +139,6 @@ export interface PageExpectation {
     options?: Partial<RetryConfig>,
   ): Promise<void>;
 }
-
-/**
- * RetryingExpectation is a union type that supports both locator-based and page-based expectations.
- *
- * Retrying expectations are used to assert that a condition is met within a given timeout.
- * The provided assertion function is called repeatedly until the condition is met or the timeout is reached.
- */
-export type RetryingExpectation = LocatorExpectation | PageExpectation;
 
 /**
  * createLocatorExpectation is a factory function that creates an expectation object for Locator values.
