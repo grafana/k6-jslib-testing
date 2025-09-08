@@ -381,6 +381,11 @@ export function createExpectation(
               msg = String(error);
             }
 
+            // FIXME: This is brittle since it relies on the error message.
+            //        We should consider moving the logic to the browser module
+            //        in k6 itself.
+            //        See https://github.com/grafana/k6-jslib-testing/issues/43
+            //        for more details.
             if (
               !msg.includes(
                 "Node is not an <input>, <textarea> or <select> element",
