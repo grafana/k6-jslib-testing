@@ -110,8 +110,8 @@ Deno.test("negated retrying expectations", async (t) => {
       // Don't throw for this test
     };
 
-    // Import the createExpectation function directly to test it
-    const { createExpectation } = await import("./expectRetrying.ts");
+    // Import the createLocatorExpectation function directly to test it
+    const { createLocatorExpectation } = await import("./expectRetrying.ts");
 
     const config: ExpectConfig = {
       assertFn: mockAssert,
@@ -124,7 +124,7 @@ Deno.test("negated retrying expectations", async (t) => {
     };
 
     // Test with isNegated = true
-    const negatedExpectation = createExpectation(
+    const negatedExpectation = createLocatorExpectation(
       mockLocator as any,
       config,
       undefined,
@@ -181,8 +181,8 @@ Deno.test("negated retrying expectations", async (t) => {
       // Don't throw for this test
     };
 
-    // Import the createExpectation function directly to test it
-    const { createExpectation } = await import("./expectRetrying.ts");
+    // Import the createLocatorExpectation function directly to test it
+    const { createLocatorExpectation } = await import("./expectRetrying.ts");
 
     const config: ExpectConfig = {
       assertFn: mockAssert,
@@ -195,7 +195,7 @@ Deno.test("negated retrying expectations", async (t) => {
     };
 
     // Create an expectation
-    const expectation = createExpectation(
+    const expectation = createLocatorExpectation(
       mockLocator as any,
       config,
       undefined,

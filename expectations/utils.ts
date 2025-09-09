@@ -1,4 +1,4 @@
-import type { Locator } from "k6/browser";
+import type { Locator, Page } from "k6/browser";
 
 /**
  * Checks if the given value is a browser Locator.
@@ -51,5 +51,39 @@ export function isLocator(value: unknown): value is Locator {
     value !== undefined &&
     typeof value === "object" &&
     hasLocatorProperties(value)
+  );
+}
+
+/**
+ * Checks if the given value is a browser Page.
+ *
+ * If it quacks like a duck, it's a duck.
+ *
+ * @param value The value to check.
+ * @returns Whether the value is a Page.
+ */
+export function isPage(value: unknown): value is Page {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const pageProperties = [
+    "title",
+    "goto",
+    "url",
+    "close",
+    "mainFrame",
+    "waitForLoadState",
+  ];
+
+  const hasPageProperties = (value: object): boolean => {
+    return pageProperties.every((prop) => prop in value);
+  };
+
+  return (
+    value !== null &&
+    value !== undefined &&
+    typeof value === "object" &&
+    hasPageProperties(value)
   );
 }

@@ -14,9 +14,10 @@ import {
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 import { parseStackTrace } from "./stacktrace.ts";
-import type { Locator } from "k6/browser";
+import type { Locator, Page } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
+import { isLocator, isPage } from "./expectations/utils.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
   /**
@@ -32,18 +33,22 @@ interface ToHaveTextOptions extends RetryConfig {
 }
 
 /**
- * RetryingExpectation is an interface that defines the methods that can be used to create a retrying expectation.
+ * RetryingExpectation is a union type that supports both locator-based and page-based expectations.
  *
  * Retrying expectations are used to assert that a condition is met within a given timeout.
  * The provided assertion function is called repeatedly until the condition is met or the timeout is reached.
- *
- * The RetryingExpectation interface is implemented by the createExpectation function.
  */
-export interface RetryingExpectation {
+export type RetryingExpectation = LocatorExpectation | PageExpectation;
+
+/**
+ * LocatorExpectation defines methods for asserting on Locator objects (DOM elements).
+ * These assertions retry automatically until they pass or timeout.
+ */
+export interface LocatorExpectation {
   /**
    * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
    */
-  not: RetryingExpectation;
+  not: LocatorExpectation;
 
   /**
    * Ensures the Locator points to a checked input.
@@ -117,24 +122,43 @@ export interface RetryingExpectation {
 }
 
 /**
- * createExpectation is a factory function that creates an expectation object for a given value.
+ * PageExpectation defines methods for asserting on Page objects (browser pages).
+ * These assertions retry automatically until they pass or timeout.
+ */
+export interface PageExpectation {
+  /**
+   * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
+   */
+  not: PageExpectation;
+
+  /**
+   * Ensures that the Page's title matches the given title.
+   */
+  toHaveTitle(
+    expected: RegExp | string,
+    options?: Partial<RetryConfig>,
+  ): Promise<void>;
+}
+
+/**
+ * createLocatorExpectation is a factory function that creates an expectation object for Locator values.
  *
  * Note that although the browser `is` prefixed methods are used, and return boolean values, we
  * throw errors if the condition is not met. This is to ensure that we align with playwright's
  * API, and have matchers return `Promise<void>`, as opposed to `Promise<boolean>`.
  *
- * @param locator the value to create an expectation for
+ * @param locator the Locator to create an expectation for
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
- * @returns an expectation object over the given value exposing the Expectation set of methods
+ * @returns an expectation object over the locator exposing locator-specific methods
  */
-export function createExpectation(
+export function createLocatorExpectation(
   locator: Locator,
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
-): RetryingExpectation {
+): LocatorExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
   // if not, we need to use the default assert function.
@@ -311,9 +335,9 @@ export function createExpectation(
     }
   };
 
-  const expectation: RetryingExpectation = {
-    get not(): RetryingExpectation {
-      return createExpectation(locator, config, message, !isNegated);
+  const expectation: LocatorExpectation = {
+    get not(): LocatorExpectation {
+      return createLocatorExpectation(locator, config, message, !isNegated);
     },
 
     async toBeChecked(
@@ -526,6 +550,192 @@ export function createExpectation(
   return expectation;
 }
 
+/**
+ * createPageExpectation is a factory function that creates an expectation object for Page values.
+ *
+ * @param page the Page to create an expectation for
+ * @param config the configuration for the expectation
+ * @param message the optional custom message for the expectation
+ * @param isNegated whether the expectation is negated
+ * @returns an expectation object over the page exposing page-specific methods
+ */
+export function createPageExpectation(
+  page: Page,
+  config: ExpectConfig,
+  message?: string,
+  isNegated: boolean = false,
+): PageExpectation {
+  // In order to facilitate testing, we support passing in a custom assert function.
+  const usedAssert = config.assertFn ?? assert;
+  const isSoft = config.soft ?? false;
+  const retryConfig: RetryConfig = {
+    timeout: config.timeout,
+    interval: config.interval,
+  };
+
+  // Configure the renderer with the colorize option.
+  MatcherErrorRendererRegistry.configure({
+    colorize: config.colorize,
+    display: config.display,
+  });
+
+  // Register renderers specific to page matchers at initialization time.
+  MatcherErrorRendererRegistry.register(
+    "toHaveTitle",
+    new PageExpectedReceivedMatcherRenderer(),
+  );
+
+  const matchPageText = async (
+    matcherName: string,
+    expected: RegExp | string,
+    options: Partial<RetryConfig> = {},
+    compareFn: (actual: string, expected: string) => boolean,
+  ) => {
+    const stacktrace = parseStackTrace(new Error().stack);
+    const executionContext = captureExecutionContext(stacktrace);
+
+    if (!executionContext) {
+      throw new Error("k6 failed to capture execution context");
+    }
+
+    const checkRegExp = (expected: RegExp, actual: string) => {
+      // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
+      const regexp = expected;
+
+      const info: MatcherErrorInfo = {
+        executionContext,
+        matcherName,
+        expected: regexp.toString(),
+        received: actual,
+        matcherSpecific: { isNegated },
+        customMessage: message,
+      };
+
+      const result = regexp.test(actual);
+
+      usedAssert(
+        isNegated ? !result : result,
+        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
+        ),
+        isSoft,
+        config.softMode,
+      );
+    };
+
+    const checkText = (expected: string, actual: string) => {
+      const normalizedExpected = normalizeWhiteSpace(expected);
+      const normalizedActual = normalizeWhiteSpace(actual);
+
+      const info: MatcherErrorInfo = {
+        executionContext,
+        matcherName,
+        expected: normalizedExpected,
+        received: normalizedActual,
+        matcherSpecific: { isNegated },
+        customMessage: message,
+      };
+
+      const result = compareFn(normalizedActual, normalizedExpected);
+
+      usedAssert(
+        isNegated ? !result : result,
+        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
+        ),
+        isSoft,
+        config.softMode,
+      );
+    };
+
+    try {
+      await withRetry(
+        async () => {
+          const actualText = await page.title();
+
+          if (expected instanceof RegExp) {
+            checkRegExp(expected, actualText);
+
+            return;
+          }
+
+          checkText(expected, actualText);
+        },
+        { ...retryConfig, ...options },
+      );
+    } catch (_) {
+      const info: MatcherErrorInfo = {
+        executionContext,
+        matcherName,
+        expected: expected.toString(),
+        received: "unknown",
+        matcherSpecific: { isNegated },
+        customMessage: message,
+      };
+
+      usedAssert(
+        false,
+        MatcherErrorRendererRegistry.getRenderer("toHaveTitle").render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
+        ),
+        isSoft,
+        config.softMode,
+      );
+    }
+  };
+
+  const expectation: PageExpectation = {
+    get not(): PageExpectation {
+      return createPageExpectation(page, config, message, !isNegated);
+    },
+
+    toHaveTitle(
+      expected: RegExp | string,
+      options: Partial<RetryConfig> = {},
+    ) {
+      return matchPageText(
+        "toHaveTitle",
+        expected,
+        options,
+        (actual, expected) => actual === expected,
+      );
+    },
+  };
+
+  return expectation;
+}
+
+/**
+ * createExpectation is a factory function that creates an expectation object for a given value.
+ *
+ * This function routes to the appropriate specialized factory based on the input type.
+ *
+ * @param target the value to create an expectation for (Locator or Page)
+ * @param config the configuration for the expectation
+ * @param message the optional custom message for the expectation
+ * @param isNegated whether the expectation is negated
+ * @returns an expectation object exposing the appropriate methods
+ */
+export function createExpectation(
+  target: Locator | Page,
+  config: ExpectConfig,
+  message?: string,
+  isNegated: boolean = false,
+): RetryingExpectation {
+  if (isPage(target)) {
+    return createPageExpectation(target, config, message, isNegated);
+  } else if (isLocator(target)) {
+    return createLocatorExpectation(target, config, message, isNegated);
+  } else {
+    throw new Error(
+      "Invalid target for retrying expectation. Expected Locator or Page object.",
+    );
+  }
+}
+
 // Helper function to create common matcher info
 function createMatcherInfo(
   matcherName: string,
@@ -732,6 +942,49 @@ export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
       {
         label: "",
         value: maybeColorize(`  - waiting for locator`, "darkGrey"),
+        group: 3,
+        raw: true,
+      },
+    ];
+  }
+}
+
+export class PageExpectedReceivedMatcherRenderer
+  extends ExpectedReceivedMatcherRenderer {
+  protected getMatcherName(): string {
+    return "pageExpectedReceived";
+  }
+
+  protected override getSpecificLines(
+    info: MatcherErrorInfo,
+    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
+  ): LineGroup[] {
+    const matcherName = info.matcherName;
+
+    return [
+      {
+        label: "Expected",
+        value: maybeColorize(info.expected, "green"),
+        group: 3,
+      },
+      {
+        label: "Received",
+        value: maybeColorize(info.received, "red"),
+        group: 3,
+      },
+      { label: "Call log", value: "", group: 3 },
+      {
+        label: "",
+        value: maybeColorize(
+          `  - expect.${matcherName}`,
+          "darkGrey",
+        ),
+        group: 3,
+        raw: true,
+      },
+      {
+        label: "",
+        value: maybeColorize(`  - waiting for page`, "darkGrey"),
         group: 3,
         raw: true,
       },

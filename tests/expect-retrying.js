@@ -165,6 +165,27 @@ const standardTestCases = [
     ],
   },
   {
+    suite: "toHaveTitle",
+    children: [
+      {
+        name: "string",
+        assertion: async ({ page }) => {
+          await expect(page).toHaveTitle(
+            "K6 Browser Test Page",
+          );
+        },
+      },
+      {
+        name: "regexp",
+        assertion: async ({ page }) => {
+          await expect(page).toHaveTitle(
+            /K6 Browser Test Page/i,
+          );
+        },
+      },
+    ],
+  },
+  {
     suite: "toContainText",
     children: [
       {
@@ -299,6 +320,12 @@ const negationTestCases = [
     },
   },
   {
+    name: "not.toHaveTitle",
+    assertion: async ({ page }) => {
+      await expect(page).not.toHaveTitle("Hello World");
+    },
+  },
+  {
     name: "not.toContainText",
     selector: "#toContainText",
     assertion: async (locator) => {
@@ -373,8 +400,14 @@ export default async function testExpectRetrying() {
     const page = await context.newPage();
     try {
       await page.goto("http://localhost:8000");
-      const locator = page.locator(testCase.selector);
-      await testCase.assertion(locator);
+
+      if (testCase.selector) {
+        const locator = page.locator(testCase.selector);
+        await testCase.assertion(locator);
+      } else {
+        await testCase.assertion({ page });
+      }
+
       passTest(testCase.name);
     } catch (error) {
       console.error(`Test case "${testCase.name}" failed: ${error.message}`);
