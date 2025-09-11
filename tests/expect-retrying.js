@@ -44,6 +44,25 @@ const standardTestCases = [
     },
   },
   {
+    suite: "toBeEmpty",
+    children: [
+      {
+        name: "input element",
+        selector: "#toBeEmptyInput",
+        assertion: async (locator) => {
+          await expect(locator).toBeEmpty();
+        },
+      },
+      {
+        name: "non-input element",
+        selector: "#toBeEmptyText",
+        assertion: async (locator) => {
+          await expect(locator).toBeEmpty();
+        },
+      },
+    ],
+  },
+  {
     name: "toBeEnabled",
     selector: "#toBeEnabledInput",
     assertion: async (locator) => {
@@ -290,6 +309,25 @@ const negationTestCases = [
     assertion: async (locator) => {
       await expect(locator).not.toBeEditable();
     },
+  },
+  {
+    suite: "not.toBeEmpty",
+    children: [
+      {
+        name: "input element",
+        selector: "#notToBeEmptyInput",
+        assertion: async (locator) => {
+          await expect(locator).not.toBeEmpty();
+        },
+      },
+      {
+        name: "non-input element",
+        selector: "#notToBeEmptyText",
+        assertion: async (locator) => {
+          await expect(locator).not.toBeEmpty();
+        },
+      },
+    ],
   },
   {
     name: "not.toBeEnabled",

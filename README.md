@@ -128,6 +128,7 @@ interval is set to 100 milliseconds.
 | `toBeChecked(opts?)`                 | Element is checked                                    |
 | `toBeDisabled(opts?)`                | Element is disabled                                   |
 | `toBeEditable(opts?)`                | Element is editable                                   |
+| `toBeEmpty(opts?)`                   | Element is empty                                      |
 | `toBeEnabled(opts?)`                 | Element is enabled                                    |
 | `toBeHidden(opts?)`                  | Element is hidden                                     |
 | `toBeVisible(opts?)`                 | Element is visible                                    |
