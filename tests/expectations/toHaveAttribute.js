@@ -43,7 +43,7 @@ describe("toHaveAttribute(attribute)", () => {
 
       Filename: expect-retrying.js
           Line: ...
-
+      
     `);
   });
 });
@@ -84,7 +84,7 @@ describe("toHaveAttribute(attribute, expectedValue)", () => {
 
       Filename: expect-retrying.js
           Line: ...
-
+      
     `);
   });
 
@@ -110,7 +110,7 @@ describe("toHaveAttribute(attribute, expectedValue)", () => {
 
       Filename: expect-retrying.js
           Line: ...
-
+      
     `);
   });
 });
@@ -151,7 +151,7 @@ describe("not.toHaveAttribute(attribute)", () => {
 
       Filename: expect-retrying.js
           Line: ...
-
+      
     `);
   });
 });
@@ -179,7 +179,7 @@ describe("not.toHaveAttribute(attribute, expectedValue)", () => {
 
       Filename: expect-retrying.js
           Line: ...
-
+      
     `);
   });
 
