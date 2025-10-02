@@ -256,6 +256,11 @@ export class DefaultMatcherErrorRenderer implements MatcherErrorRenderer {
   ): string {
     const maybeColorize = (text: string, color: keyof typeof ANSI_COLORS) =>
       config.colorize ? colorize(text, color) : text;
+
+    if ("customMessage" in info && typeof info.customMessage === "string") {
+      return maybeColorize(info.customMessage, "white");
+    }
+
     return maybeColorize(`expect(`, "darkGrey") +
       maybeColorize(`received`, "red") +
       maybeColorize(`).`, "darkGrey") +
