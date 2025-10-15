@@ -11,7 +11,7 @@ Deno.test("assert default to hard assertions", () => {
     myAssert(false, "false is false");
   } catch (e) {
     // In the Deno runtime, the k6/execution module is not available, so
-    // it is mapepd to the k6-execution-shim module, which is throwing AbortedTestError instead.
+    // it is mapped to the k6-execution-shim module, which is throwing AbortedTestError instead.
     // In the k6 runtime, the bundle file will ensure k6/execution is used instead.
     assert(
       e instanceof AbortedTestError,
