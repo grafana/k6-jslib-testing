@@ -3,14 +3,19 @@
   "version": "0.1.0",
   "exports": "./mod.ts",
   "tasks": {
-    "build": "deno --allow-env --allow-read --allow-run esbuild.mjs",
-    "release": "NODE_ENV=production deno --allow-env --allow-read --allow-run esbuild.mjs",
-    "test": "deno task build && deno run --allow-run --allow-net --allow-read tests/run-tests.ts"
+    "build": "deno task tsc && deno task rollup && deno --allow-env --allow-read --allow-run esbuild.mjs && deno task clean-dts",
+    "release": "NODE_ENV=production deno task build",
+    "test": "deno task build && deno run --allow-run --allow-net --allow-read tests/run-tests.ts",
+    "tsc": "deno run --allow-env --allow-read --allow-write npm:typescript/tsc -p tsconfig.json",
+    "rollup": "deno run --allow-env --allow-read --allow-write --allow-sys --allow-ffi npm:rollup -c rollup.dts.config.mjs",
+    "clean-dts": "find dist -name \"*.d.ts\" ! -name \"index.d.ts\" -type f -delete && find dist -type d -delete"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.11",
     "@std/http": "jsr:@std/http@^1.0.21",
     "@types/k6": "npm:@types/k6@^0.57.1",
+    "rollup": "npm:rollup@^4.46.2",
+    "rollup-plugin-dts": "npm:rollup-plugin-dts@^6.2.3",
     "esbuild": "npm:esbuild@^0.25.0",
     "k6": "npm:k6@^0.0.0",
     "k6-execution-shim": "./k6-execution-shim.ts"
