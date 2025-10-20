@@ -16,6 +16,11 @@ export const options = {
   },
 };
 
+const TEST_SERVER_PORT = typeof __ENV !== "undefined" && __ENV.TEST_SERVER_PORT
+  ? __ENV.TEST_SERVER_PORT
+  : "8000";
+const TEST_SERVER_BASE_URL = `http://localhost:${TEST_SERVER_PORT}`;
+
 // First run the standard tests
 const standardTestCases = [
   {
@@ -403,7 +408,7 @@ export default async function testExpectRetrying() {
   for (const testCase of flattenSuites(testCases)) {
     const page = await context.newPage();
     try {
-      await page.goto("http://localhost:8000");
+      await page.goto(TEST_SERVER_BASE_URL);
 
       if (testCase.selector) {
         const locator = page.locator(testCase.selector);
@@ -437,7 +442,7 @@ export default async function testExpectRetrying() {
   for (const testCase of flattenSuites(negationTestCases)) {
     const page = await context.newPage();
     try {
-      await page.goto("http://localhost:8000");
+      await page.goto(TEST_SERVER_BASE_URL);
 
       if (testCase.selector) {
         const locator = page.locator(testCase.selector);

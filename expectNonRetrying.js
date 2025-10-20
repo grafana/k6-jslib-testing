@@ -172,7 +172,6 @@ export function createExpectation(
         matcherConfig,
       );
     },
-    // deno-lint-ignore ban-types
     toBeInstanceOf(expected) {
       createMatcher(
         "toBeInstanceOf",

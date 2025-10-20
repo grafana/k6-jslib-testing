@@ -1,6 +1,8 @@
 import { serveFile } from "@std/http/file-server";
 
-Deno.serve((req: Request) => {
+const portArg = Number(Deno.args[0] ?? "8000");
+
+Deno.serve({ hostname: "0.0.0.0", port: portArg }, (req: Request) => {
   const pathname = new URL(req.url).pathname;
   if (pathname === "/") {
     const filepath = new URL("./test.html", import.meta.url).pathname;

@@ -18,7 +18,6 @@ import type { Locator, Page } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
 import { isLocator, isPage } from "./expectations/utils.ts";
-import type { ExpectationFailed } from "./expectations/result.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
   /**
@@ -396,7 +395,9 @@ export function createLocatorExpectation(
         async () => {
           try {
             // First check if the element is an input, textarea or select.
-            return await locator.inputValue().then((text) => text.length === 0);
+            return await locator.inputValue().then((text: string) =>
+              text.length === 0
+            );
           } catch (error) {
             let msg = "";
             if (error instanceof Error) {
@@ -419,7 +420,7 @@ export function createLocatorExpectation(
               throw error;
             }
 
-            return await locator.textContent().then((text) => {
+            return await locator.textContent().then((text: string | null) => {
               if (text === null || text === undefined) {
                 return true;
               }
