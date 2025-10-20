@@ -13,8 +13,20 @@ async function runTests() {
   try {
     // Run the tests
     const tests = [
-      ["k6", "run", "--quiet", "--no-summary", "tests/expect-non-retrying.js"],
-      ["k6", "run", "--quiet", "--no-summary", "tests/expect-retrying.js"],
+      [
+        "k6",
+        "run",
+        "--quiet",
+        "--summary-mode=disabled",
+        "tests/expect-non-retrying.js",
+      ],
+      [
+        "k6",
+        "run",
+        "--quiet",
+        "--summary-mode=disabled",
+        "tests/expect-retrying.js",
+      ],
     ];
 
     for (const args of tests) {
