@@ -1,4 +1,5 @@
 import { build } from "esbuild";
+import { generateDtsBundle } from "dts-bundle-generator";
 import * as process from "node:process";
 
 const buildOptions = {
@@ -58,5 +59,24 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Build the project
-build(buildOptions).catch(() => process.exit(1));
+async function emitTypeDefinitions() {
+  const [dtsContent] = generateDtsBundle([{
+    filePath: "./mod.ts",
+    output: {
+      noBanner: true,
+    },
+  }], {
+    preferredConfigPath: "./tsconfig.json",
+  });
+
+  await Deno.mkdir("dist", { recursive: true });
+  await Deno.writeTextFile("dist/index.d.ts", `${dtsContent}\n`);
+}
+
+try {
+  await build(buildOptions);
+  await emitTypeDefinitions();
+} catch (error) {
+  console.error(error);
+  process.exit(1);
+}
