@@ -8,10 +8,13 @@ export interface Environment {
   [key: string]: string | undefined;
 }
 
+type DenoEnv = { env: { toObject(): Record<string, string> } };
+
 function getEnvironment(): Environment {
-  // When running in Deno
-  if (typeof Deno !== "undefined") {
-    return Deno.env.toObject();
+  const deno = (globalThis as { Deno?: DenoEnv }).Deno;
+
+  if (deno) {
+    return deno.env.toObject();
   }
 
   // When running in k6

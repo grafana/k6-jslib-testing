@@ -1,4 +1,4 @@
-import { assert } from "jsr:@std/assert";
+import { assert } from "@std/assert";
 import { assert as myAssert, AssertionFailedError } from "./assert.ts";
 import { AbortedTestError } from "./k6-execution-shim.ts";
 
