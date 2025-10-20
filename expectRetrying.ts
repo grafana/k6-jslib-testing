@@ -18,6 +18,7 @@ import type { Locator, Page } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
 import { isLocator, isPage } from "./expectations/utils.ts";
+import type { ExpectationFailed } from "./expectations/result.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
   /**
@@ -518,11 +519,13 @@ export function createLocatorExpectation(
             return;
           }
 
+          const failedResult = finalResult as ExpectationFailed;
+
           const info: MatcherErrorInfo = {
             executionContext,
             matcherName,
-            expected: finalResult.detail.expected,
-            received: finalResult.detail.received,
+            expected: failedResult.detail.expected,
+            received: failedResult.detail.received,
           };
 
           usedAssert(
