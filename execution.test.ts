@@ -1,6 +1,6 @@
 // deno-lint-ignore-file
 
-import { assert, assertEquals, assertStrictEquals } from "jsr:@std/assert";
+import { assert, assertEquals, assertStrictEquals } from "@std/assert";
 import { captureExecutionContext } from "./execution.ts";
 import type { StackFrame, Stacktrace } from "./stacktrace.ts";
 

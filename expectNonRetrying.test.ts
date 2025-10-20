@@ -1,6 +1,6 @@
 // deno-lint-ignore-file
 
-import { assert } from "jsr:@std/assert";
+import { assert } from "@std/assert";
 import { createExpectation } from "./expectNonRetrying.ts";
 import type { ExpectConfig } from "./config.ts";
 import type { SoftMode } from "./assert.ts";

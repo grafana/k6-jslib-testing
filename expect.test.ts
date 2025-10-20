@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 
 import { expect } from "./expect.ts";
 import { withEnv } from "./test_helpers.ts";

@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 
 import { ConfigLoader } from "./config.ts";
 import { withEnv } from "./test_helpers.ts";

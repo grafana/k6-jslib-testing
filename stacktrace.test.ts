@@ -1,6 +1,6 @@
 // deno-lint-ignore-file
 
-import { assert, assertEquals } from "jsr:@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { parseStackTrace } from "./stacktrace.ts";
 
 Deno.test("parseStackTrace", async (t) => {
