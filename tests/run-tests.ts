@@ -1,9 +1,23 @@
 async function runTests() {
+  const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
+  const serverPort = (listener.addr as Deno.NetAddr).port;
+  listener.close();
+  const serverBaseUrl = `http://127.0.0.1:${serverPort}`;
+
   // Start the test server
   const server = new Deno.Command("deno", {
-    args: ["run", "--allow-net", "--allow-read", "tests/testserver.ts"],
+    args: [
+      "run",
+      "--allow-net",
+      "--allow-read",
+      "--allow-env",
+      "tests/testserver.ts",
+    ],
     stdout: "inherit",
     stderr: "inherit",
+    env: {
+      TEST_SERVER_PORT: String(serverPort),
+    },
   });
   const serverProcess = server.spawn();
 
@@ -34,6 +48,10 @@ async function runTests() {
         args: args.slice(1),
         stdout: "inherit",
         stderr: "inherit",
+        env: {
+          K6_NO_API: "true",
+          TEST_SERVER_BASE_URL: serverBaseUrl,
+        },
       });
       const status = await test.output();
 

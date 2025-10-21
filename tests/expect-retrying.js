@@ -395,6 +395,7 @@ function flattenSuites(tests) {
 }
 
 export default async function testExpectRetrying() {
+  const baseUrl = __ENV.TEST_SERVER_BASE_URL ?? "http://localhost:8000";
   const context = await browser.newContext();
 
   const testCases = [...testItems, ...standardTestCases];
@@ -403,7 +404,7 @@ export default async function testExpectRetrying() {
   for (const testCase of flattenSuites(testCases)) {
     const page = await context.newPage();
     try {
-      await page.goto("http://localhost:8000");
+      await page.goto(baseUrl);
 
       if (testCase.selector) {
         const locator = page.locator(testCase.selector);
@@ -437,7 +438,7 @@ export default async function testExpectRetrying() {
   for (const testCase of flattenSuites(negationTestCases)) {
     const page = await context.newPage();
     try {
-      await page.goto("http://localhost:8000");
+      await page.goto(baseUrl);
 
       if (testCase.selector) {
         const locator = page.locator(testCase.selector);
