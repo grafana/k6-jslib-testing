@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           persist-credentials: false
 
@@ -26,7 +26,7 @@ jobs:
         with:
           deno-version: v2.x
 
-      - uses: grafana/setup-k6-action@v1
+      - uses: grafana/setup-k6-action@ffe7d7290dfa715e48c2ccc924d068444c94bde2 # v1
 
       - name: Run Integration Tests
         run: K6_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome K6_BROWSER_HEADLESS=true deno task test
