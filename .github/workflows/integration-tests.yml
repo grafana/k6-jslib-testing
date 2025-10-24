@@ -22,11 +22,11 @@ jobs:
           persist-credentials: false
 
       - name: Setup Deno
-        uses: denoland/setup-deno@909cc5acb0fdd60627fb858598759246509fa755 # v2.0.2
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb # v2.0.3
         with:
           deno-version: v2.x
 
-      - uses: grafana/setup-k6-action@v1
+      - uses: grafana/setup-k6-action@ffe7d7290dfa715e48c2ccc924d068444c94bde2 # v1
 
       - name: Run Integration Tests
         run: K6_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome K6_BROWSER_HEADLESS=true deno task test
