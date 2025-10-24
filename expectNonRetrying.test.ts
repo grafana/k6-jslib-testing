@@ -161,12 +161,11 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const expectation1 = createExpectation(1, config, "unexpected status");
     expectation1.toBe(1);
 
+    // In this test, even with a passing assertion, the custom message will be
+    // present, but it won't be rendered.
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for matching values");
     assert(!assertSoft, "Soft should be false by default");
-
-    // For passing assertions, we don't expect the custom message to be in the error message
-    // since no error is actually generated (just the assertion succeeds)
 
     // Reset mock
     assertCalled = false;
