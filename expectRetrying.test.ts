@@ -211,6 +211,67 @@ Deno.test("negated retrying expectations", async (t) => {
   });
 });
 
+Deno.test("retrying expectations with custom messages", async (t) => {
+  await t.step(
+    "should include custom message in error for failing assertion",
+    async () => {
+      let assertCalled = false;
+      let assertCondition = false;
+      let assertMessage = "";
+
+      const mockLocator = {
+        isVisible: async () => false, // Will fail the assertion
+      };
+
+      const mockAssert = (
+        condition: boolean,
+        message: string,
+        soft?: boolean,
+      ) => {
+        assertCalled = true;
+        assertCondition = condition;
+        assertMessage = message;
+        // Don't throw for this test
+      };
+
+      // Import the createLocatorExpectation function directly to test it
+      const { createLocatorExpectation } = await import("./expectRetrying.ts");
+
+      const config: ExpectConfig = {
+        assertFn: mockAssert,
+        timeout: 10,
+        interval: 5,
+        soft: false,
+        softMode: "throw",
+        colorize: false,
+        display: "pretty", // Use pretty mode to see custom message
+      };
+
+      // Test with custom message
+      const expectation = createLocatorExpectation(
+        mockLocator as any,
+        config,
+        "element should be visible for user interaction", // Custom message
+        false,
+      );
+
+      await expectation.toBeVisible();
+
+      assert(assertCalled, "Assert should have been called");
+      assert(
+        !assertCondition,
+        "Condition should be false for failing assertion",
+      );
+      assert(
+        assertMessage.includes(
+          "element should be visible for user interaction",
+        ),
+        `Custom message should be included in the assert message. Got: ${assertMessage}`,
+      );
+    },
+  );
+});
+
 /**
  * Asserts that a promise rejects with an error matching the expected parameters.
  *

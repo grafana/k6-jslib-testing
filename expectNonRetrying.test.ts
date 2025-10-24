@@ -132,6 +132,79 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
+  await t.step("toBe with custom message", () => {
+    let assertCalled = false;
+    let assertCondition = false;
+    let assertMessage = "";
+    let assertSoft = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      assertCalled = true;
+      assertCondition = condition;
+      assertMessage = message;
+      assertSoft = !!soft;
+    };
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      soft: false,
+      softMode: "throw",
+      colorize: false,
+      display: "pretty", // Change to pretty to see if custom message appears
+    };
+
+    // Test with custom message for passing assertion
+    const expectation1 = createExpectation(1, config, "unexpected status");
+    expectation1.toBe(1);
+
+    // In this test, even with a passing assertion, the custom message will be
+    // present, but it won't be rendered.
+    assert(assertCalled, "Assert should have been called");
+    assert(assertCondition, "Condition should be true for matching values");
+    assert(!assertSoft, "Soft should be false by default");
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+    assertMessage = "";
+
+    // Test with custom message for failing assertion
+    const expectation2 = createExpectation(1, config, "unexpected status");
+    expectation2.toBe(0);
+
+    assert(assertCalled, "Assert should have been called");
+    assert(
+      !assertCondition,
+      "Condition should be false for non-matching values",
+    );
+    // For failing assertions, the custom message should appear as the error line
+    assert(
+      assertMessage.includes("unexpected status"),
+      `Custom message should be included in the assert message. Got: ${assertMessage}`,
+    );
+
+    // Reset mock
+    assertCalled = false;
+    assertCondition = false;
+    assertMessage = "";
+
+    // Test without custom message to ensure it still works
+    const expectation3 = createExpectation(1, config);
+    expectation3.toBe(1);
+
+    assert(assertCalled, "Assert should have been called");
+    assert(assertCondition, "Condition should be true for matching values");
+    // Message should not contain the custom message text
+    assert(
+      !assertMessage.includes("unexpected status"),
+      "Should not include custom message when none is provided",
+    );
+  });
+
   await t.step("toBeCloseTo", () => {
     let assertCalled = false;
     let assertCondition = false;
