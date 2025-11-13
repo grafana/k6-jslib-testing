@@ -5,7 +5,7 @@
   "tasks": {
     "build": "deno --allow-env --allow-read --allow-run esbuild.mjs",
     "release": "NODE_ENV=production deno --allow-env --allow-read --allow-run esbuild.mjs",
-    "test": "deno task build && deno run --allow-run --allow-net --allow-read tests/run-tests.ts"
+    "test": "deno task build && deno run --allow-run --allow-net --allow-read --allow-env tests/run-tests.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.11",

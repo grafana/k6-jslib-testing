@@ -91,7 +91,7 @@ export type DisplayFormat = "inline" | "pretty";
 export const DEFAULT_CONFIG: ExpectConfig = {
   ...DEFAULT_RETRY_OPTIONS,
   soft: false,
-  softMode: "throw",
+  softMode: "fail",
   colorize: true,
   display: "pretty",
   assertFn: assert,
