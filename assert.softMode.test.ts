@@ -96,28 +96,26 @@ Deno.test({
     );
 
     await t.step(
-      "default expect.soft should throw an AssertionFailedError",
+      "default expect.soft should call exec.test.fail (softMode='fail' by default)",
       async () => {
         try {
           // Replace mock only within test
           let failCalled = false;
+          let failMessage = "";
           exec.test.fail = (message: string) => {
             failCalled = true;
+            failMessage = message;
           };
 
-          try {
-            // Default behavior should be to throw
-            expect.soft(false).toBeTruthy();
-            denoAssert(false, "expect.soft did not throw");
-          } catch (e) {
-            denoAssert(e instanceof AssertionFailedError, "wrong error type");
-            denoAssert(
-              e.message && typeof e.message === "string" &&
-                e.message.length > 0,
-              "error has no message",
-            );
-            denoAssert(!failCalled, "exec.test.fail was called");
-          }
+          // Default behavior is now softMode='fail', so it should call exec.test.fail
+          expect.soft(false).toBeTruthy();
+
+          denoAssert(failCalled, "exec.test.fail was not called");
+          denoAssert(
+            failMessage && typeof failMessage === "string" &&
+              failMessage.length > 0,
+            "exec.test.fail was called with empty message",
+          );
         } finally {
           // Restore original functions
           exec.test.fail = originalTestFail;
