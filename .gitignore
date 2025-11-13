@@ -1,5 +1,6 @@
 # Ignore dist folder
 dist/
+node_modules/
 
 # Sensitive files
 .env*
