@@ -1,4 +1,6 @@
 import { build } from "esbuild";
+import * as path from "@std/path";
+
 import * as process from "node:process";
 
 const buildOptions = {
@@ -44,6 +46,43 @@ const buildOptions = {
 
   // By default, no minification is applied
   minify: false,
+
+  plugins: [
+    {
+      name: "normalize-source-maps",
+      setup(build) {
+        build.onEnd(async (result) => {
+          if (result.errors.length > 0) {
+            return;
+          }
+
+          const mapPath = path.join("dist", "index.js.map");
+          try {
+            const content = await Deno.readTextFile(mapPath);
+            const map = JSON.parse(content);
+
+            // The sources in in the source map are relative to the outdir, which means that
+            // the paths are mapped incorrectly when hosted in jslib.k6.io. For instance,
+            // `../execution.ts` would map to `https://jslib.k6.io/k6-testing/execution.ts`
+            // instead of the correct `https://jslib.k6.io/k6-testing/0.6.0/execution.ts`.
+            //
+            // It's generally not a problem, but we want to be able to detect which stack
+            // frames are from k6-testing, and having incorrect paths makes that impossible.
+            map.sources = map.sources.map((source) => {
+              if (source.startsWith("../")) {
+                return "./" + source.substring(3);
+              }
+              return source;
+            });
+
+            await Deno.writeTextFile(mapPath, JSON.stringify(map));
+          } catch (error) {
+            console.error("Failed to normalize source map:", error);
+          }
+        });
+      },
+    },
+  ],
 };
 
 // Determine if this is a release build or a development build
