@@ -12,4 +12,4 @@ export { expect } from "./expect.ts";
 export { colorize } from "./colors.ts";
 
 export { createTestSuite, type TestSuite } from "./suites/suite.ts";
-export { describe, it, options, runSuite, test } from "./suites/globals.ts";
+export { defineSuite, describe, it, test } from "./suites/globals.ts";

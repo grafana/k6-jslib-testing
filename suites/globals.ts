@@ -11,6 +11,7 @@ import { captureExecutionContext } from "../execution.ts";
 import { dirname } from "../utils/path.ts";
 import { formatSummary, formatTestName } from "./summary.ts";
 import type { TestFunctions } from "./test.ts";
+import { createTestOptions, type TestSuiteOptions } from "./options.ts";
 
 type GlobalTestFunctions = TestFunctions<
   { expect: ExpectFunction },
@@ -54,30 +55,22 @@ export const test = fns.test;
 export const it = fns.it;
 export const describe = fns.describe;
 
-export const options: Options = {
-  scenarios: {
-    default: {
-      executor: "per-vu-iterations",
-      vus: 1,
-      iterations: 1,
-      exec: "default",
-      options: {
-        browser: {
-          type: "chromium",
-        },
-      },
-    },
-  },
-};
-
-interface RunOptions {
+interface DefineTestSuiteOptions extends TestSuiteOptions {
+  /**
+   * Whether to colorize the output. Unless explicitly set to false, this options
+   * will match the option of the `expect` function.
+   */
   colorize?: boolean;
 }
 
-export function runSuite(options: RunOptions): () => Promise<void> {
-  const config = ConfigLoader.load(options);
-  const colorize = config.colorize ? ansi.colorize : (str: string) => str;
+export interface TestSuiteDefinition {
+  options: Options;
+  runSuite: () => Promise<void>;
+}
 
+export function defineSuite(
+  options: DefineTestSuiteOptions,
+): TestSuiteDefinition {
   const stackTrace = parseStackTrace(new Error().stack);
   const executationContext = captureExecutionContext(stackTrace);
 
@@ -85,9 +78,15 @@ export function runSuite(options: RunOptions): () => Promise<void> {
     throw new Error("Could not capture execution context");
   }
 
+  const config = ConfigLoader.load(options);
+
+  const colorize = config.colorize
+    ? ansi.colorize
+    : (str: string | undefined) => str ?? "";
+
   const cwd = dirname(executationContext.filePath);
 
-  return async function () {
+  async function runSuite() {
     const results = await rootTestSuite.run({
       cwd,
       onTestCase(result) {
@@ -109,5 +108,10 @@ export function runSuite(options: RunOptions): () => Promise<void> {
     if (results.some((result) => result.type === "fail")) {
       exec.test.fail(`One or more test case(s) failed`);
     }
+  }
+
+  return {
+    options: createTestOptions(options),
+    runSuite,
   };
 }
