@@ -4,8 +4,8 @@ import { setRootDirectory } from "./execution.ts";
 // stack frames from error stack traces.
 setRootDirectory(
   import.meta.resolve("./1234.js").replace(/1234\.js$/i, "")
-    .replace(/^file:\/\//i, "")
-    .replace(/dist\/$/i, ""),
+    .replace(/^file:\/\//i, "") // Remove file:// for local dev
+    .replace(/dist\/$/i, ""), // Remove dist/ for local dev
 );
 
 export { expect } from "./expect.ts";

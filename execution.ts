@@ -62,8 +62,7 @@ export function captureExecutionContext(
     return undefined;
   }
 
-  // Find the first stack frame that is outside of the testing library itself. We check for both
-  // the repo name and the jslib name to cover both dev and production scenarios. There's also
+  // Find the first stack frame that is outside of the testing library. There's also
   // an exception for tests within the testing library itself.
   const stackFrameIndex = st.findIndex((frame) =>
     !frame.filePath.startsWith(ROOT_DIRECTORY) ||
