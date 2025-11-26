@@ -533,6 +533,7 @@
     "https://deno.land/std@0.224.0/path/windows/to_namespaced_path.ts": "4ffa4fb6fae321448d5fe810b3ca741d84df4d7897e61ee29be961a6aac89a4c",
     "https://deno.land/std@0.224.0/streams/byte_slice_stream.ts": "5bbdcadb118390affa9b3d0a0f73ef8e83754f59bb89df349add669dd9369713",
     "https://deno.land/std@0.224.0/version.ts": "f6a28c9704d82d1c095988777e30e6172eb674a6570974a0d27a653be769bbbe",
+    "https://jslib.k6.io/k6-testing/0.6.0/index.js": "fa2055d58a0a4e7eb3bdae78b22640106132a623b6ed95f5341182dbfd03fa42",
     "https://jslib.k6.io/k6chaijs/4.3.4.1/index.js": "0e2fb2818a1ee99ad9be36e07744ff628caf48839be3569d4a0d09c8bd9dec8c"
   },
   "workspace": {
