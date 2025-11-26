@@ -1,8 +1,9 @@
-import type { test as globalTest } from "../../suites/globals.ts";
+import type { expect as globalExpect, test as globalTest } from "../../mod.ts";
 import { expect, test as baseTest } from "../../dist/index.js";
 
-// Hacky way to get correct typing for the test function in dist/index.js
+// Hacky way to get correct typing for the test and expect functions in dist/index.js
 const typedTest = baseTest as unknown as typeof globalTest;
+const typedExpect = expect as unknown as typeof globalExpect;
 
 function makeExpectWithSpy() {
   const result: { passed: boolean; message: string | null } = {
@@ -10,9 +11,9 @@ function makeExpectWithSpy() {
     message: null,
   };
 
-  const expectFn = expect.configure({
+  const expectFn = typedExpect.configure({
     colorize: false,
-    assertFn(condition, message) {
+    assertFn(condition: boolean, message: string) {
       result.passed = condition;
 
       // Remove file/line info for snapshot consistency

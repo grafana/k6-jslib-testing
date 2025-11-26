@@ -8,6 +8,9 @@
     "release": "NODE_ENV=production deno --allow-env --allow-read --allow-run --allow-write esbuild.mjs",
     "test": "deno task build && deno run --allow-run --allow-net --allow-read --allow-env tests/run-tests.ts"
   },
+  "compilerOptions": {
+    "lib": ["dom", "es2022", "deno.ns"]
+  },
   "test": {
     "exclude": ["tests/**/*"]
   },

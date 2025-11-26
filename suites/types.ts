@@ -7,7 +7,7 @@ export class TestCaseError extends Error {
 export interface TestRunContext {
   start: (test: TestCase) => void;
   pass: (test: TestCase) => void;
-  fail: (test: TestCase, error: Error) => void;
+  fail: (test: TestCase, error: unknown) => void;
 }
 
 export interface TestCase {
@@ -36,7 +36,7 @@ export interface TestCasePassed extends TestCaseResultBase {
 
 export interface TestCaseFailed extends TestCaseResultBase {
   type: "fail";
-  error: Error;
+  error: unknown;
 }
 
 export type TestCaseResult = TestCasePassed | TestCaseFailed;
