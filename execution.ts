@@ -1,8 +1,4 @@
-import {
-  parseStackTrace,
-  type StackFrame,
-  type Stacktrace,
-} from "./stacktrace.ts";
+import type { StackFrame, Stacktrace } from "./stacktrace.ts";
 
 let ROOT_DIRECTORY = "";
 let INTERNAL_TESTS_DIRECTORY = "";

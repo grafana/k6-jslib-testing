@@ -92,7 +92,9 @@ class TestSuite {
     currentGroup.children.push(newGroup);
   }
 
-  async run({ cwd, onTestCase: onTestDone }: RunOptions = {}) {
+  async run(
+    { cwd, onTestCase: onTestDone }: RunOptions = {},
+  ): Promise<TestCaseResult[]> {
     const instances = Array.from(this.#roots.values()).flatMap((group) => {
       return buildTestCaseInstances({
         ...group,
@@ -158,7 +160,7 @@ class TestSuite {
 
 export const rootTestSuite = new TestSuite();
 
-export function createTestSuite() {
+export function createTestSuite(): TestSuite {
   return new TestSuite();
 }
 

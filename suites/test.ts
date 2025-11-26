@@ -135,7 +135,7 @@ interface MakeTestFunctionArgs<Context, Options> {
   mergeOptions(baseOptions: Options, newOptions: DeepPartial<Options>): Options;
 }
 
-interface TestFunctions<Context, Options> {
+export interface TestFunctions<Context, Options> {
   test: TestFunction<Context, Options>;
   it: TestFunction<Context, Options>;
   describe: (name: string, fn: () => void) => void;

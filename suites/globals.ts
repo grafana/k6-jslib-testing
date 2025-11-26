@@ -1,6 +1,6 @@
 import type { Options } from "k6/options";
-import { ConfigLoader, DEFAULT_CONFIG } from "../config.ts";
-import { expect } from "../expect.ts";
+import { ConfigLoader, DEFAULT_CONFIG, type ExpectConfig } from "../config.ts";
+import { expect, type ExpectFunction } from "../expect.ts";
 import { rootTestSuite } from "./suite.ts";
 import { makeTestFunction } from "./test.ts";
 import { TestCaseError } from "./types.ts";
@@ -10,8 +10,14 @@ import { parseStackTrace } from "../stacktrace.ts";
 import { captureExecutionContext } from "../execution.ts";
 import { dirname } from "../utils/path.ts";
 import { formatSummary, formatTestName } from "./summary.ts";
+import type { TestFunctions } from "./test.ts";
 
-const { test, it, describe } = makeTestFunction({
+type GlobalTestFunctions = TestFunctions<
+  { expect: ExpectFunction },
+  { expect: ExpectConfig }
+>;
+
+const fns: GlobalTestFunctions = makeTestFunction({
   suite: rootTestSuite,
 
   options: {
@@ -44,7 +50,9 @@ const { test, it, describe } = makeTestFunction({
   },
 });
 
-export { describe, it, test };
+export const test = fns.test;
+export const it = fns.it;
+export const describe = fns.describe;
 
 export const options: Options = {
   scenarios: {
@@ -66,7 +74,7 @@ interface RunOptions {
   colorize?: boolean;
 }
 
-export function runSuite(options: RunOptions) {
+export function runSuite(options: RunOptions): () => Promise<void> {
   const config = ConfigLoader.load(options);
   const colorize = config.colorize ? ansi.colorize : (str: string) => str;
 
