@@ -104,8 +104,20 @@ export interface TestFunction<Context, Options> {
     options: ExtendOptions<NewContext, NewOptions>,
   ): TestFunctions<Context & NewContext, Options & NewOptions>;
 
+  /**
+   * Creates a new test function with the given options merged into the base options.
+   *
+   * @param newOptions The new options to merge into the base options.
+   * @returns A new test function with the merged options.
+   */
   configure(newOptions: DeepPartial<Options>): TestFunction<Context, Options>;
 
+  /**
+   * Creates a new test suite using the current test function configuration.
+   *
+   * @param suite An optional test suite to use as the base for the new suite. If not provided, a new suite will be created.
+   * @returns New test functions that will run tests in the given suite.
+   */
   suite(suite?: TestSuite): TestFunctions<Context, Options>;
 }
 

@@ -1,4 +1,4 @@
-import { browser } from "k6/browser";
+import { browser, type Page } from "k6/browser";
 import { test as baseTest } from "./test.ts";
 
 /**
@@ -30,7 +30,11 @@ export { describe, it, test };
 /**
  * Render an element into the body of the given page.
  */
-export function renderElement(page, tagName, attrs) {
+export function renderElement<K extends keyof HTMLElementTagNameMap>(
+  page: Page,
+  tagName: K,
+  attrs: Record<string, string>,
+) {
   return page.evaluate(([tagName, attrs]) => {
     const el = document.createElement(tagName);
 
@@ -39,5 +43,5 @@ export function renderElement(page, tagName, attrs) {
     });
 
     document.body.appendChild(el);
-  }, [tagName, attrs]);
+  }, [tagName, attrs] as const);
 }
