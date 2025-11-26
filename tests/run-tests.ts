@@ -111,6 +111,13 @@ async function runIntegrationTests() {
         "--summary-mode=disabled",
         "tests/expect-retrying.js",
       ],
+      [
+        "k6",
+        "run",
+        "--quiet",
+        "--summary-mode=disabled",
+        "tests/suite.ts",
+      ],
     ];
 
     for (const args of tests) {

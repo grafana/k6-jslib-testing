@@ -1,7 +1,5 @@
-import "./expectations/toHaveAttribute.js";
-
 import { browser } from "k6/browser";
-import { expect, failTest, passTest, testItems } from "./testing.js";
+import { expect, failTest, passTest } from "./helpers.ts";
 
 export const options = {
   scenarios: {
@@ -398,10 +396,8 @@ export default async function testExpectRetrying() {
   const baseUrl = __ENV.TEST_SERVER_BASE_URL ?? "http://localhost:8000";
   const context = await browser.newContext();
 
-  const testCases = [...testItems, ...standardTestCases];
-
   // First run standard tests
-  for (const testCase of flattenSuites(testCases)) {
+  for (const testCase of flattenSuites(standardTestCases)) {
     const page = await context.newPage();
     try {
       await page.goto(baseUrl);

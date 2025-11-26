@@ -1,4 +1,16 @@
-import type { StackFrame, Stacktrace } from "./stacktrace.ts";
+import {
+  parseStackTrace,
+  type StackFrame,
+  type Stacktrace,
+} from "./stacktrace.ts";
+
+let ROOT_DIRECTORY = "";
+let INTERNAL_TESTS_DIRECTORY = "";
+
+export function setRootDirectory(path: string) {
+  ROOT_DIRECTORY = path;
+  INTERNAL_TESTS_DIRECTORY = `${ROOT_DIRECTORY}tests/`;
+}
 
 /**
  * Holds the execution context for a given assertion, and is used to render the error message.
@@ -46,11 +58,23 @@ export interface ExecutionContext {
 export function captureExecutionContext(
   st: Stacktrace,
 ): ExecutionContext | undefined {
-  if (!st || st.length <= 1) {
+  if (!st) {
     return undefined;
   }
 
-  const stackFrame: StackFrame = st[st.length - 1];
+  // Find the first stack frame that is outside of the testing library itself. We check for both
+  // the repo name and the jslib name to cover both dev and production scenarios. There's also
+  // an exception for tests within the testing library itself.
+  const stackFrameIndex = st.findIndex((frame) =>
+    !frame.filePath.startsWith(ROOT_DIRECTORY) ||
+    frame.filePath.startsWith(INTERNAL_TESTS_DIRECTORY)
+  );
+
+  if (stackFrameIndex === -1) {
+    return undefined;
+  }
+
+  const stackFrame: StackFrame = st[stackFrameIndex];
 
   const filePath = stackFrame.filePath;
   const fileName = stackFrame.fileName;

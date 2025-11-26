@@ -1,27 +1,35 @@
-import { colorize, expect as globalExpect } from "../dist/index.js";
+import { browser } from "k6/browser";
+import { colorize, expect as globalExpect, test } from "../dist/index.js";
 
 export const expect = globalExpect.configure({
   soft: true,
 });
 
-const context = [];
+/**
+ * Extend the base test with helpers for browser testing.
+ */
+const { describe, it } = test.extend({
+  defaultOptions: {},
 
-export const testItems = [];
+  mergeOptions: (baseOptions) => baseOptions,
 
-export function describe(name, fn) {
-  context.push(name);
+  createContext: async () => {
+    const browserContext = await browser.newContext();
+    const page = await browserContext.newPage();
 
-  fn();
+    return {
+      context: {
+        page,
+      },
+      async dispose() {
+        await page.close();
+        await browserContext.close();
+      },
+    };
+  },
+});
 
-  context.pop();
-}
-
-export function it(name, fn) {
-  testItems.push({
-    name: [...context, name].join(" > "),
-    assertion: fn,
-  });
-}
+export { describe, it };
 
 /**
  * Render an element into the body of the given page.
@@ -57,12 +65,15 @@ export function makeExpectWithSpy() {
     },
   });
 
-  return [result, expectFn];
+  return [result, expectFn] as const;
 }
 
-export function failTest(testName, message) {
+export function failTest(testName: string, message: string) {
   class TestFailureError extends Error {
-    constructor(testName, message) {
+    testName: string;
+    failureMessage: string;
+
+    constructor(testName: string, message: string) {
       super(colorize(`✗ ${testName}: ${message}`, "red"));
       this.name = "TestFailureError";
       this.testName = testName;
@@ -73,12 +84,18 @@ export function failTest(testName, message) {
   throw new TestFailureError(testName, message);
 }
 
-export function passTest(testName) {
+export function passTest(testName: string) {
   console.log(colorize(`✓ ${testName}`, "green"));
 }
 
+interface MockedAssertCall {
+  condition: boolean;
+  message: string;
+  soft: boolean;
+}
+
 export function createMockAssertFn() {
-  const mockFn = function (condition, message, soft = false) {
+  const mockFn = function (condition: boolean, message: string, soft = false) {
     mockFn.called = true;
     mockFn.calls.push({
       condition,
@@ -89,7 +106,7 @@ export function createMockAssertFn() {
 
   // Initialize state
   mockFn.called = false;
-  mockFn.calls = [];
+  mockFn.calls = [] as MockedAssertCall[];
 
   return mockFn;
 }
