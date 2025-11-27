@@ -16,9 +16,13 @@ function formatErrors(
   const messages = errors.map((error) => {
     const name = colorize(formatTestName(error), "red");
 
-    const indentedMessage = error.error.message.split("\n").map((line) =>
-      `  ${line}`
-    ).join("\n");
+    const message = error instanceof Error
+      ? error.message
+      : String(error.error);
+
+    const indentedMessage = message.split("\n").map((line) => `  ${line}`).join(
+      "\n",
+    );
 
     return `${name}:\n${indentedMessage}`;
   });

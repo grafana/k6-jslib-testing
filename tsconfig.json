@@ -16,7 +16,8 @@
     "strict": true,
     "noEmitOnError": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["@types/k6"]
   },
   "include": [
     "./*.ts",
@@ -24,10 +25,5 @@
     "./utils/**/*.ts",
     "./types.d.ts"
   ],
-  "exclude": [
-    "dist",
-    "tests",
-    "**/*.test.ts",
-    "**/*.js"
-  ]
+  "exclude": ["dist", "tests", "**/*.test.ts", "**/*.js"]
 }
