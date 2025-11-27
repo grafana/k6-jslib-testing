@@ -1,8 +1,24 @@
-import type { TestCaseFailed, TestCaseResult } from "./types.ts";
+import {
+  TestCaseError,
+  type TestCaseFailed,
+  type TestCaseResult,
+} from "./types.ts";
 import type { ColorizerFn } from "../colors.ts";
 
 export function formatTestName(result: TestCaseResult): string {
   return [...result.meta.path, result.meta.name].join(" > ");
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof TestCaseError) {
+    return error.detail;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }
 
 function formatErrors(
@@ -16,10 +32,7 @@ function formatErrors(
   const messages = errors.map((error) => {
     const name = colorize(formatTestName(error), "red");
 
-    const message = error instanceof Error
-      ? error.message
-      : String(error.error);
-
+    const message = getErrorMessage(error.error);
     const indentedMessage = message.split("\n").map((line) => `  ${line}`).join(
       "\n",
     );

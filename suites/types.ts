@@ -1,6 +1,10 @@
 export class TestCaseError extends Error {
+  detail: string;
+
   constructor(message: string) {
     super(message);
+
+    this.detail = message;
   }
 }
 
