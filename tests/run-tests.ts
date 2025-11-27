@@ -1,5 +1,12 @@
+interface Test {
+  name: string;
+  script: string;
+  expectedCode: number;
+  env: Record<string, string>;
+}
+
 async function runExitCodeTests() {
-  const tests = [
+  const tests: Test[] = [
     {
       name:
         "soft-default: expect.soft() with default configuration (softMode='fail')",
