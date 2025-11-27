@@ -42,7 +42,7 @@ const buildOptions = {
 
   // Generate source maps for the output files
   sourcemap: true,
-  sourceRoot: process.env.NODE_ENV === "production" ? "dest/" : ".",
+  sourceRoot: process.env.NODE_ENV === "production" ? "dist/" : ".",
 
   // By default, no minification is applied
   minify: false,
