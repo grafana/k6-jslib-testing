@@ -12,11 +12,36 @@ import {
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 
+/**
+ * Error context provided to .otherwise() callbacks when assertions fail.
+ */
+export interface OtherwiseErrorContext {
+  message: string; // Fully rendered error message
+  expected: string; // String representation of expected value
+  received: string; // String representation of received value
+  matcherName: string; // e.g., "toBe", "toBeVisible"
+}
+
+/**
+ * Callback function type for .otherwise() method.
+ */
+export type OtherwiseCallback = (context: OtherwiseErrorContext) => void;
+
 export interface NonRetryingExpectation {
   /**
    * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
    */
   not: NonRetryingExpectation;
+
+  /**
+   * Registers a callback to execute when the assertion fails. The callback receives error context including
+   * the rendered message, expected/received values, and matcher name. Useful for taking screenshots or
+   * capturing state before the assertion aborts/throws.
+   *
+   * @param callback Function to execute on failure
+   * @returns The same expectation for method chaining
+   */
+  otherwise(callback: OtherwiseCallback): NonRetryingExpectation;
 
   /**
    * Asserts that the value is equal to the expected value.
@@ -154,6 +179,7 @@ export interface NonRetryingExpectation {
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
+ * @param otherwiseCallback optional callback to execute when assertion fails
  * @returns an expectation object over the given value exposing the Expectation set of methods
  */
 export function createExpectation(
@@ -161,6 +187,7 @@ export function createExpectation(
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
+  otherwiseCallback?: OtherwiseCallback,
 ): NonRetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -249,11 +276,22 @@ export function createExpectation(
     isNegated,
     message,
     softMode: config.softMode,
+    otherwiseCallback,
   };
 
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
-      return createExpectation(received, config, message, !isNegated);
+      return createExpectation(
+        received,
+        config,
+        message,
+        !isNegated,
+        otherwiseCallback,
+      );
+    },
+
+    otherwise(callback: OtherwiseCallback): NonRetryingExpectation {
+      return createExpectation(received, config, message, isNegated, callback);
     },
 
     toBe(expected: unknown): void {
@@ -546,6 +584,7 @@ function createMatcher(
     matcherSpecific = {},
     message,
     softMode,
+    otherwiseCallback,
   }: {
     usedAssert: typeof assert;
     isSoft: boolean;
@@ -553,6 +592,7 @@ function createMatcher(
     matcherSpecific?: Record<string, unknown>;
     message?: string;
     softMode?: SoftMode;
+    otherwiseCallback?: OtherwiseCallback;
   },
 ): void {
   const info = createMatcherInfo(
@@ -567,6 +607,31 @@ function createMatcher(
   // If isNegated is true, we want to invert the result
   const finalResult = isNegated ? !result : result;
 
+  // Execute callback on failure BEFORE usedAssert
+  if (!finalResult && otherwiseCallback) {
+    try {
+      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+        .render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
+        );
+
+      otherwiseCallback({
+        message: errorMessage,
+        expected: typeof expected === "string"
+          ? expected
+          : JSON.stringify(expected),
+        received: typeof received === "string"
+          ? received
+          : JSON.stringify(received),
+        matcherName,
+      });
+    } catch (callbackError) {
+      console.error("Error in .otherwise() callback:", callbackError);
+    }
+  }
+
+  // Always proceed with assertion
   usedAssert(
     finalResult,
     MatcherErrorRendererRegistry.getRenderer(matcherName).render(
