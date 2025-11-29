@@ -1,9 +1,8 @@
 import { expect } from "../dist/index.js";
-import { createMockAssertFn, failTest, passTest } from "./testing.js";
+import { createMockAssertFn, failTest, passTest } from "./helpers.ts";
 
 export default function testExpectNonRetrying() {
   TEST_CASES.forEach(runTest);
-  testToBeInstanceOf();
   testToContain();
   testToContainEqual();
   testToHaveProperty();
@@ -224,35 +223,6 @@ function runTest(testCase) {
   }
 
   passTest(testCase.name);
-}
-
-class Example {}
-function testToBeInstanceOf() {
-  const mockAssertFn = createMockAssertFn();
-  const testExpect = expect.configure({ assertFn: mockAssertFn });
-
-  testExpect(new Example()).toBeInstanceOf(Example);
-
-  if (!mockAssertFn.called) {
-    failTest("toBeInstanceOf", "expected assertFn to be called");
-  }
-
-  if (mockAssertFn.calls.length !== 1) {
-    failTest("toBeInstanceOf", "expected assertFn to be called once");
-  }
-
-  if (mockAssertFn.calls[0].condition !== true) {
-    failTest("toBeInstanceOf", "expected assertFn condition to be true");
-  }
-
-  if (mockAssertFn.calls[0].soft !== false) {
-    failTest(
-      "toBeInstanceOf",
-      "expected assertFn to be called with soft === false",
-    );
-  }
-
-  passTest("toBeInstanceOf");
 }
 
 function testToContain() {

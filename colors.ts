@@ -1,3 +1,5 @@
+export type ColorizerFn = typeof colorize;
+
 export const ANSI_COLORS = {
   reset: "\x1b[0m",
 
