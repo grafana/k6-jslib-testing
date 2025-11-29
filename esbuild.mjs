@@ -43,6 +43,19 @@ const buildOptions = {
   // Generate source maps for the output files
   sourcemap: true,
 
+  // The sources in in the source map are relative to the outdir, which means that
+  // the paths are mapped incorrectly when hosted in jslib.k6.io. For instance,
+  // `../execution.ts` would map to `https://jslib.k6.io/k6-testing/execution.ts`
+  // instead of the correct `https://jslib.k6.io/k6-testing/0.6.0/execution.ts`.
+  //
+  // This is generally not a problem, but we want to be able to detect which stack
+  // frames are from k6-testing, and having incorrect paths makes that impossible.
+  //
+  // By setting the sourceRoot we "trick" the source map that it's at the path
+  // `https://jslib.k6.io/k6-testing/0.6.0/dist` and the relative paths will resolve
+  // correctly.
+  sourceRoot: process.env.NODE_ENV === "production" ? "dist/" : ".",
+
   // By default, no minification is applied
   minify: false,
 };
