@@ -11,6 +11,7 @@ import {
   MatcherErrorRendererRegistry,
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
+import { type MatcherResult, MatcherResultImpl } from "./matcherResult.ts";
 
 /**
  * Error context provided to .otherwise() callbacks when assertions fail.
@@ -34,21 +35,11 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Registers a callback to execute when the assertion fails. The callback receives error context including
-   * the rendered message, expected/received values, and matcher name. Useful for taking screenshots or
-   * capturing state before the assertion aborts/throws.
-   *
-   * @param callback Function to execute on failure
-   * @returns The same expectation for method chaining
-   */
-  otherwise(callback: OtherwiseCallback): NonRetryingExpectation;
-
-  /**
    * Asserts that the value is equal to the expected value.
    *
    * @param expected the expected value
    */
-  toBe(expected: unknown): void;
+  toBe(expected: unknown): MatcherResult;
 
   /**
    * Asserts that the value is close to the expected value with a given precision.
@@ -56,31 +47,31 @@ export interface NonRetryingExpectation {
    * @param expected the expected value
    * @param precision the number of decimal places to consider
    */
-  toBeCloseTo(expected: number, precision?: number): void;
+  toBeCloseTo(expected: number, precision?: number): MatcherResult;
 
   /**
    * Asserts that the value is not `undefined`.
    */
-  toBeDefined(): void;
+  toBeDefined(): MatcherResult;
 
   /**
    * Asserts that the value is truthy.
    */
-  toBeFalsy(): void;
+  toBeFalsy(): MatcherResult;
 
   /**
    * Asserts that the value is greater than the expected value.
    *
    * @param expected the expected value
    */
-  toBeGreaterThan(expected: number): void;
+  toBeGreaterThan(expected: number): MatcherResult;
 
   /**
    * Asserts that the value is greater than or equal to the expected value.
    *
    * @param expected
    */
-  toBeGreaterThanOrEqual(expected: number): void;
+  toBeGreaterThanOrEqual(expected: number): MatcherResult;
 
   /**
    * Ensures that value is an instance of a class. Uses instanceof operator.
@@ -88,49 +79,49 @@ export interface NonRetryingExpectation {
    * @param expected The class or constructor function.
    */
   // deno-lint-ignore ban-types
-  toBeInstanceOf(expected: Function): void;
+  toBeInstanceOf(expected: Function): MatcherResult;
 
   /**
    * Asserts that the value is less than the expected value.
    *
    * @param expected the expected value
    */
-  toBeLessThan(expected: number): void;
+  toBeLessThan(expected: number): MatcherResult;
 
   /**
    * Ensures that value <= expected for number or big integer values.
    *
    * @param expected The value to compare to.
    */
-  toBeLessThanOrEqual(expected: number | bigint): void;
+  toBeLessThanOrEqual(expected: number | bigint): MatcherResult;
 
   /**
    * Ensures that value is NaN.
    */
-  toBeNaN(): void;
+  toBeNaN(): MatcherResult;
 
   /**
    * Ensures that value is null.
    */
-  toBeNull(): void;
+  toBeNull(): MatcherResult;
 
   /**
    * Ensures that value is true in a boolean context, anything but false, 0, '', null, undefined or NaN.
    * Use this method when you don't care about the specific value.
    */
-  toBeTruthy(): void;
+  toBeTruthy(): MatcherResult;
 
   /**
    * Ensures that value is `undefined`.
    */
-  toBeUndefined(): void;
+  toBeUndefined(): MatcherResult;
 
   /**
    * Asserts that the value is equal to the expected value.
    *
    * @param expected the expected value
    */
-  toEqual(expected: unknown): void;
+  toEqual(expected: unknown): MatcherResult;
 
   /**
    * Ensures that value has a `.length` property equal to expected.
@@ -138,7 +129,7 @@ export interface NonRetryingExpectation {
    *
    * @param expected
    */
-  toHaveLength(expected: number): void;
+  toHaveLength(expected: number): MatcherResult;
 
   /**
    * Ensures that a string contains an expected substring using a case-sensitive comparison,
@@ -146,7 +137,7 @@ export interface NonRetryingExpectation {
    *
    * @param expected The substring or item to check for
    */
-  toContain(expected: unknown): void;
+  toContain(expected: unknown): MatcherResult;
 
   /**
    * Ensures that value is an Array or Set and contains an item equal to the expected.
@@ -156,7 +147,7 @@ export interface NonRetryingExpectation {
    *
    * @param expected The item to check for deep equality within the collection
    */
-  toContainEqual(expected: unknown): void;
+  toContainEqual(expected: unknown): MatcherResult;
 
   /**
    * Ensures that property at provided `keyPath` exists on the object and optionally checks
@@ -166,7 +157,7 @@ export interface NonRetryingExpectation {
    *                and indexed a[2] notation to check nested array items.
    * @param expected Optional expected value to compare the property to.
    */
-  toHaveProperty(keyPath: string, expected?: unknown): void;
+  toHaveProperty(keyPath: string, expected?: unknown): MatcherResult;
 }
 
 /**
@@ -179,7 +170,6 @@ export interface NonRetryingExpectation {
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
- * @param otherwiseCallback optional callback to execute when assertion fails
  * @returns an expectation object over the given value exposing the Expectation set of methods
  */
 export function createExpectation(
@@ -187,7 +177,6 @@ export function createExpectation(
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
-  otherwiseCallback?: OtherwiseCallback,
 ): NonRetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -276,20 +265,15 @@ export function createExpectation(
     isNegated,
     message,
     softMode: config.softMode,
-    otherwiseCallback,
   };
 
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
-      return createExpectation(received, config, message, !isNegated, otherwiseCallback);
+      return createExpectation(received, config, message, !isNegated);
     },
 
-    otherwise(callback: OtherwiseCallback): NonRetryingExpectation {
-      return createExpectation(received, config, message, isNegated, callback);
-    },
-
-    toBe(expected: unknown): void {
-      createMatcher(
+    toBe(expected: unknown): MatcherResult {
+      return createMatcher(
         "toBe",
         () => Object.is(received, expected),
         expected,
@@ -298,12 +282,12 @@ export function createExpectation(
       );
     },
 
-    toBeCloseTo(expected: number, precision: number = 2): void {
+    toBeCloseTo(expected: number, precision: number = 2): MatcherResult {
       const tolerance = Math.pow(10, -precision) *
         Math.max(Math.abs(received as number), Math.abs(expected));
       const diff = Math.abs((received as number) - expected);
 
-      createMatcher(
+      return createMatcher(
         "toBeCloseTo",
         () => diff < tolerance,
         expected,
@@ -319,8 +303,8 @@ export function createExpectation(
       );
     },
 
-    toBeDefined(): void {
-      createMatcher(
+    toBeDefined(): MatcherResult {
+      return createMatcher(
         "toBeDefined",
         () => received !== undefined,
         "defined",
@@ -329,8 +313,8 @@ export function createExpectation(
       );
     },
 
-    toBeFalsy(): void {
-      createMatcher(
+    toBeFalsy(): MatcherResult {
+      return createMatcher(
         "toBeFalsy",
         () => !received,
         "falsy",
@@ -339,8 +323,8 @@ export function createExpectation(
       );
     },
 
-    toBeGreaterThan(expected: number | bigint): void {
-      createMatcher(
+    toBeGreaterThan(expected: number | bigint): MatcherResult {
+      return createMatcher(
         "toBeGreaterThan",
         () => (received as number) > expected,
         expected,
@@ -349,8 +333,8 @@ export function createExpectation(
       );
     },
 
-    toBeGreaterThanOrEqual(expected: number | bigint): void {
-      createMatcher(
+    toBeGreaterThanOrEqual(expected: number | bigint): MatcherResult {
+      return createMatcher(
         "toBeGreaterThanOrEqual",
         () => (received as number) >= expected,
         expected,
@@ -360,8 +344,8 @@ export function createExpectation(
     },
 
     // deno-lint-ignore ban-types
-    toBeInstanceOf(expected: Function): void {
-      createMatcher(
+    toBeInstanceOf(expected: Function): MatcherResult {
+      return createMatcher(
         "toBeInstanceOf",
         () => received instanceof expected,
         expected.name,
@@ -370,8 +354,8 @@ export function createExpectation(
       );
     },
 
-    toBeLessThan(expected: number | bigint): void {
-      createMatcher(
+    toBeLessThan(expected: number | bigint): MatcherResult {
+      return createMatcher(
         "toBeLessThan",
         () => (received as number) < expected,
         expected,
@@ -380,8 +364,8 @@ export function createExpectation(
       );
     },
 
-    toBeLessThanOrEqual(expected: number | bigint): void {
-      createMatcher(
+    toBeLessThanOrEqual(expected: number | bigint): MatcherResult {
+      return createMatcher(
         "toBeLessThanOrEqual",
         () => (received as number) <= expected,
         expected,
@@ -390,8 +374,8 @@ export function createExpectation(
       );
     },
 
-    toBeNaN(): void {
-      createMatcher(
+    toBeNaN(): MatcherResult {
+      return createMatcher(
         "toBeNaN",
         () => isNaN(received as number),
         "NaN",
@@ -400,8 +384,8 @@ export function createExpectation(
       );
     },
 
-    toBeNull(): void {
-      createMatcher(
+    toBeNull(): MatcherResult {
+      return createMatcher(
         "toBeNull",
         () => received === null,
         "null",
@@ -410,8 +394,8 @@ export function createExpectation(
       );
     },
 
-    toBeTruthy(): void {
-      createMatcher(
+    toBeTruthy(): MatcherResult {
+      return createMatcher(
         "toBeTruthy",
         () => !!received,
         "truthy",
@@ -420,8 +404,8 @@ export function createExpectation(
       );
     },
 
-    toBeUndefined(): void {
-      createMatcher(
+    toBeUndefined(): MatcherResult {
+      return createMatcher(
         "toBeUndefined",
         () => received === undefined,
         "undefined",
@@ -430,8 +414,8 @@ export function createExpectation(
       );
     },
 
-    toEqual(expected: unknown): void {
-      createMatcher(
+    toEqual(expected: unknown): MatcherResult {
+      return createMatcher(
         "toEqual",
         () => isDeepEqual(received, expected),
         JSON.stringify(expected),
@@ -440,8 +424,8 @@ export function createExpectation(
       );
     },
 
-    toHaveLength(expected: number): void {
-      createMatcher(
+    toHaveLength(expected: number): MatcherResult {
+      return createMatcher(
         "toHaveLength",
         () => (received as Array<unknown>).length === expected,
         expected.toString(),
@@ -450,7 +434,7 @@ export function createExpectation(
       );
     },
 
-    toContain(expected: unknown): void {
+    toContain(expected: unknown): MatcherResult {
       let receivedType = "";
       if (typeof received === "string") {
         receivedType = "string";
@@ -463,7 +447,7 @@ export function createExpectation(
           "toContain is only supported for strings, arrays, and sets",
         );
       }
-      createMatcher(
+      return createMatcher(
         "toContain",
         () => {
           if (typeof received === "string") {
@@ -489,7 +473,7 @@ export function createExpectation(
       );
     },
 
-    toContainEqual(expected: unknown): void {
+    toContainEqual(expected: unknown): MatcherResult {
       let receivedType = "";
       if (Array.isArray(received)) {
         receivedType = "array";
@@ -501,7 +485,7 @@ export function createExpectation(
         );
       }
 
-      createMatcher(
+      return createMatcher(
         "toContainEqual",
         () => {
           if (Array.isArray(received)) {
@@ -527,7 +511,7 @@ export function createExpectation(
       );
     },
 
-    toHaveProperty(keyPath: string, expected?: unknown): void {
+    toHaveProperty(keyPath: string, expected?: unknown): MatcherResult {
       if (typeof received !== "object" || received === null) {
         throw new Error(
           "toHaveProperty is only supported for objects",
@@ -546,7 +530,7 @@ export function createExpectation(
         }
       };
 
-      createMatcher(
+      return createMatcher(
         "toHaveProperty",
         hasProperty,
         expected !== undefined ? expected : keyPath,
@@ -578,7 +562,6 @@ function createMatcher(
     matcherSpecific = {},
     message,
     softMode,
-    otherwiseCallback,
   }: {
     usedAssert: typeof assert;
     isSoft: boolean;
@@ -586,9 +569,8 @@ function createMatcher(
     matcherSpecific?: Record<string, unknown>;
     message?: string;
     softMode?: SoftMode;
-    otherwiseCallback?: OtherwiseCallback;
   },
-): void {
+): MatcherResult {
   const info = createMatcherInfo(
     matcherName,
     expected,
@@ -601,35 +583,30 @@ function createMatcher(
   // If isNegated is true, we want to invert the result
   const finalResult = isNegated ? !result : result;
 
-  // Execute callback on failure BEFORE usedAssert
-  if (!finalResult && otherwiseCallback) {
-    try {
-      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-        info,
-        MatcherErrorRendererRegistry.getConfig(),
-      );
-
-      otherwiseCallback({
-        message: errorMessage,
-        expected: typeof expected === "string" ? expected : JSON.stringify(expected),
-        received: typeof received === "string" ? received : JSON.stringify(received),
-        matcherName,
-      });
-    } catch (callbackError) {
-      console.error("Error in .otherwise() callback:", callbackError);
-    }
-  }
-
-  // Always proceed with assertion
-  usedAssert(
-    finalResult,
-    MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+  if (finalResult) {
+    // Success case
+    return new MatcherResultImpl(true, null, null);
+  } else {
+    // Failure case - prepare context and throw function
+    const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
       info,
       MatcherErrorRendererRegistry.getConfig(),
-    ),
-    isSoft,
-    softMode,
-  );
+    );
+
+    const errorContext: OtherwiseErrorContext = {
+      message: errorMessage,
+      expected: typeof expected === "string" ? expected : JSON.stringify(expected),
+      received: typeof received === "string" ? received : JSON.stringify(received),
+      matcherName,
+    };
+
+    // Closure captures assertion logic
+    const throwError = () => {
+      usedAssert(false, errorMessage, isSoft, softMode);
+    };
+
+    return new MatcherResultImpl(false, errorContext, throwError);
+  }
 }
 
 function createMatcherInfo(

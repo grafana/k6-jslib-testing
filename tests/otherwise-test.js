@@ -9,12 +9,12 @@ export default function() {
   let errorContext = null;
 
   try {
-    expect(5).otherwise((ctx) => {
+    expect(5).toBe(10).otherwise((ctx) => {
       callbackInvoked = true;
       errorContext = ctx;
       console.log("  Callback executed!");
       console.log("  Error context:", JSON.stringify(ctx, null, 2));
-    }).toBe(10);
+    });
   } catch (e) {
     // Expected to throw
   }
@@ -29,9 +29,9 @@ export default function() {
   console.log("Test 2: Non-retrying expectation success");
   let successCallback = false;
 
-  expect(5).otherwise(() => {
+  expect(5).toBe(5).otherwise(() => {
     successCallback = true;
-  }).toBe(5);
+  });
 
   if (!successCallback) {
     console.log("  ✓ Test 2 passed: Callback was NOT invoked on success\n");
@@ -44,10 +44,10 @@ export default function() {
   let notCallbackInvoked = false;
 
   try {
-    expect(5).otherwise(() => {
+    expect(5).not.toBe(5).otherwise(() => {
       notCallbackInvoked = true;
       console.log("  Callback executed with .not!");
-    }).not.toBe(5);
+    });
   } catch (e) {
     // Expected to throw
   }
@@ -58,27 +58,12 @@ export default function() {
     console.log("  ✗ Test 3 failed: Callback did not work with .not\n");
   }
 
-  // Test 4: Multiple .otherwise() calls (last wins)
-  console.log("Test 4: Multiple .otherwise() calls");
-  let firstCallback = false;
-  let secondCallback = false;
-
-  try {
-    expect(5).otherwise(() => {
-      firstCallback = true;
-    }).otherwise(() => {
-      secondCallback = true;
-      console.log("  Second callback executed!");
-    }).toBe(10);
-  } catch (e) {
-    // Expected to throw
-  }
-
-  if (!firstCallback && secondCallback) {
-    console.log("  ✓ Test 4 passed: Only second callback was invoked\n");
-  } else {
-    console.log("  ✗ Test 4 failed: Wrong callbacks invoked\n");
-  }
+  // Test 4: Verify matchers work without .otherwise()
+  console.log("Test 4: Matcher works without .otherwise()");
+  // Note: This will abort via exec.test.abort() after a 1ms delay
+  // We can't catch it with try-catch, so we just verify the syntax works
+  expect(5).toBe(5); // This should succeed
+  console.log("  ✓ Test 4 passed: Matcher works without .otherwise()\n");
 
   console.log("All tests completed!");
 }

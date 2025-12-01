@@ -1963,11 +1963,11 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
+        .toBe(10)
         .otherwise((ctx) => {
           callbackInvoked = true;
           errorContext = ctx;
-        })
-        .toBe(10);
+        });
     } catch (e) {
       // Expected to throw
     }
@@ -1993,10 +1993,10 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config = createTestConfig({ assertFn: mockAssert });
 
     createExpectation(5, config)
+      .toBe(5)
       .otherwise(() => {
         callbackInvoked = true;
-      })
-      .toBe(5);
+      });
 
     assert(!callbackInvoked, "Callback should NOT be invoked on success");
   });
@@ -2019,10 +2019,10 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
+        .not.toBe(5)
         .otherwise(() => {
           callbackInvoked = true;
-        })
-        .not.toBe(5);
+        });
     } catch (e) {
       // Expected to throw
     }
@@ -2048,49 +2048,15 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .not.otherwise(() => {
+        .not.toBe(5)
+        .otherwise(() => {
           callbackInvoked = true;
-        })
-        .toBe(5);
+        });
     } catch (e) {
       // Expected to throw
     }
 
     assert(callbackInvoked, "Callback should be invoked when chained after .not");
-  });
-
-  await t.step("otherwise() last callback wins", () => {
-    let firstCalled = false;
-    let secondCalled = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-      softMode?: SoftMode,
-    ) => {
-      if (!condition) {
-        throw new Error(message);
-      }
-    };
-
-    const config = createTestConfig({ assertFn: mockAssert });
-
-    try {
-      createExpectation(5, config)
-        .otherwise(() => {
-          firstCalled = true;
-        })
-        .otherwise(() => {
-          secondCalled = true;
-        })
-        .toBe(10);
-    } catch (e) {
-      // Expected to throw
-    }
-
-    assert(!firstCalled, "First callback should NOT be invoked");
-    assert(secondCalled, "Second callback should be invoked");
   });
 
   await t.step("otherwise() callback error doesn't prevent assertion", () => {
@@ -2112,10 +2078,10 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
+        .toBe(10)
         .otherwise(() => {
           throw new Error("Callback error");
-        })
-        .toBe(10);
+        });
     } catch (e) {
       // Expected to throw from assertion, not callback
     }
