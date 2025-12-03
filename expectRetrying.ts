@@ -244,7 +244,10 @@ export function createLocatorExpectation(
       throw new Error("k6 failed to capture execution context");
     }
 
-    const checkRegExp = (expected: RegExp, actual: string): boolean => {
+    // Variable to capture error info with actual values during retries
+    let lastErrorInfo: MatcherErrorInfo | null = null;
+
+    const checkRegExp = (expected: RegExp, actual: string): void => {
       // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
       const regexp = options.ignoreCase !== undefined
         ? new RegExp(
@@ -253,14 +256,37 @@ export function createLocatorExpectation(
         )
         : expected;
 
+      const info: MatcherErrorInfo = {
+        executionContext,
+        matcherName,
+        expected: regexp.toString(),
+        received: actual,
+        matcherSpecific: { isNegated },
+        customMessage: message,
+      };
+
       const result = regexp.test(actual);
       const finalResult = isNegated ? !result : result;
-      return finalResult;
+
+      if (!finalResult) {
+        // Store error info for later use (but don't call usedAssert yet - only after retries are exhausted)
+        lastErrorInfo = info;
+        throw new Error("matcher failed");
+      }
     };
 
-    const checkText = (expected: string, actual: string): boolean => {
+    const checkText = (expected: string, actual: string): void => {
       const normalizedExpected = normalizeWhiteSpace(expected);
       const normalizedActual = normalizeWhiteSpace(actual);
+
+      const info: MatcherErrorInfo = {
+        executionContext,
+        matcherName,
+        expected: normalizedExpected,
+        received: normalizedActual,
+        matcherSpecific: { isNegated },
+        customMessage: message,
+      };
 
       const result = options.ignoreCase
         ? compareFn(
@@ -270,7 +296,12 @@ export function createLocatorExpectation(
         : compareFn(normalizedActual, normalizedExpected);
 
       const finalResult = isNegated ? !result : result;
-      return finalResult;
+
+      if (!finalResult) {
+        // Store error info for later use (but don't call usedAssert yet - only after retries are exhausted)
+        lastErrorInfo = info;
+        throw new Error("matcher failed");
+      }
     };
 
     try {
@@ -284,41 +315,42 @@ export function createLocatorExpectation(
             throw new Error("Element has no text content");
           }
 
-          let passed: boolean;
+          // Call check functions directly (they throw on failure)
           if (expected instanceof RegExp) {
-            passed = checkRegExp(expected, actualText);
+            checkRegExp(expected, actualText);
           } else {
-            passed = checkText(expected, actualText);
+            checkText(expected, actualText);
           }
-
-          if (!passed) {
-            throw new Error("matcher failed");
-          }
+          // If we get here, the check passed
         },
         { ...retryConfig, ...options },
       );
 
-      // Success
+      // Success - all retries passed
       return new AsyncMatcherResultImpl(true, null, null);
     } catch (_) {
-      const info: MatcherErrorInfo = {
-        executionContext,
-        matcherName,
-        expected: expected.toString(),
-        received: "unknown",
-        matcherSpecific: { isNegated },
-        customMessage: message,
-      };
+      // Failure - use captured error info with actual values
+      if (!lastErrorInfo) {
+        // Fallback if error info wasn't captured (shouldn't happen in normal flow)
+        lastErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: expected.toString(),
+          received: "unknown",
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+      }
 
       const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-        info,
+        lastErrorInfo,
         MatcherErrorRendererRegistry.getConfig(),
       );
 
       const errorContext: OtherwiseErrorContext = {
         message: errorMessage,
-        expected: expected.toString(),
-        received: "unknown",
+        expected: lastErrorInfo.expected,
+        received: lastErrorInfo.received,
         matcherName,
       };
 
@@ -499,6 +531,9 @@ export function createLocatorExpectation(
         const renderer = MatcherErrorRendererRegistry.getRenderer(matcherName);
         const renderConfig = MatcherErrorRendererRegistry.getConfig();
 
+        // Variable to capture error info with actual values during retries
+        let lastErrorInfo: MatcherErrorInfo | null = null;
+
         try {
           await withRetry(async () => {
             const result = await toHaveAttribute(
@@ -509,6 +544,13 @@ export function createLocatorExpectation(
             const finalResult = isNegated ? result.negate() : result;
 
             if (!finalResult.passed) {
+              // Store error info with actual values from the result
+              lastErrorInfo = {
+                executionContext,
+                matcherName,
+                expected: finalResult.detail.expected,
+                received: finalResult.detail.received,
+              };
               throw new Error("matcher failed");
             }
           }, retryConfig);
@@ -516,23 +558,26 @@ export function createLocatorExpectation(
           // Success
           return new AsyncMatcherResultImpl(true, null, null);
         } catch {
-          const info: MatcherErrorInfo = {
-            executionContext,
-            matcherName,
-            expected: "An element matching the locator.",
-            received:
-              `Timeout waiting for element matching locator (${retryConfig.timeout}ms)`,
-          };
+          // Fallback if error info wasn't captured
+          if (!lastErrorInfo) {
+            lastErrorInfo = {
+              executionContext,
+              matcherName,
+              expected: "An element matching the locator.",
+              received:
+                `Timeout waiting for element matching locator (${retryConfig.timeout}ms)`,
+            };
+          }
 
           const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-            info,
+            lastErrorInfo,
             MatcherErrorRendererRegistry.getConfig(),
           );
 
           const errorContext: OtherwiseErrorContext = {
             message: errorMessage,
-            expected: info.expected,
-            received: info.received,
+            expected: lastErrorInfo.expected,
+            received: lastErrorInfo.received,
             matcherName,
           };
 
@@ -558,14 +603,8 @@ export function createLocatorExpectation(
           throw new Error("k6 failed to capture execution context");
         }
 
-        const info: MatcherErrorInfo = {
-          executionContext,
-          matcherName: "toHaveValue",
-          expected: expectedValue,
-          received: "unknown",
-          matcherSpecific: { isNegated },
-          customMessage: message,
-        };
+        // Variable to capture error info with actual values during retries
+        let lastErrorInfo: MatcherErrorInfo | null = null;
 
         try {
           await withRetry(async () => {
@@ -575,6 +614,15 @@ export function createLocatorExpectation(
             const finalResult = isNegated ? !result : result;
 
             if (!finalResult) {
+              // Store error info with actual value
+              lastErrorInfo = {
+                executionContext,
+                matcherName: "toHaveValue",
+                expected: expectedValue,
+                received: actualValue,
+                matcherSpecific: { isNegated },
+                customMessage: message,
+              };
               throw new Error("matcher failed");
             }
           }, { ...retryConfig, ...options });
@@ -582,15 +630,27 @@ export function createLocatorExpectation(
           // Success
           return new AsyncMatcherResultImpl(true, null, null);
         } catch (_) {
+          // Fallback if error info wasn't captured
+          if (!lastErrorInfo) {
+            lastErrorInfo = {
+              executionContext,
+              matcherName: "toHaveValue",
+              expected: expectedValue,
+              received: "unknown",
+              matcherSpecific: { isNegated },
+              customMessage: message,
+            };
+          }
+
           const errorMessage = MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
-            info,
+            lastErrorInfo,
             MatcherErrorRendererRegistry.getConfig(),
           );
 
           const errorContext: OtherwiseErrorContext = {
             message: errorMessage,
             expected: expectedValue,
-            received: "unknown",
+            received: lastErrorInfo.received,
             matcherName: "toHaveValue",
           };
 
@@ -657,20 +717,52 @@ export function createPageExpectation(
       throw new Error("k6 failed to capture execution context");
     }
 
-    const checkRegExp = (expected: RegExp, actual: string): boolean => {
+    // Variable to capture error info with actual values during retries
+    let lastErrorInfo: MatcherErrorInfo | null = null;
+
+    const checkRegExp = (expected: RegExp, actual: string): void => {
       const regexp = expected;
+
+      const info: MatcherErrorInfo = {
+        executionContext,
+        matcherName,
+        expected: regexp.toString(),
+        received: actual,
+        matcherSpecific: { isNegated },
+        customMessage: message,
+      };
+
       const result = regexp.test(actual);
       const finalResult = isNegated ? !result : result;
-      return finalResult;
+
+      if (!finalResult) {
+        // Store error info for later use
+        lastErrorInfo = info;
+        throw new Error("matcher failed");
+      }
     };
 
-    const checkText = (expected: string, actual: string): boolean => {
+    const checkText = (expected: string, actual: string): void => {
       const normalizedExpected = normalizeWhiteSpace(expected);
       const normalizedActual = normalizeWhiteSpace(actual);
 
+      const info: MatcherErrorInfo = {
+        executionContext,
+        matcherName,
+        expected: normalizedExpected,
+        received: normalizedActual,
+        matcherSpecific: { isNegated },
+        customMessage: message,
+      };
+
       const result = compareFn(normalizedActual, normalizedExpected);
       const finalResult = isNegated ? !result : result;
-      return finalResult;
+
+      if (!finalResult) {
+        // Store error info for later use
+        lastErrorInfo = info;
+        throw new Error("matcher failed");
+      }
     };
 
     try {
@@ -678,41 +770,42 @@ export function createPageExpectation(
         async () => {
           const actualText = await page.title();
 
-          let passed: boolean;
+          // Call check functions directly (they throw on failure)
           if (expected instanceof RegExp) {
-            passed = checkRegExp(expected, actualText);
+            checkRegExp(expected, actualText);
           } else {
-            passed = checkText(expected, actualText);
+            checkText(expected, actualText);
           }
-
-          if (!passed) {
-            throw new Error("matcher failed");
-          }
+          // If we get here, the check passed
         },
         { ...retryConfig, ...options },
       );
 
-      // Success
+      // Success - all retries passed
       return new AsyncMatcherResultImpl(true, null, null);
     } catch (_) {
-      const info: MatcherErrorInfo = {
-        executionContext,
-        matcherName,
-        expected: expected.toString(),
-        received: "unknown",
-        matcherSpecific: { isNegated },
-        customMessage: message,
-      };
+      // Failure - use captured error info with actual values
+      if (!lastErrorInfo) {
+        // Fallback if error info wasn't captured
+        lastErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: expected.toString(),
+          received: "unknown",
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+      }
 
       const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-        info,
+        lastErrorInfo,
         MatcherErrorRendererRegistry.getConfig(),
       );
 
       const errorContext: OtherwiseErrorContext = {
         message: errorMessage,
-        expected: expected.toString(),
-        received: "unknown",
+        expected: lastErrorInfo.expected,
+        received: lastErrorInfo.received,
         matcherName,
       };
 
