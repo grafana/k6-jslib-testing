@@ -2088,4 +2088,49 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     assert(assertCalled, "Assert should still be called despite callback error");
   });
+
+  await t.step("otherwise() warns about async callbacks on sync matchers", () => {
+    let warnCalled = false;
+    let warnMessage = "";
+    const originalWarn = console.warn;
+    console.warn = (...args: any[]) => {
+      warnCalled = true;
+      warnMessage = args.join(" ");
+    };
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+      softMode?: SoftMode,
+    ) => {
+      if (!condition) {
+        throw new Error(message);
+      }
+    };
+
+    const config = createTestConfig({ assertFn: mockAssert });
+
+    try {
+      createExpectation(5, config)
+        .toBe(10)
+        .otherwise(async (ctx) => {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        });
+    } catch (e) {
+      // Expected to throw
+    } finally {
+      console.warn = originalWarn;
+    }
+
+    assert(warnCalled, "Should warn about async callback on sync matcher");
+    assert(
+      warnMessage.includes("cannot be awaited"),
+      `Warning message should mention 'cannot be awaited', got: ${warnMessage}`
+    );
+    assert(
+      warnMessage.includes("retrying matchers"),
+      `Warning message should mention 'retrying matchers', got: ${warnMessage}`
+    );
+  });
 });

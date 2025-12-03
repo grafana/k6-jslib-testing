@@ -10,6 +10,9 @@ export interface MatcherResult {
    * If the matcher passed, this is a no-op.
    * This is a terminal operation that returns void.
    *
+   * NOTE: Async callbacks are not awaited in synchronous matchers.
+   * Use retrying matchers (toBeVisible, toBeChecked, etc.) for async operations.
+   *
    * @param callback Function to execute on failure
    * @returns void (terminal operation)
    */
@@ -26,7 +29,9 @@ export interface AsyncMatcherResult {
    * If the matcher passed, this is a no-op.
    * This is a terminal operation that returns Promise<void>.
    *
-   * @param callback Function to execute on failure
+   * Async callbacks will be awaited before throwing the error.
+   *
+   * @param callback Function to execute on failure (can be async)
    * @returns Promise<void> (terminal operation)
    */
   otherwise(callback: OtherwiseCallback): Promise<void>;
@@ -61,7 +66,20 @@ export class MatcherResultImpl implements MatcherResult {
     // Only execute callback if the matcher failed and we have error context
     if (!this.passed && this.errorContext) {
       try {
-        callback(this.errorContext);
+        const result = callback(this.errorContext);
+
+        // Warn if async callback used with sync matcher
+        if (result instanceof Promise) {
+          console.warn(
+            "Warning: .otherwise() callback returned a Promise but cannot be awaited " +
+            "in synchronous matchers. Use retrying matchers (toBeVisible, toHaveText, etc.) for async operations."
+          );
+
+          // Catch any errors in the async callback
+          result.catch((callbackError) => {
+            console.error("Error in async .otherwise() callback:", callbackError);
+          });
+        }
       } catch (callbackError) {
         console.error("Error in .otherwise() callback:", callbackError);
       }
@@ -102,7 +120,12 @@ export class AsyncMatcherResultImpl implements AsyncMatcherResult {
     // Only execute callback if the matcher failed and we have error context
     if (!this.passed && this.errorContext) {
       try {
-        callback(this.errorContext);
+        const result = callback(this.errorContext);
+
+        // If callback returned a Promise, await it
+        if (result instanceof Promise) {
+          await result;
+        }
       } catch (callbackError) {
         console.error("Error in .otherwise() callback:", callbackError);
       }

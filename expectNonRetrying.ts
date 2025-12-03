@@ -25,8 +25,9 @@ export interface OtherwiseErrorContext {
 
 /**
  * Callback function type for .otherwise() method.
+ * Supports both synchronous and asynchronous callbacks.
  */
-export type OtherwiseCallback = (context: OtherwiseErrorContext) => void;
+export type OtherwiseCallback = (context: OtherwiseErrorContext) => void | Promise<void>;
 
 export interface NonRetryingExpectation {
   /**
