@@ -245,7 +245,9 @@ Note that soft assertions can be
 [configured to throw an exception](#6-configuration), and effectively failing
 the iteration where it happens instead.
 
-#### 5. Custom expect messages
+#### 5. Debugging & Error Handling
+
+##### Custom Expect Messages
 
 When writing tests, clear and informative error messages can significantly speed
 up debugging. You can specify a custom error message as the second argument to
@@ -271,6 +273,87 @@ Expected property to equal: 43
 
                   Filename: expectNonRetrying.ts
                       Line: 555
+```
+
+##### Error Callbacks with .otherwise()
+
+The `.otherwise()` method allows you to execute a callback function when an
+assertion fails, providing powerful debugging capabilities without interrupting
+your test workflow. This is particularly useful for capturing screenshots,
+logging response bodies, or performing cleanup actions before the test fails.
+
+The `.otherwise()` method can be chained with any matcher and works seamlessly
+with both retrying and non-retrying assertions, as well as with `.not` and
+`.soft()` modifiers.
+
+**Callback Signature:**
+
+The callback receives an error context object with the following properties:
+
+```javascript
+.otherwise((context) => {
+  // context.message - Full error message
+  // context.expected - Expected value as string
+  // context.received - Received value as string
+  // context.matcherName - Matcher name (e.g., "toBe", "toBeVisible")
+})
+```
+
+**Async Callback Support:**
+
+Async callbacks are fully supported for retrying matchers (browser and page
+assertions like `toBeVisible()`, `toHaveText()`, `toHaveTitle()`, etc.). The
+test will wait for the async operation to complete before failing.
+
+```javascript
+await expect(page.locator(".button"))
+  .otherwise(async (ctx) => {
+    await page.screenshot({ path: "failure.png" });
+  })
+  .toBeVisible();
+```
+
+For non-retrying matchers (value assertions like `toBe()`, `toEqual()`, etc.),
+async callbacks can be used but will not be awaited. Use synchronous callbacks
+for these matchers.
+
+**Example 1: Logging HTTP Response Details**
+
+```javascript
+expect(response.status)
+  .otherwise((ctx) => {
+    console.log(`API returned ${ctx.received}, response body:`);
+    console.log(response.body);
+  })
+  .toBe(200);
+```
+
+**Example 2: Capturing Screenshots on Browser Test Failures (Retrying Matcher)**
+
+```javascript
+await expect(page.locator(".success-message"))
+  .otherwise(async (ctx) => {
+    console.log(`Expected element not visible: ${ctx.matcherName}`);
+    await page.screenshot({
+      path: "failure.png",
+      fullPage: true,
+    });
+  })
+  .toBeVisible();
+```
+
+**Example 3: Combining with Soft Assertions**
+
+```javascript
+// Callback executes but test continues
+await expect
+  .soft(page.locator("h1"))
+  .otherwise(async (ctx) => {
+    console.log(`Title mismatch: "${ctx.received}"`);
+    await page.screenshot({ path: "title-failure.png" });
+  })
+  .toHaveText("Expected Title");
+// Test continues even after failure
 ```
 
 #### 6. Configuration
