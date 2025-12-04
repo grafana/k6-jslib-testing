@@ -245,7 +245,9 @@ Note that soft assertions can be
 [configured to throw an exception](#6-configuration), and effectively failing
 the iteration where it happens instead.
 
-#### 5. Custom expect messages
+#### 5. Debugging & Error Handling
+
+##### Custom Expect Messages
 
 When writing tests, clear and informative error messages can significantly speed
 up debugging. You can specify a custom error message as the second argument to
@@ -272,6 +274,93 @@ Expected property to equal: 43
                   Filename: expectNonRetrying.ts
                       Line: 555
 ```
+
+##### Error Callbacks with .otherwise()
+
+The `.otherwise()` method allows you to execute a callback function when an
+assertion fails, providing powerful debugging capabilities without interrupting
+your test workflow. This is particularly useful for capturing screenshots,
+logging response bodies, or performing cleanup actions before the test fails.
+
+The `.otherwise()` method can be chained with any matcher and works seamlessly
+with both retrying and non-retrying assertions, as well as with `.not` and
+`.soft()` modifiers.
+
+**Callback Signature:**
+
+The callback receives an error context object with the following properties:
+
+```javascript
+.otherwise((context) => {
+  // context.message - Full error message
+  // context.expected - Expected value as string
+  // context.received - Received value as string
+  // context.matcherName - Matcher name (e.g., "toBe", "toBeVisible")
+})
+```
+
+**Example 1: Logging HTTP Response Details**
+
+```javascript
+import http from "k6/http";
+import { expect } from "https://jslib.k6.io/k6-testing/0.3.0/index.js";
+
+export default function () {
+  const response = http.get("https://api.example.com/users");
+
+  expect(response.status)
+    .toBe(200)
+    .otherwise((ctx) => {
+      console.log(`API returned ${ctx.received}, response body:`);
+      console.log(response.body);
+    });
+}
+```
+
+**Example 2: Capturing Screenshots on Browser Test Failures**
+
+```javascript
+import { browser } from "k6/browser";
+import { expect } from "https://jslib.k6.io/k6-testing/0.3.0/index.js";
+
+export default async function () {
+  const page = await browser.newPage();
+
+  await page.goto("https://example.com");
+
+  await expect(page.locator(".success-message"))
+    .toBeVisible()
+    .otherwise(async (ctx) => {
+      console.log(`Expected element not visible: ${ctx.matcherName}`);
+      await page.screenshot({
+        path: "failure.png",
+        fullPage: true,
+      });
+    });
+}
+```
+
+**Example 3: Combining with Soft Assertions**
+
+```javascript
+// Callback executes but test continues
+await expect
+  .soft(page.locator("h1"))
+  .toHaveText("Expected Title")
+  .otherwise((ctx) => {
+    console.log(`Title mismatch: "${ctx.received}"`);
+    page.screenshot({ path: "title-failure.png" });
+  });
+// Test continues even after failure
+```
+
+**Technical Note:**
+
+- `.otherwise()` throws the error synchronously, making it catchable in
+  try-catch blocks
+- Callbacks for retrying matchers can be async and will be awaited
+- Callbacks for non-retrying matchers should be synchronous (async callbacks
+  will generate a warning)
 
 #### 6. Configuration
 
