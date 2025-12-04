@@ -4,6 +4,10 @@ import { assert } from "@std/assert";
 import { createExpectation } from "./expectNonRetrying.ts";
 import type { ExpectConfig } from "./config.ts";
 import type { SoftMode } from "./assert.ts";
+import { setupFastDenoTests, waitForMatcher } from "./test_helpers.ts";
+
+// Configure fast microtask-based delays for Deno tests
+setupFastDenoTests();
 
 // Helper function to create a test config with correct defaults
 function createTestConfig(config: Partial<ExpectConfig> = {}): ExpectConfig {
@@ -17,7 +21,7 @@ function createTestConfig(config: Partial<ExpectConfig> = {}): ExpectConfig {
 }
 
 Deno.test("NonRetryingExpectation", async (t) => {
-  await t.step("toBe", () => {
+  await t.step("toBe", async () => {
     // Mock assert function
     let assertCalled = false;
     let assertCondition = false;
@@ -40,6 +44,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     // Test passing case
     const expectation = createExpectation(true, config);
     expectation.toBe(true);
+    await waitForMatcher();
 
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for matching values");
@@ -51,6 +56,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(true, config).toBe(false);
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -58,7 +64,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toBe behavior with Object.is", () => {
+  await t.step("toBe behavior with Object.is", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -81,6 +87,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test NaN equality
     createExpectation(NaN, config).toBe(NaN);
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -93,6 +100,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test +0 and -0 inequality
     createExpectation(0, config).toBe(0);
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for +0 === +0");
 
@@ -101,6 +109,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assertCondition = false;
 
     createExpectation(0, config).toBe(-0);
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -114,6 +123,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     // Test object reference equality
     const obj = { a: 1 };
     createExpectation(obj, config).toBe(obj);
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -125,6 +135,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assertCondition = false;
 
     createExpectation(obj, config).toBe({ a: 1 });
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -132,7 +143,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toBe with custom message", () => {
+  await t.step("toBe with custom message", async () => {
     let assertCalled = false;
     let assertCondition = false;
     let assertMessage = "";
@@ -205,7 +216,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toBeCloseTo", () => {
+  await t.step("toBeCloseTo", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -259,7 +270,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toBeCloseTo edge cases", () => {
+  await t.step("toBeCloseTo edge cases", async () => {
     let assertCalled = false;
     let assertCondition = false;
     let debugInfo = {};
@@ -328,7 +339,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toBeDefined", () => {
+  await t.step("toBeDefined", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -351,6 +362,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation("defined value", config).toBeDefined();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for defined values");
 
@@ -360,11 +373,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(undefined, config).toBeDefined();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false for undefined");
   });
 
-  await t.step("toBeFalsy", () => {
+  await t.step("toBeFalsy", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -387,6 +402,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation(false, config).toBeFalsy();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for falsy values");
 
@@ -396,11 +413,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(true, config).toBeFalsy();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false for truthy values");
   });
 
-  await t.step("toBeFalsy with falsy values", () => {
+  await t.step("toBeFalsy with falsy values", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -429,6 +448,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
       assertCondition = false;
 
       createExpectation(value, config).toBeFalsy();
+
+      await waitForMatcher();
       assert(assertCalled, `Assert should have been called for ${value}`);
       assert(
         assertCondition,
@@ -437,7 +458,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     }
   });
 
-  await t.step("toBeGreaterThan", () => {
+  await t.step("toBeGreaterThan", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -460,6 +481,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation(5, config).toBeGreaterThan(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true when value > expected");
 
@@ -469,6 +492,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(3, config).toBeGreaterThan(5);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -476,7 +501,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toBeGreaterThanOrEqual", () => {
+  await t.step("toBeGreaterThanOrEqual", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -499,6 +524,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case (greater)
     createExpectation(5, config).toBeGreaterThanOrEqual(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true when value > expected");
 
@@ -508,6 +535,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case (equal)
     createExpectation(5, config).toBeGreaterThanOrEqual(5);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true when value = expected");
 
@@ -517,11 +546,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(3, config).toBeGreaterThanOrEqual(5);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false when value < expected");
   });
 
-  await t.step("toBeInstanceOf", () => {
+  await t.step("toBeInstanceOf", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -563,7 +594,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toBeLessThan", () => {
+  await t.step("toBeLessThan", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -586,6 +617,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation(3, config).toBeLessThan(5);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true when value < expected");
 
@@ -595,6 +628,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(5, config).toBeLessThan(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -602,7 +637,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toBeLessThanOrEqual", () => {
+  await t.step("toBeLessThanOrEqual", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -625,6 +660,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case (less)
     createExpectation(3, config).toBeLessThanOrEqual(5);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true when value < expected");
 
@@ -634,6 +671,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case (equal)
     createExpectation(5, config).toBeLessThanOrEqual(5);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true when value = expected");
 
@@ -643,11 +682,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(5, config).toBeLessThanOrEqual(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false when value > expected");
   });
 
-  await t.step("toBeNaN", () => {
+  await t.step("toBeNaN", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -670,6 +711,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation(NaN, config).toBeNaN();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for NaN");
 
@@ -679,11 +722,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(5, config).toBeNaN();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false for non-NaN values");
   });
 
-  await t.step("toBeNull", () => {
+  await t.step("toBeNull", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -706,6 +751,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation(null, config).toBeNull();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for null");
 
@@ -715,11 +762,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(5, config).toBeNull();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false for non-null values");
   });
 
-  await t.step("toBeTruthy", () => {
+  await t.step("toBeTruthy", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -742,6 +791,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation(true, config).toBeTruthy();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for truthy values");
 
@@ -751,11 +802,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(false, config).toBeTruthy();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false for falsy values");
   });
 
-  await t.step("toBeTruthy with truthy values", () => {
+  await t.step("toBeTruthy with truthy values", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -784,6 +837,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
       assertCondition = false;
 
       createExpectation(value, config).toBeTruthy();
+
+      await waitForMatcher();
       assert(assertCalled, "Assert should have been called");
       assert(
         assertCondition,
@@ -792,7 +847,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     }
   });
 
-  await t.step("toBeUndefined", () => {
+  await t.step("toBeUndefined", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -815,6 +870,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation(undefined, config).toBeUndefined();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for undefined");
 
@@ -824,11 +881,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation(5, config).toBeUndefined();
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false for defined values");
   });
 
-  await t.step("toEqual", () => {
+  await t.step("toEqual", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -851,6 +910,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case with primitives
     createExpectation(5, config).toEqual(5);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for equal primitives");
 
@@ -860,6 +921,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case with objects
     createExpectation({ a: 1, b: 2 }, config).toEqual({ a: 1, b: 2 });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for equal objects");
 
@@ -869,11 +932,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation({ a: 1 }, config).toEqual({ a: 2 });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false for unequal objects");
   });
 
-  await t.step("toEqual deep equality", () => {
+  await t.step("toEqual deep equality", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -899,6 +964,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
       { a: 1, b: { c: 2, d: [3, 4] } },
       config,
     ).toEqual({ a: 1, b: { c: 2, d: [3, 4] } });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -911,6 +978,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test arrays with same values but different references
     createExpectation([1, 2, { a: 3 }], config).toEqual([1, 2, { a: 3 }]);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -923,6 +992,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test with different object structures
     createExpectation({ a: 1, b: 2 }, config).toEqual({ b: 2, a: 1 });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -930,7 +1001,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveLength", () => {
+  await t.step("toHaveLength", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -953,6 +1024,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case with array
     createExpectation([1, 2, 3], config).toHaveLength(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for correct length");
 
@@ -962,6 +1035,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case with string
     createExpectation("abc", config).toHaveLength(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -974,11 +1049,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation([1, 2], config).toHaveLength(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(!assertCondition, "Condition should be false for incorrect length");
   });
 
-  await t.step("toHaveLength with different types", () => {
+  await t.step("toHaveLength with different types", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1001,6 +1078,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test with array
     createExpectation([1, 2, 3], config).toHaveLength(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1013,6 +1092,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test with string
     createExpectation("hello", config).toHaveLength(5);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1026,6 +1107,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     // Test with array-like object
     const arrayLike = { length: 3, 0: "a", 1: "b", 2: "c" };
     createExpectation(arrayLike, config).toHaveLength(3);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1038,6 +1121,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test with empty array
     createExpectation([], config).toHaveLength(0);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for empty array");
 
@@ -1047,11 +1132,13 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test with empty string
     createExpectation("", config).toHaveLength(0);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true for empty string");
   });
 
-  await t.step("toContain with string", () => {
+  await t.step("toContain with string", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1074,6 +1161,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case with string
     createExpectation("hello world", config).toContain("world");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1086,6 +1175,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case with string
     createExpectation("hello world", config).toContain("universe");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1098,6 +1189,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test case sensitivity
     createExpectation("hello World", config).toContain("world");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1105,7 +1198,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toContain with array", () => {
+  await t.step("toContain with array", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1128,6 +1221,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case with array of primitives
     createExpectation([1, 2, 3], config).toContain(2);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1140,6 +1235,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case with array
     createExpectation([1, 2, 3], config).toContain(4);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1155,6 +1252,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const array = [{ id: 2 }, obj, { id: 3 }];
 
     createExpectation(array, config).toContain(obj);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1167,6 +1266,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test with array of objects (different reference but same content)
     createExpectation(array, config).toContain({ id: 1 });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1174,7 +1275,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toContain with Set", () => {
+  await t.step("toContain with Set", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1198,6 +1299,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     // Test passing case with Set
     const set = new Set([1, 2, 3]);
     createExpectation(set, config).toContain(2);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1210,6 +1313,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case with Set
     createExpectation(set, config).toContain(4);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1225,6 +1330,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const objSet = new Set([{ id: 2 }, obj, { id: 3 }]);
 
     createExpectation(objSet, config).toContain(obj);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1237,6 +1344,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test with Set of objects (different reference but same content)
     createExpectation(objSet, config).toContain({ id: 1 });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1244,7 +1353,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toContain with unsupported type", () => {
+  await t.step("toContain with unsupported type", async () => {
     const config: ExpectConfig = {
       assertFn: () => {},
       soft: false,
@@ -1256,6 +1365,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     // Test with unsupported type
     try {
       createExpectation(123, config).toContain(2);
+
+      await waitForMatcher();
       assert(false, "Should have thrown an error for unsupported type");
     } catch (error) {
       assert(
@@ -1269,7 +1380,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     }
   });
 
-  await t.step("negation with .not", () => {
+  await t.step("negation with .not", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1292,6 +1403,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test negated passing case
     createExpectation(1, config).not.toBe(2);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1304,6 +1417,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test negated failing case
     createExpectation(1, config).not.toBe(1);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1323,7 +1438,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toContainEqual with array", () => {
+  await t.step("toContainEqual with array", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1346,6 +1461,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case with array of primitives
     createExpectation([1, 2, 3], config).toContainEqual(2);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1358,6 +1475,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case with array
     createExpectation([1, 2, 3], config).toContainEqual(4);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1372,6 +1491,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const array = [{ id: 2 }, { id: 1 }, { id: 3 }];
 
     createExpectation(array, config).toContainEqual({ id: 1 });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1391,6 +1512,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     createExpectation(nestedArray, config).toContainEqual({
       user: { name: "Bob", age: 25 },
     });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1404,6 +1527,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     createExpectation(nestedArray, config).toContainEqual({
       user: { name: "Bob", age: 26 },
     });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1411,7 +1536,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toContainEqual with Set", () => {
+  await t.step("toContainEqual with Set", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1435,6 +1560,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     // Test passing case with Set of primitives
     const set = new Set([1, 2, 3]);
     createExpectation(set, config).toContainEqual(2);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1447,6 +1574,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case with Set
     createExpectation(set, config).toContainEqual(4);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1461,6 +1590,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const objSet = new Set([{ id: 2 }, { id: 1 }, { id: 3 }]);
 
     createExpectation(objSet, config).toContainEqual({ id: 1 });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1480,6 +1611,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     createExpectation(nestedSet, config).toContainEqual({
       user: { name: "Bob", age: 25 },
     });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1493,6 +1626,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     createExpectation(nestedSet, config).toContainEqual({
       user: { name: "Bob", age: 26 },
     });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1500,7 +1635,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toContainEqual with negation", () => {
+  await t.step("toContainEqual with negation", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1525,6 +1660,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     createExpectation([{ id: 1 }, { id: 2 }], config).not.toContainEqual({
       id: 3,
     });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1539,6 +1676,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     createExpectation([{ id: 1 }, { id: 2 }], config).not.toContainEqual({
       id: 1,
     });
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1546,7 +1685,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveProperty with simple property", () => {
+  await t.step("toHaveProperty with simple property", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1569,6 +1708,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation({ a: 1 }, config).toHaveProperty("a");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1581,6 +1722,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation({ a: 1 }, config).toHaveProperty("b");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1588,7 +1731,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveProperty with nested property", () => {
+  await t.step("toHaveProperty with nested property", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1611,6 +1754,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation({ a: { b: 2 } }, config).toHaveProperty("a.b");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1623,6 +1768,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case
     createExpectation({ a: { c: 2 } }, config).toHaveProperty("a.b");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1630,7 +1777,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveProperty with array index", () => {
+  await t.step("toHaveProperty with array index", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1653,6 +1800,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation({ a: [1, 2, 3] }, config).toHaveProperty("a[1]");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1665,6 +1814,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case - index out of bounds
     createExpectation({ a: [1, 2, 3] }, config).toHaveProperty("a[5]");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1672,7 +1823,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveProperty with expected value", () => {
+  await t.step("toHaveProperty with expected value", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1695,6 +1846,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing case
     createExpectation({ a: 1 }, config).toHaveProperty("a", 1);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1707,6 +1860,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test failing case - wrong value
     createExpectation({ a: 1 }, config).toHaveProperty("a", 2);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1714,7 +1869,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveProperty with complex object", () => {
+  await t.step("toHaveProperty with complex object", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1747,6 +1902,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test passing cases
     createExpectation(complexObj, config).toHaveProperty("a.b[1].c", 2);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1758,6 +1915,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assertCondition = false;
 
     createExpectation(complexObj, config).toHaveProperty("d", true);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1765,7 +1924,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveProperty with unsupported type", () => {
+  await t.step("toHaveProperty with unsupported type", async () => {
     let errorThrown = false;
     let errorMessage = "";
 
@@ -1801,7 +1960,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveProperty with Playwright examples", () => {
+  await t.step("toHaveProperty with Playwright examples", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1831,6 +1990,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test: expect(value).toHaveProperty('a.b');
     createExpectation(value, config).toHaveProperty("a.b");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1843,6 +2004,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test: expect(value).toHaveProperty('a.b', [42]);
     createExpectation(value, config).toHaveProperty("a.b", [42]);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1855,6 +2018,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test: expect(value).toHaveProperty('a.b[0]', 42);
     createExpectation(value, config).toHaveProperty("a.b[0]", 42);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1867,6 +2032,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test: expect(value).toHaveProperty('c');
     createExpectation(value, config).toHaveProperty("c");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1879,6 +2046,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test: expect(value).toHaveProperty('c', true);
     createExpectation(value, config).toHaveProperty("c", true);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1886,7 +2055,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("toHaveProperty with negation", () => {
+  await t.step("toHaveProperty with negation", async () => {
     let assertCalled = false;
     let assertCondition = false;
 
@@ -1909,6 +2078,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test negation with missing property
     createExpectation({ a: 1 }, config).not.toHaveProperty("b");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1921,6 +2092,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test negation with existing property
     createExpectation({ a: 1 }, config).not.toHaveProperty("a");
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1933,6 +2106,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     // Test negation with expected value
     createExpectation({ a: 1 }, config).not.toHaveProperty("a", 2);
+
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1940,7 +2115,209 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("not", () => {
+  await t.step("not", async () => {
     // ... existing test ...
   });
+
+  await t.step("otherwise() executes callback on failure", async () => {
+    let callbackInvoked = false;
+    let errorContext: any = null;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+      softMode?: SoftMode,
+    ) => {
+      if (!condition) {
+        throw new Error(message);
+      }
+    };
+
+    const config = createTestConfig({ assertFn: mockAssert });
+
+    try {
+      createExpectation(5, config)
+        .toBe(10)
+        .otherwise((ctx) => {
+          callbackInvoked = true;
+          errorContext = ctx;
+        });
+    } catch (e) {
+      // Expected to throw
+    }
+
+    assert(callbackInvoked, "Callback should be invoked on failure");
+    assert(errorContext !== null, "Error context should be provided");
+    assert(errorContext.matcherName === "toBe", "Matcher name should be toBe");
+    assert(errorContext.expected === "10", "Expected value should be 10");
+    assert(errorContext.received === "5", "Received value should be 5");
+    assert(
+      errorContext.message.length > 0,
+      "Message should not be empty",
+    );
+  });
+
+  await t.step("otherwise() NOT executed on success", async () => {
+    let callbackInvoked = false;
+
+    const mockAssert = (condition: boolean) => {
+      // No-op for successful assertions
+    };
+
+    const config = createTestConfig({ assertFn: mockAssert });
+
+    createExpectation(5, config)
+      .toBe(5)
+      .otherwise(() => {
+        callbackInvoked = true;
+      });
+
+    assert(!callbackInvoked, "Callback should NOT be invoked on success");
+  });
+
+  await t.step("otherwise() works with .not", async () => {
+    let callbackInvoked = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+      softMode?: SoftMode,
+    ) => {
+      if (!condition) {
+        throw new Error(message);
+      }
+    };
+
+    const config = createTestConfig({ assertFn: mockAssert });
+
+    try {
+      createExpectation(5, config)
+        .not.toBe(5)
+        .otherwise(() => {
+          callbackInvoked = true;
+        });
+    } catch (e) {
+      // Expected to throw
+    }
+
+    assert(callbackInvoked, "Callback should be invoked with .not");
+  });
+
+  await t.step("otherwise() works when chained after .not", async () => {
+    let callbackInvoked = false;
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+      softMode?: SoftMode,
+    ) => {
+      if (!condition) {
+        throw new Error(message);
+      }
+    };
+
+    const config = createTestConfig({ assertFn: mockAssert });
+
+    try {
+      createExpectation(5, config)
+        .not.toBe(5)
+        .otherwise(() => {
+          callbackInvoked = true;
+        });
+    } catch (e) {
+      // Expected to throw
+    }
+
+    assert(
+      callbackInvoked,
+      "Callback should be invoked when chained after .not",
+    );
+  });
+
+  await t.step(
+    "otherwise() callback error doesn't prevent assertion",
+    async () => {
+      let assertCalled = false;
+
+      const mockAssert = (
+        condition: boolean,
+        message: string,
+        soft?: boolean,
+        softMode?: SoftMode,
+      ) => {
+        assertCalled = true;
+        if (!condition) {
+          throw new Error(message);
+        }
+      };
+
+      const config = createTestConfig({ assertFn: mockAssert });
+
+      try {
+        createExpectation(5, config)
+          .toBe(10)
+          .otherwise(() => {
+            throw new Error("Callback error");
+          });
+      } catch (e) {
+        // Expected to throw from assertion, not callback
+      }
+
+      assert(
+        assertCalled,
+        "Assert should still be called despite callback error",
+      );
+    },
+  );
+
+  await t.step(
+    "otherwise() warns about async callbacks on sync matchers",
+    async () => {
+      let warnCalled = false;
+      let warnMessage = "";
+      const originalWarn = console.warn;
+      console.warn = (...args: any[]) => {
+        warnCalled = true;
+        warnMessage = args.join(" ");
+      };
+
+      const mockAssert = (
+        condition: boolean,
+        message: string,
+        soft?: boolean,
+        softMode?: SoftMode,
+      ) => {
+        if (!condition) {
+          throw new Error(message);
+        }
+      };
+
+      const config = createTestConfig({ assertFn: mockAssert });
+
+      try {
+        createExpectation(5, config)
+          .toBe(10)
+          .otherwise(async (ctx) => {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          });
+      } catch (e) {
+        // Expected to throw
+      } finally {
+        console.warn = originalWarn;
+      }
+
+      assert(warnCalled, "Should warn about async callback on sync matcher");
+      assert(
+        warnMessage.includes("cannot be awaited"),
+        `Warning message should mention 'cannot be awaited', got: ${warnMessage}`,
+      );
+      assert(
+        warnMessage.includes("retrying matchers"),
+        `Warning message should mention 'retrying matchers', got: ${warnMessage}`,
+      );
+    },
+  );
 });

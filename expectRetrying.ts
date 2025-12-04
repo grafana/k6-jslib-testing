@@ -18,7 +18,12 @@ import type { Locator, Page } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
 import { isLocator, isPage } from "./expectations/utils.ts";
-import type { ExpectationFailed } from "./expectations/result.ts";
+import type { OtherwiseErrorContext } from "./expectNonRetrying.ts";
+import {
+  type AsyncMatcherResult,
+  AsyncMatcherResultImpl,
+  PromiseLikeMatcherResult,
+} from "./matcherResult.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
   /**
@@ -54,7 +59,7 @@ export interface LocatorExpectation {
   /**
    * Ensures the Locator points to a checked input.
    */
-  toBeChecked(options?: Partial<RetryConfig>): Promise<void>;
+  toBeChecked(options?: Partial<RetryConfig>): PromiseLikeMatcherResult;
 
   /**
    * Ensures the Locator points to a disabled element.
@@ -63,34 +68,34 @@ export interface LocatorExpectation {
    * Note that only native control elements such as HTML button, input, select, textarea, option, optgroup can be disabled by setting "disabled" attribute.
    * "disabled" attribute on other elements is ignored by the browser.
    */
-  toBeDisabled(options?: Partial<RetryConfig>): Promise<void>;
+  toBeDisabled(options?: Partial<RetryConfig>): PromiseLikeMatcherResult;
 
   /**
    * Ensures the Locator points to an editable element.
    */
-  toBeEditable(options?: Partial<RetryConfig>): Promise<void>;
+  toBeEditable(options?: Partial<RetryConfig>): PromiseLikeMatcherResult;
 
   /**
    * Ensures the Locator points to an empty element. If the element is an input,
    * it will be empty if it has no value. If the element is not an input, it will
    * be empty if it has no text content.
    */
-  toBeEmpty(options?: Partial<RetryConfig>): Promise<void>;
+  toBeEmpty(options?: Partial<RetryConfig>): PromiseLikeMatcherResult;
 
   /**
    * Ensures the Locator points to an enabled element.
    */
-  toBeEnabled(options?: Partial<RetryConfig>): Promise<void>;
+  toBeEnabled(options?: Partial<RetryConfig>): PromiseLikeMatcherResult;
 
   /**
    * Ensures that Locator either does not resolve to any DOM node, or resolves to a non-visible one.
    */
-  toBeHidden(options?: Partial<RetryConfig>): Promise<void>;
+  toBeHidden(options?: Partial<RetryConfig>): PromiseLikeMatcherResult;
 
   /**
    * Ensures that Locator points to an attached and visible DOM node.
    */
-  toBeVisible(options?: Partial<RetryConfig>): Promise<void>;
+  toBeVisible(options?: Partial<RetryConfig>): PromiseLikeMatcherResult;
 
   /**
    * Ensures that the Locator points to an element with the given text.
@@ -102,7 +107,7 @@ export interface LocatorExpectation {
   toHaveText(
     expected: RegExp | string,
     options?: Partial<ToHaveTextOptions>,
-  ): Promise<void>;
+  ): PromiseLikeMatcherResult;
 
   /**
    * Ensures that the Locator points to an element that contains the given text.
@@ -114,19 +119,25 @@ export interface LocatorExpectation {
   toContainText(
     expected: RegExp | string,
     options?: Partial<ToHaveTextOptions>,
-  ): Promise<void>;
+  ): PromiseLikeMatcherResult;
 
   /**
    * Ensures that the Locator points to an element that has the given attribute and, optionally, the given value.
    */
-  toHaveAttribute(attribute: string, expectedValue?: string): Promise<void>;
+  toHaveAttribute(
+    attribute: string,
+    expectedValue?: string,
+  ): PromiseLikeMatcherResult;
 
   /**
    * Ensures the Locator points to an element with the given input value. You can use regular expressions for the value as well.
    *
    * @param value {string} the expected value of the input
    */
-  toHaveValue(value: string, options?: Partial<RetryConfig>): Promise<void>;
+  toHaveValue(
+    value: string,
+    options?: Partial<RetryConfig>,
+  ): PromiseLikeMatcherResult;
 }
 
 /**
@@ -145,7 +156,7 @@ export interface PageExpectation {
   toHaveTitle(
     expected: RegExp | string,
     options?: Partial<RetryConfig>,
-  ): Promise<void>;
+  ): PromiseLikeMatcherResult;
 }
 
 /**
@@ -234,7 +245,7 @@ export function createLocatorExpectation(
     expected: RegExp | string,
     options: Partial<ToHaveTextOptions> = {},
     compareFn: (actual: string, expected: string) => boolean,
-  ) => {
+  ): Promise<AsyncMatcherResult> => {
     const stacktrace = parseStackTrace(new Error().stack);
     const executionContext = captureExecutionContext(stacktrace);
 
@@ -242,7 +253,10 @@ export function createLocatorExpectation(
       throw new Error("k6 failed to capture execution context");
     }
 
-    const checkRegExp = (expected: RegExp, actual: string) => {
+    // Variable to capture error info with actual values during retries
+    let lastErrorInfo: MatcherErrorInfo | null = null;
+
+    const checkRegExp = (expected: RegExp, actual: string): void => {
       // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
       const regexp = options.ignoreCase !== undefined
         ? new RegExp(
@@ -261,19 +275,16 @@ export function createLocatorExpectation(
       };
 
       const result = regexp.test(actual);
+      const finalResult = isNegated ? !result : result;
 
-      usedAssert(
-        isNegated ? !result : result,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        config.softMode,
-      );
+      if (!finalResult) {
+        // Store error info for later use (but don't call usedAssert yet - only after retries are exhausted)
+        lastErrorInfo = info;
+        throw new Error("matcher failed");
+      }
     };
 
-    const checkText = (expected: string, actual: string) => {
+    const checkText = (expected: string, actual: string): void => {
       const normalizedExpected = normalizeWhiteSpace(expected);
       const normalizedActual = normalizeWhiteSpace(actual);
 
@@ -293,15 +304,13 @@ export function createLocatorExpectation(
         )
         : compareFn(normalizedActual, normalizedExpected);
 
-      usedAssert(
-        isNegated ? !result : result,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        config.softMode,
-      );
+      const finalResult = isNegated ? !result : result;
+
+      if (!finalResult) {
+        // Store error info for later use (but don't call usedAssert yet - only after retries are exhausted)
+        lastErrorInfo = info;
+        throw new Error("matcher failed");
+      }
     };
 
     try {
@@ -315,35 +324,51 @@ export function createLocatorExpectation(
             throw new Error("Element has no text content");
           }
 
+          // Call check functions directly (they throw on failure)
           if (expected instanceof RegExp) {
             checkRegExp(expected, actualText);
-
-            return;
+          } else {
+            checkText(expected, actualText);
           }
-
-          checkText(expected, actualText);
+          // If we get here, the check passed
         },
         { ...retryConfig, ...options },
       );
+
+      // Success - all retries passed
+      return new AsyncMatcherResultImpl(true, null, null);
     } catch (_) {
-      const info: MatcherErrorInfo = {
-        executionContext,
+      // Failure - use captured error info with actual values
+      if (!lastErrorInfo) {
+        // Fallback if error info wasn't captured (shouldn't happen in normal flow)
+        lastErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: expected.toString(),
+          received: "unknown",
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+      }
+
+      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+        .render(
+          lastErrorInfo,
+          MatcherErrorRendererRegistry.getConfig(),
+        );
+
+      const errorContext: OtherwiseErrorContext = {
+        message: errorMessage,
+        expected: lastErrorInfo.expected,
+        received: lastErrorInfo.received,
         matcherName,
-        expected: expected.toString(),
-        received: "unknown",
-        matcherSpecific: { isNegated },
-        customMessage: message,
       };
 
-      usedAssert(
-        false,
-        MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        config.softMode,
-      );
+      const throwError = () => {
+        usedAssert(false, errorMessage, isSoft, config.softMode);
+      };
+
+      return new AsyncMatcherResultImpl(false, errorContext, throwError);
     }
   };
 
@@ -352,46 +377,49 @@ export function createLocatorExpectation(
       return createLocatorExpectation(locator, config, message, !isNegated);
     },
 
-    async toBeChecked(
+    toBeChecked(
       options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
+    ): PromiseLikeMatcherResult {
+      const promise = createMatcher(
         "toBeChecked",
         async () => await locator.isChecked(),
         "checked",
         "unchecked",
         { ...matcherConfig, options },
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
-    async toBeDisabled(
+    toBeDisabled(
       options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
+    ): PromiseLikeMatcherResult {
+      const promise = createMatcher(
         "toBeDisabled",
         async () => await locator.isDisabled(),
         "disabled",
         "enabled",
         { ...matcherConfig, options },
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
-    async toBeEditable(
+    toBeEditable(
       options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
+    ): PromiseLikeMatcherResult {
+      const promise = createMatcher(
         "toBeEditable",
         async () => await locator.isEditable(),
         "editable",
         "uneditable",
         { ...matcherConfig, options },
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
-    async toBeEmpty(
+    toBeEmpty(
       options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
+    ): PromiseLikeMatcherResult {
+      const promise = createMatcher(
         "toBeEmpty",
         async () => {
           try {
@@ -431,178 +459,224 @@ export function createLocatorExpectation(
         "not empty",
         { ...matcherConfig, options },
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
-    async toBeEnabled(
+    toBeEnabled(
       options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
+    ): PromiseLikeMatcherResult {
+      const promise = createMatcher(
         "toBeEnabled",
         async () => await locator.isEnabled(),
         "enabled",
         "disabled",
         { ...matcherConfig, options },
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
-    async toBeHidden(
+    toBeHidden(
       options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
+    ): PromiseLikeMatcherResult {
+      const promise = createMatcher(
         "toBeHidden",
         async () => await locator.isHidden(),
         "hidden",
         "visible",
         { ...matcherConfig, options },
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
-    async toBeVisible(
+    toBeVisible(
       options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
+    ): PromiseLikeMatcherResult {
+      const promise = createMatcher(
         "toBeVisible",
         async () => await locator.isVisible(),
         "visible",
         "hidden",
         { ...matcherConfig, options },
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
     toHaveText(
       expected: RegExp | string,
       options: Partial<ToHaveTextOptions> = {},
-    ) {
-      return matchText(
+    ): PromiseLikeMatcherResult {
+      const promise = matchText(
         "toHaveText",
         expected,
         options,
         (actual, expected) => actual === expected,
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
     toContainText(
       expected: RegExp | string,
       options: Partial<ToHaveTextOptions> = {},
-    ) {
-      return matchText(
+    ): PromiseLikeMatcherResult {
+      const promise = matchText(
         "toContainText",
         expected,
         options,
         (actual, expected) => actual.includes(expected),
       );
+      return new PromiseLikeMatcherResult(promise);
     },
 
-    async toHaveAttribute(attribute: string, expectedValue?: string) {
+    toHaveAttribute(
+      attribute: string,
+      expectedValue?: string,
+    ): PromiseLikeMatcherResult {
       const matcherName = "toHaveAttribute";
 
-      const stacktrace = parseStackTrace(new Error().stack);
-      const executionContext = captureExecutionContext(stacktrace);
+      const promise = (async (): Promise<AsyncMatcherResult> => {
+        const stacktrace = parseStackTrace(new Error().stack);
+        const executionContext = captureExecutionContext(stacktrace);
 
-      if (!executionContext) {
-        throw new Error("k6 failed to capture execution context");
-      }
+        if (!executionContext) {
+          throw new Error("k6 failed to capture execution context");
+        }
 
-      const renderer = MatcherErrorRendererRegistry.getRenderer(matcherName);
-      const renderConfig = MatcherErrorRendererRegistry.getConfig();
+        // Variable to capture error info with actual values during retries
+        let lastErrorInfo: MatcherErrorInfo | null = null;
 
-      try {
-        await withRetry(async () => {
-          const result = await toHaveAttribute(
-            locator,
-            attribute,
-            expectedValue,
-          );
-          const finalResult = isNegated ? result.negate() : result;
+        try {
+          await withRetry(async () => {
+            const result = await toHaveAttribute(
+              locator,
+              attribute,
+              expectedValue,
+            );
+            const finalResult = isNegated ? result.negate() : result;
 
-          if (finalResult.passed) {
-            return;
+            if (!finalResult.passed) {
+              // Store error info with actual values from the result
+              lastErrorInfo = {
+                executionContext,
+                matcherName,
+                expected: finalResult.detail.expected,
+                received: finalResult.detail.received,
+              };
+              throw new Error("matcher failed");
+            }
+          }, retryConfig);
+
+          // Success
+          return new AsyncMatcherResultImpl(true, null, null);
+        } catch {
+          // Fallback if error info wasn't captured
+          if (!lastErrorInfo) {
+            lastErrorInfo = {
+              executionContext,
+              matcherName,
+              expected: "An element matching the locator.",
+              received:
+                `Timeout waiting for element matching locator (${retryConfig.timeout}ms)`,
+            };
           }
 
-          const failedResult = finalResult as ExpectationFailed;
-
-          const info: MatcherErrorInfo = {
-            executionContext,
+          const errorMessage = MatcherErrorRendererRegistry.getRenderer(
             matcherName,
-            expected: failedResult.detail.expected,
-            received: failedResult.detail.received,
+          ).render(
+            lastErrorInfo,
+            MatcherErrorRendererRegistry.getConfig(),
+          );
+
+          const errorContext: OtherwiseErrorContext = {
+            message: errorMessage,
+            expected: lastErrorInfo.expected,
+            received: lastErrorInfo.received,
+            matcherName,
           };
 
-          usedAssert(
-            false,
-            renderer.render(info, renderConfig),
-            isSoft,
-            config.softMode,
-          );
-        }, retryConfig);
-      } catch {
-        const info: MatcherErrorInfo = {
-          executionContext,
-          matcherName,
-          expected: "An element matching the locator.",
-          received:
-            `Timeout waiting for element matching locator (${retryConfig.timeout}ms)`,
-        };
+          const throwError = () => {
+            usedAssert(false, errorMessage, isSoft, config.softMode);
+          };
 
-        usedAssert(
-          false,
-          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-          config.softMode,
-        );
-      }
+          return new AsyncMatcherResultImpl(false, errorContext, throwError);
+        }
+      })();
+
+      return new PromiseLikeMatcherResult(promise);
     },
 
-    async toHaveValue(
+    toHaveValue(
       expectedValue: string,
       options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      const stacktrace = parseStackTrace(new Error().stack);
-      const executionContext = captureExecutionContext(stacktrace);
-      if (!executionContext) {
-        throw new Error("k6 failed to capture execution context");
-      }
+    ): PromiseLikeMatcherResult {
+      const promise = (async (): Promise<AsyncMatcherResult> => {
+        const stacktrace = parseStackTrace(new Error().stack);
+        const executionContext = captureExecutionContext(stacktrace);
+        if (!executionContext) {
+          throw new Error("k6 failed to capture execution context");
+        }
 
-      const info: MatcherErrorInfo = {
-        executionContext,
-        matcherName: "toHaveValue",
-        expected: expectedValue,
-        received: "unknown",
-        matcherSpecific: { isNegated },
-        customMessage: message,
-      };
+        // Variable to capture error info with actual values during retries
+        let lastErrorInfo: MatcherErrorInfo | null = null;
 
-      try {
-        await withRetry(async () => {
-          const actualValue = await locator.inputValue();
-          const result = expectedValue === actualValue;
-          // If isNegated is true, we want to invert the result
-          const finalResult = isNegated ? !result : result;
+        try {
+          await withRetry(async () => {
+            const actualValue = await locator.inputValue();
+            const result = expectedValue === actualValue;
+            // If isNegated is true, we want to invert the result
+            const finalResult = isNegated ? !result : result;
 
-          usedAssert(
-            finalResult,
-            MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
-              info,
-              MatcherErrorRendererRegistry.getConfig(),
-            ),
-            isSoft,
-            config.softMode,
-          );
-        }, { ...retryConfig, ...options });
-      } catch (_) {
-        usedAssert(
-          false,
-          MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
-            info,
+            if (!finalResult) {
+              // Store error info with actual value
+              lastErrorInfo = {
+                executionContext,
+                matcherName: "toHaveValue",
+                expected: expectedValue,
+                received: actualValue,
+                matcherSpecific: { isNegated },
+                customMessage: message,
+              };
+              throw new Error("matcher failed");
+            }
+          }, { ...retryConfig, ...options });
+
+          // Success
+          return new AsyncMatcherResultImpl(true, null, null);
+        } catch (_) {
+          // Fallback if error info wasn't captured
+          if (!lastErrorInfo) {
+            lastErrorInfo = {
+              executionContext,
+              matcherName: "toHaveValue",
+              expected: expectedValue,
+              received: "unknown",
+              matcherSpecific: { isNegated },
+              customMessage: message,
+            };
+          }
+
+          const errorMessage = MatcherErrorRendererRegistry.getRenderer(
+            "toHaveValue",
+          ).render(
+            lastErrorInfo,
             MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-          config.softMode,
-        );
-      }
+          );
+
+          const errorContext: OtherwiseErrorContext = {
+            message: errorMessage,
+            expected: expectedValue,
+            received: lastErrorInfo.received,
+            matcherName: "toHaveValue",
+          };
+
+          const throwError = () => {
+            usedAssert(false, errorMessage, isSoft, config.softMode);
+          };
+
+          return new AsyncMatcherResultImpl(false, errorContext, throwError);
+        }
+      })();
+
+      return new PromiseLikeMatcherResult(promise);
     },
   };
 
@@ -649,7 +723,7 @@ export function createPageExpectation(
     expected: RegExp | string,
     options: Partial<RetryConfig> = {},
     compareFn: (actual: string, expected: string) => boolean,
-  ) => {
+  ): Promise<AsyncMatcherResult> => {
     const stacktrace = parseStackTrace(new Error().stack);
     const executionContext = captureExecutionContext(stacktrace);
 
@@ -657,8 +731,10 @@ export function createPageExpectation(
       throw new Error("k6 failed to capture execution context");
     }
 
-    const checkRegExp = (expected: RegExp, actual: string) => {
-      // `ignoreCase` should take precedence over the `i` flag of the regex if it is defined.
+    // Variable to capture error info with actual values during retries
+    let lastErrorInfo: MatcherErrorInfo | null = null;
+
+    const checkRegExp = (expected: RegExp, actual: string): void => {
       const regexp = expected;
 
       const info: MatcherErrorInfo = {
@@ -671,19 +747,16 @@ export function createPageExpectation(
       };
 
       const result = regexp.test(actual);
+      const finalResult = isNegated ? !result : result;
 
-      usedAssert(
-        isNegated ? !result : result,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        config.softMode,
-      );
+      if (!finalResult) {
+        // Store error info for later use
+        lastErrorInfo = info;
+        throw new Error("matcher failed");
+      }
     };
 
-    const checkText = (expected: string, actual: string) => {
+    const checkText = (expected: string, actual: string): void => {
       const normalizedExpected = normalizeWhiteSpace(expected);
       const normalizedActual = normalizeWhiteSpace(actual);
 
@@ -697,16 +770,13 @@ export function createPageExpectation(
       };
 
       const result = compareFn(normalizedActual, normalizedExpected);
+      const finalResult = isNegated ? !result : result;
 
-      usedAssert(
-        isNegated ? !result : result,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        config.softMode,
-      );
+      if (!finalResult) {
+        // Store error info for later use
+        lastErrorInfo = info;
+        throw new Error("matcher failed");
+      }
     };
 
     try {
@@ -714,35 +784,51 @@ export function createPageExpectation(
         async () => {
           const actualText = await page.title();
 
+          // Call check functions directly (they throw on failure)
           if (expected instanceof RegExp) {
             checkRegExp(expected, actualText);
-
-            return;
+          } else {
+            checkText(expected, actualText);
           }
-
-          checkText(expected, actualText);
+          // If we get here, the check passed
         },
         { ...retryConfig, ...options },
       );
+
+      // Success - all retries passed
+      return new AsyncMatcherResultImpl(true, null, null);
     } catch (_) {
-      const info: MatcherErrorInfo = {
-        executionContext,
+      // Failure - use captured error info with actual values
+      if (!lastErrorInfo) {
+        // Fallback if error info wasn't captured
+        lastErrorInfo = {
+          executionContext,
+          matcherName,
+          expected: expected.toString(),
+          received: "unknown",
+          matcherSpecific: { isNegated },
+          customMessage: message,
+        };
+      }
+
+      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+        .render(
+          lastErrorInfo,
+          MatcherErrorRendererRegistry.getConfig(),
+        );
+
+      const errorContext: OtherwiseErrorContext = {
+        message: errorMessage,
+        expected: lastErrorInfo.expected,
+        received: lastErrorInfo.received,
         matcherName,
-        expected: expected.toString(),
-        received: "unknown",
-        matcherSpecific: { isNegated },
-        customMessage: message,
       };
 
-      usedAssert(
-        false,
-        MatcherErrorRendererRegistry.getRenderer("toHaveTitle").render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        config.softMode,
-      );
+      const throwError = () => {
+        usedAssert(false, errorMessage, isSoft, config.softMode);
+      };
+
+      return new AsyncMatcherResultImpl(false, errorContext, throwError);
     }
   };
 
@@ -754,13 +840,14 @@ export function createPageExpectation(
     toHaveTitle(
       expected: RegExp | string,
       options: Partial<RetryConfig> = {},
-    ) {
-      return matchPageText(
+    ): PromiseLikeMatcherResult {
+      const promise = matchPageText(
         "toHaveTitle",
         expected,
         options,
         (actual, expected) => actual === expected,
       );
+      return new PromiseLikeMatcherResult(promise);
     },
   };
 
@@ -845,7 +932,7 @@ async function createMatcher(
     message?: string;
     softMode?: SoftMode;
   },
-): Promise<void> {
+): Promise<AsyncMatcherResult> {
   const info = createMatcherInfo(matcherName, expected, received, {
     matcherSpecific: {
       locator,
@@ -863,27 +950,30 @@ async function createMatcher(
       if (!finalResult) {
         throw new Error("matcher failed");
       }
-
-      usedAssert(
-        finalResult,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        softMode,
-      );
     }, { ...retryConfig, ...options });
+
+    // Success - retries passed
+    return new AsyncMatcherResultImpl(true, null, null);
   } catch (_) {
-    usedAssert(
-      false,
-      MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+    // Failure after retries exhausted
+    const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+      .render(
         info,
         MatcherErrorRendererRegistry.getConfig(),
-      ),
-      isSoft,
-      softMode,
-    );
+      );
+
+    const errorContext: OtherwiseErrorContext = {
+      message: errorMessage,
+      expected,
+      received,
+      matcherName,
+    };
+
+    const throwError = () => {
+      usedAssert(false, errorMessage, isSoft, softMode);
+    };
+
+    return new AsyncMatcherResultImpl(false, errorContext, throwError);
   }
 }
 

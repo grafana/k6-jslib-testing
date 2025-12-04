@@ -4,6 +4,10 @@ import { assert } from "@std/assert";
 import type { SoftMode } from "./assert.ts";
 import { RetryTimeoutError, withRetry } from "./expectRetrying.ts";
 import { DEFAULT_RETRY_OPTIONS, type ExpectConfig } from "./config.ts";
+import { setupFastDenoTests, waitForMatcher } from "./test_helpers.ts";
+
+// Configure fast microtask-based delays for Deno tests
+setupFastDenoTests();
 
 Deno.test("withRetry", async (t) => {
   await t.step("succeeds immediately when assertion passes", async () => {
@@ -133,6 +137,7 @@ Deno.test("negated retrying expectations", async (t) => {
 
     // Test a few matchers
     await negatedExpectation.toBeVisible();
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -141,6 +146,7 @@ Deno.test("negated retrying expectations", async (t) => {
 
     assertCalled = false;
     await negatedExpectation.toBeChecked();
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -149,6 +155,7 @@ Deno.test("negated retrying expectations", async (t) => {
 
     assertCalled = false;
     await negatedExpectation.toHaveValue("test-value");
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -206,6 +213,7 @@ Deno.test("negated retrying expectations", async (t) => {
     const doubleNegated = expectation.not.not;
 
     await doubleNegated.toBeVisible();
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true with double negation");
   });
@@ -256,6 +264,7 @@ Deno.test("retrying expectations with custom messages", async (t) => {
       );
 
       await expectation.toBeVisible();
+      await waitForMatcher();
 
       assert(assertCalled, "Assert should have been called");
       assert(
@@ -313,3 +322,160 @@ async function assertRejects(
 
   assert(thrown, "Expected function to throw an error, but it did not");
 }
+
+Deno.test("otherwise() with async callbacks", async (t) => {
+  await t.step("awaits async callbacks before throwing", async () => {
+    let callbackCompleted = false;
+    let callbackValue = "";
+
+    const mockLocator = {
+      isVisible: async () => false, // Will fail the assertion
+    };
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      // Don't throw for this test, just fail
+    };
+
+    const { createLocatorExpectation } = await import("./expectRetrying.ts");
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      timeout: 10,
+      interval: 5,
+      soft: false,
+      softMode: "throw",
+      colorize: false,
+      display: "inline",
+    };
+
+    const expectation = createLocatorExpectation(
+      mockLocator as any,
+      config,
+      undefined,
+      false,
+    );
+
+    try {
+      await expectation.toBeVisible().otherwise(async (ctx) => {
+        // Simulate async operation
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        callbackCompleted = true;
+        callbackValue = ctx.matcherName;
+      });
+    } catch (e) {
+      // Expected to throw
+    }
+
+    assert(callbackCompleted, "Async callback should complete before throw");
+    assert(
+      callbackValue === "toBeVisible",
+      `Expected matcherName 'toBeVisible', got '${callbackValue}'`,
+    );
+  });
+
+  await t.step("handles callback errors properly", async () => {
+    let errorLogged = false;
+    const originalError = console.error;
+    console.error = (...args: any[]) => {
+      if (args[0] === "Error in .otherwise() callback:") {
+        errorLogged = true;
+      }
+    };
+
+    const mockLocator = {
+      isVisible: async () => false, // Will fail the assertion
+    };
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      // Don't throw for this test
+    };
+
+    const { createLocatorExpectation } = await import("./expectRetrying.ts");
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      timeout: 10,
+      interval: 5,
+      soft: false,
+      softMode: "throw",
+      colorize: false,
+      display: "inline",
+    };
+
+    const expectation = createLocatorExpectation(
+      mockLocator as any,
+      config,
+      undefined,
+      false,
+    );
+
+    try {
+      await expectation.toBeVisible().otherwise(async (ctx) => {
+        throw new Error("Callback error");
+      });
+    } catch (e) {
+      // Should throw assertion error, not callback error
+      assert(
+        (e as Error).message !== "Callback error",
+        "Should not throw callback error",
+      );
+    } finally {
+      console.error = originalError;
+    }
+
+    assert(errorLogged, "Callback error should be logged");
+  });
+
+  await t.step("supports synchronous callbacks in async matchers", async () => {
+    let callbackCalled = false;
+
+    const mockLocator = {
+      isVisible: async () => false, // Will fail the assertion
+    };
+
+    const mockAssert = (
+      condition: boolean,
+      message: string,
+      soft?: boolean,
+    ) => {
+      // Don't throw for this test
+    };
+
+    const { createLocatorExpectation } = await import("./expectRetrying.ts");
+
+    const config: ExpectConfig = {
+      assertFn: mockAssert,
+      timeout: 10,
+      interval: 5,
+      soft: false,
+      softMode: "throw",
+      colorize: false,
+      display: "inline",
+    };
+
+    const expectation = createLocatorExpectation(
+      mockLocator as any,
+      config,
+      undefined,
+      false,
+    );
+
+    try {
+      await expectation.toBeVisible().otherwise((ctx) => {
+        callbackCalled = true;
+      });
+    } catch (e) {
+      // Expected to throw
+    }
+
+    assert(callbackCalled, "Synchronous callback should be called");
+  });
+});

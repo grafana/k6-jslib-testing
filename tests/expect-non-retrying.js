@@ -1,6 +1,17 @@
 import { expect } from "../dist/index.js";
 import { createMockAssertFn, failTest, passTest } from "./testing.js";
 
+/**
+ * Busy-wait for matcher to call assertFn (via setTimeout in k6)
+ * k6 doesn't support async/await, so we use busy-wait
+ */
+function waitForMatcher(mockAssertFn, timeoutMs = 10) {
+  const startTime = Date.now();
+  while (!mockAssertFn.called && Date.now() - startTime < timeoutMs) {
+    // Busy wait
+  }
+}
+
 export default function testExpectNonRetrying() {
   TEST_CASES.forEach(runTest);
   testToBeInstanceOf();
@@ -200,6 +211,9 @@ function runTest(testCase) {
     testExpect(testCase.value)[testCase.matcher](testCase.arg);
   }
 
+  // Wait for setTimeout to fire (k6 uses setTimeout for delayed throws)
+  waitForMatcher(mockAssertFn);
+
   // Verify the mock assertions
   if (!mockAssertFn.called) {
     failTest(testCase.name, "expected assertFn to be called");
@@ -232,6 +246,7 @@ function testToBeInstanceOf() {
   const testExpect = expect.configure({ assertFn: mockAssertFn });
 
   testExpect(new Example()).toBeInstanceOf(Example);
+  waitForMatcher(mockAssertFn);
 
   if (!mockAssertFn.called) {
     failTest("toBeInstanceOf", "expected assertFn to be called");
@@ -263,6 +278,7 @@ function testToContain() {
 
     // Test passing case
     testExpect("hello world").toContain("world");
+    waitForMatcher(mockAssertFn);
     if (!mockAssertFn.called) {
       failTest("toContain with string", "expected assertFn to be called");
     }
@@ -406,6 +422,7 @@ function testToContainEqual() {
 
     // Test passing case with primitives
     testExpect([1, 2, 3]).toContainEqual(2);
+    waitForMatcher(mockAssertFn);
     if (!mockAssertFn.called) {
       failTest("toContainEqual with array", "expected assertFn to be called");
     }
@@ -555,6 +572,7 @@ function testToHaveProperty() {
 
     // Test passing case
     testExpect({ a: 1 }).toHaveProperty("a");
+    waitForMatcher(mockAssertFn);
     if (!mockAssertFn.called) {
       failTest(
         "toHaveProperty with simple property",
@@ -1026,6 +1044,7 @@ function testNegation() {
     } else {
       testExpect(testCase.value).not[matcher]();
     }
+    waitForMatcher(mockAssertFn);
 
     // Verify the mock assertions
     if (!mockAssertFn.called) {
