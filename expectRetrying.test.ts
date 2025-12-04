@@ -353,7 +353,7 @@ Deno.test("otherwise() with async callbacks", async (t) => {
     try {
       await expectation.toBeVisible().otherwise(async (ctx) => {
         // Simulate async operation
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         callbackCompleted = true;
         callbackValue = ctx.matcherName;
       });
@@ -362,7 +362,10 @@ Deno.test("otherwise() with async callbacks", async (t) => {
     }
 
     assert(callbackCompleted, "Async callback should complete before throw");
-    assert(callbackValue === "toBeVisible", `Expected matcherName 'toBeVisible', got '${callbackValue}'`);
+    assert(
+      callbackValue === "toBeVisible",
+      `Expected matcherName 'toBeVisible', got '${callbackValue}'`,
+    );
   });
 
   await t.step("handles callback errors properly", async () => {
@@ -411,7 +414,10 @@ Deno.test("otherwise() with async callbacks", async (t) => {
       });
     } catch (e) {
       // Should throw assertion error, not callback error
-      assert((e as Error).message !== "Callback error", "Should not throw callback error");
+      assert(
+        (e as Error).message !== "Callback error",
+        "Should not throw callback error",
+      );
     } finally {
       console.error = originalError;
     }

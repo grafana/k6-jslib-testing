@@ -1,6 +1,6 @@
 import { expect } from "../dist/index.js";
 
-export default function() {
+export default function () {
   console.log("Testing .otherwise() feature...\n");
 
   // Test 1: Non-retrying expectation - callback should execute on failure
@@ -15,7 +15,7 @@ export default function() {
       console.log("  Callback executed!");
       console.log("  Error context:", JSON.stringify(ctx, null, 2));
     });
-  } catch (e) {
+  } catch (_) {
     // Expected to throw
   }
 
@@ -48,7 +48,7 @@ export default function() {
       notCallbackInvoked = true;
       console.log("  Callback executed with .not!");
     });
-  } catch (e) {
+  } catch (_) {
     // Expected to throw
   }
 

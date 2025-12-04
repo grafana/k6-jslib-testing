@@ -1,6 +1,6 @@
 import { expect } from "../dist/index.js";
 
-export default function() {
+export default function () {
   console.log("Testing .otherwise() feature with soft mode...\n");
 
   // Configure expect with soft mode
@@ -20,14 +20,18 @@ export default function() {
       console.log("  Expected:", ctx.expected);
       console.log("  Received:", ctx.received);
     });
-  } catch (e) {
+  } catch (_) {
     // Soft mode with throw - expected
   }
 
   if (callbackInvoked && errorContext && errorContext.matcherName === "toBe") {
-    console.log("  ✓ Test 1 passed: Callback was invoked with correct error context\n");
+    console.log(
+      "  ✓ Test 1 passed: Callback was invoked with correct error context\n",
+    );
   } else {
-    console.log("  ✗ Test 1 failed: Callback was not invoked or context is incorrect\n");
+    console.log(
+      "  ✗ Test 1 failed: Callback was not invoked or context is incorrect\n",
+    );
   }
 
   // Test 2: Soft expectation - callback should NOT execute on success
@@ -53,7 +57,7 @@ export default function() {
       notCallbackInvoked = true;
       console.log("  Callback executed with .not!");
     });
-  } catch (e) {
+  } catch (_) {
     // Expected
   }
 
@@ -78,7 +82,7 @@ export default function() {
     softExpect(5).toBe(10).otherwise(() => {
       console.log("  First failure callback executed!");
     });
-  } catch (e) {
+  } catch (_) {
     // Expected throw
   }
 
@@ -86,7 +90,9 @@ export default function() {
   continuationReached = true;
 
   if (continuationReached) {
-    console.log("  ✓ Test 5 passed: Test continued after soft assertion failure\n");
+    console.log(
+      "  ✓ Test 5 passed: Test continued after soft assertion failure\n",
+    );
   } else {
     console.log("  ✗ Test 5 failed: Test did not continue\n");
   }
@@ -97,10 +103,11 @@ export default function() {
 
   try {
     softExpect("hello").toBe("world").otherwise((ctx) => {
-      hasMessage = ctx.message && ctx.message.includes("Expected") && ctx.message.includes("Received");
+      hasMessage = ctx.message && ctx.message.includes("Expected") &&
+        ctx.message.includes("Received");
       console.log("  Message present:", hasMessage);
     });
-  } catch (e) {
+  } catch (_) {
     // Expected
   }
 

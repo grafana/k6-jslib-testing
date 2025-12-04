@@ -27,7 +27,9 @@ export interface OtherwiseErrorContext {
  * Callback function type for .otherwise() method.
  * Supports both synchronous and asynchronous callbacks.
  */
-export type OtherwiseCallback = (context: OtherwiseErrorContext) => void | Promise<void>;
+export type OtherwiseCallback = (
+  context: OtherwiseErrorContext,
+) => void | Promise<void>;
 
 export interface NonRetryingExpectation {
   /**
@@ -589,15 +591,20 @@ function createMatcher(
     return new MatcherResultImpl(true, null, null);
   } else {
     // Failure case - prepare context and throw function
-    const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-      info,
-      MatcherErrorRendererRegistry.getConfig(),
-    );
+    const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+      .render(
+        info,
+        MatcherErrorRendererRegistry.getConfig(),
+      );
 
     const errorContext: OtherwiseErrorContext = {
       message: errorMessage,
-      expected: typeof expected === "string" ? expected : JSON.stringify(expected),
-      received: typeof received === "string" ? received : JSON.stringify(received),
+      expected: typeof expected === "string"
+        ? expected
+        : JSON.stringify(expected),
+      received: typeof received === "string"
+        ? received
+        : JSON.stringify(received),
       matcherName,
     };
 

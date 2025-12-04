@@ -1,4 +1,7 @@
-import type { OtherwiseCallback, OtherwiseErrorContext } from "./expectNonRetrying.ts";
+import type {
+  OtherwiseCallback,
+  OtherwiseErrorContext,
+} from "./expectNonRetrying.ts";
 
 /**
  * Result object returned by non-retrying (synchronous) matchers.
@@ -72,12 +75,15 @@ export class MatcherResultImpl implements MatcherResult {
         if (result instanceof Promise) {
           console.warn(
             "Warning: .otherwise() callback returned a Promise but cannot be awaited " +
-            "in synchronous matchers. Use retrying matchers (toBeVisible, toHaveText, etc.) for async operations."
+              "in synchronous matchers. Use retrying matchers (toBeVisible, toHaveText, etc.) for async operations.",
           );
 
           // Catch any errors in the async callback
           result.catch((callbackError) => {
-            console.error("Error in async .otherwise() callback:", callbackError);
+            console.error(
+              "Error in async .otherwise() callback:",
+              callbackError,
+            );
           });
         }
       } catch (callbackError) {
@@ -178,12 +184,12 @@ export class PromiseLikeMatcherResult implements PromiseLike<void> {
    */
   then<TResult1 = void, TResult2 = never>(
     onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
     // If .otherwise() was called, don't throw automatically
     if (this.otherwiseCalled) {
       // The .otherwise() path handles the promise
-      return Promise.resolve() as any;
+      return Promise.resolve() as unknown as PromiseLike<TResult1 | TResult2>;
     }
 
     // Normal path: await the result, which will trigger auto-throw if failed
@@ -192,7 +198,7 @@ export class PromiseLikeMatcherResult implements PromiseLike<void> {
       if (onfulfilled) {
         return onfulfilled(undefined as void);
       }
-      return undefined as any;
+      return undefined as unknown as TResult1;
     }, onrejected);
   }
 
@@ -200,7 +206,7 @@ export class PromiseLikeMatcherResult implements PromiseLike<void> {
    * Implements catch for Promise compatibility
    */
   catch<TResult = never>(
-    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
+    onrejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | null,
   ): PromiseLike<void | TResult> {
     return this.then(undefined, onrejected);
   }

@@ -18,9 +18,12 @@ import type { Locator, Page } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
 import { isLocator, isPage } from "./expectations/utils.ts";
-import type { ExpectationFailed } from "./expectations/result.ts";
-import type { OtherwiseCallback, OtherwiseErrorContext } from "./expectNonRetrying.ts";
-import { type AsyncMatcherResult, AsyncMatcherResultImpl, PromiseLikeMatcherResult } from "./matcherResult.ts";
+import type { OtherwiseErrorContext } from "./expectNonRetrying.ts";
+import {
+  type AsyncMatcherResult,
+  AsyncMatcherResultImpl,
+  PromiseLikeMatcherResult,
+} from "./matcherResult.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
   /**
@@ -121,14 +124,20 @@ export interface LocatorExpectation {
   /**
    * Ensures that the Locator points to an element that has the given attribute and, optionally, the given value.
    */
-  toHaveAttribute(attribute: string, expectedValue?: string): PromiseLikeMatcherResult;
+  toHaveAttribute(
+    attribute: string,
+    expectedValue?: string,
+  ): PromiseLikeMatcherResult;
 
   /**
    * Ensures the Locator points to an element with the given input value. You can use regular expressions for the value as well.
    *
    * @param value {string} the expected value of the input
    */
-  toHaveValue(value: string, options?: Partial<RetryConfig>): PromiseLikeMatcherResult;
+  toHaveValue(
+    value: string,
+    options?: Partial<RetryConfig>,
+  ): PromiseLikeMatcherResult;
 }
 
 /**
@@ -342,10 +351,11 @@ export function createLocatorExpectation(
         };
       }
 
-      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-        lastErrorInfo,
-        MatcherErrorRendererRegistry.getConfig(),
-      );
+      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+        .render(
+          lastErrorInfo,
+          MatcherErrorRendererRegistry.getConfig(),
+        );
 
       const errorContext: OtherwiseErrorContext = {
         message: errorMessage,
@@ -517,7 +527,10 @@ export function createLocatorExpectation(
       return new PromiseLikeMatcherResult(promise);
     },
 
-    toHaveAttribute(attribute: string, expectedValue?: string): PromiseLikeMatcherResult {
+    toHaveAttribute(
+      attribute: string,
+      expectedValue?: string,
+    ): PromiseLikeMatcherResult {
       const matcherName = "toHaveAttribute";
 
       const promise = (async (): Promise<AsyncMatcherResult> => {
@@ -527,9 +540,6 @@ export function createLocatorExpectation(
         if (!executionContext) {
           throw new Error("k6 failed to capture execution context");
         }
-
-        const renderer = MatcherErrorRendererRegistry.getRenderer(matcherName);
-        const renderConfig = MatcherErrorRendererRegistry.getConfig();
 
         // Variable to capture error info with actual values during retries
         let lastErrorInfo: MatcherErrorInfo | null = null;
@@ -569,7 +579,9 @@ export function createLocatorExpectation(
             };
           }
 
-          const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+          const errorMessage = MatcherErrorRendererRegistry.getRenderer(
+            matcherName,
+          ).render(
             lastErrorInfo,
             MatcherErrorRendererRegistry.getConfig(),
           );
@@ -642,7 +654,9 @@ export function createLocatorExpectation(
             };
           }
 
-          const errorMessage = MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
+          const errorMessage = MatcherErrorRendererRegistry.getRenderer(
+            "toHaveValue",
+          ).render(
             lastErrorInfo,
             MatcherErrorRendererRegistry.getConfig(),
           );
@@ -797,10 +811,11 @@ export function createPageExpectation(
         };
       }
 
-      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-        lastErrorInfo,
-        MatcherErrorRendererRegistry.getConfig(),
-      );
+      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+        .render(
+          lastErrorInfo,
+          MatcherErrorRendererRegistry.getConfig(),
+        );
 
       const errorContext: OtherwiseErrorContext = {
         message: errorMessage,
@@ -941,10 +956,11 @@ async function createMatcher(
     return new AsyncMatcherResultImpl(true, null, null);
   } catch (_) {
     // Failure after retries exhausted
-    const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-      info,
-      MatcherErrorRendererRegistry.getConfig(),
-    );
+    const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+      .render(
+        info,
+        MatcherErrorRendererRegistry.getConfig(),
+      );
 
     const errorContext: OtherwiseErrorContext = {
       message: errorMessage,
