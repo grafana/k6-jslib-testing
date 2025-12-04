@@ -4,6 +4,10 @@ import { assert } from "@std/assert";
 import type { SoftMode } from "./assert.ts";
 import { RetryTimeoutError, withRetry } from "./expectRetrying.ts";
 import { DEFAULT_RETRY_OPTIONS, type ExpectConfig } from "./config.ts";
+import { setupFastDenoTests, waitForMatcher } from "./test_helpers.ts";
+
+// Configure fast microtask-based delays for Deno tests
+setupFastDenoTests();
 
 Deno.test("withRetry", async (t) => {
   await t.step("succeeds immediately when assertion passes", async () => {
@@ -133,6 +137,7 @@ Deno.test("negated retrying expectations", async (t) => {
 
     // Test a few matchers
     await negatedExpectation.toBeVisible();
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -141,6 +146,7 @@ Deno.test("negated retrying expectations", async (t) => {
 
     assertCalled = false;
     await negatedExpectation.toBeChecked();
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -149,6 +155,7 @@ Deno.test("negated retrying expectations", async (t) => {
 
     assertCalled = false;
     await negatedExpectation.toHaveValue("test-value");
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -206,6 +213,7 @@ Deno.test("negated retrying expectations", async (t) => {
     const doubleNegated = expectation.not.not;
 
     await doubleNegated.toBeVisible();
+    await waitForMatcher();
     assert(assertCalled, "Assert should have been called");
     assert(assertCondition, "Condition should be true with double negation");
   });
@@ -256,6 +264,7 @@ Deno.test("retrying expectations with custom messages", async (t) => {
       );
 
       await expectation.toBeVisible();
+      await waitForMatcher();
 
       assert(assertCalled, "Assert should have been called");
       assert(

@@ -2,6 +2,7 @@ import type {
   OtherwiseCallback,
   OtherwiseErrorContext,
 } from "./expectNonRetrying.ts";
+import { scheduleDelayedThrow } from "./delay.ts";
 
 /**
  * Result object returned by non-retrying (synchronous) matchers.
@@ -52,14 +53,14 @@ export class MatcherResultImpl implements MatcherResult {
     private errorContext: OtherwiseErrorContext | null,
     private throwError: (() => void) | null,
   ) {
-    // Use setTimeout with 1ms delay to allow .otherwise() to be called first
-    // queueMicrotask runs too early in k6's runtime
+    // Use scheduleDelayedThrow to allow .otherwise() to be called first
+    // Default uses setTimeout(1ms) for k6, but can be overridden for faster tests
     if (this.throwError) {
-      setTimeout(() => {
+      scheduleDelayedThrow(() => {
         if (!this.otherwiseCalled) {
           this.throwError!();
         }
-      }, 1);
+      });
     }
   }
 
@@ -109,14 +110,14 @@ export class AsyncMatcherResultImpl implements AsyncMatcherResult {
     private errorContext: OtherwiseErrorContext | null,
     private throwError: (() => void) | null,
   ) {
-    // Use setTimeout with 1ms delay to allow .otherwise() to be called first
-    // queueMicrotask runs too early in k6's runtime
+    // Use scheduleDelayedThrow to allow .otherwise() to be called first
+    // Default uses setTimeout(1ms) for k6, but can be overridden for faster tests
     if (this.throwError) {
-      setTimeout(() => {
+      scheduleDelayedThrow(() => {
         if (!this.otherwiseCalled) {
           this.throwError!();
         }
-      }, 1);
+      });
     }
   }
 

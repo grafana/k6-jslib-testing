@@ -1,7 +1,15 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals } from "@std/assert";
 
 import { expect } from "./expect.ts";
-import { withEnv } from "./test_helpers.ts";
+import {
+  expectToThrowAsync,
+  setupFastDenoTests,
+  waitForMatcher,
+  withEnv,
+} from "./test_helpers.ts";
+
+// Configure fast microtask-based delays for Deno tests
+setupFastDenoTests();
 
 Deno.test("expect.configure", async (t) => {
   await t.step(
@@ -55,55 +63,51 @@ Deno.test("expect.configure", async (t) => {
 });
 
 Deno.test("expect.not", async (t) => {
-  await t.step("should negate toBe matcher", () => {
+  await t.step("should negate toBe matcher", async () => {
     // This should pass
     expect(1).not.toBe(2);
 
     // This should throw
-    assertThrows(
+    await expectToThrowAsync(
       () => expect(1).not.toBe(1),
-      Error,
-      "toBe",
+      (err) => err.message.includes("toBe"),
     );
   });
 
-  await t.step("should negate toEqual matcher", () => {
+  await t.step("should negate toEqual matcher", async () => {
     // This should pass
     expect({ a: 1 }).not.toEqual({ a: 2 });
 
     // This should throw
-    assertThrows(
+    await expectToThrowAsync(
       () => expect({ a: 1 }).not.toEqual({ a: 1 }),
-      Error,
-      "toEqual",
+      (err) => err.message.includes("toEqual"),
     );
   });
 
-  await t.step("should negate toBeTruthy matcher", () => {
+  await t.step("should negate toBeTruthy matcher", async () => {
     // This should pass
     expect(false).not.toBeTruthy();
 
     // This should throw
-    assertThrows(
+    await expectToThrowAsync(
       () => expect(true).not.toBeTruthy(),
-      Error,
-      "toBeTruthy",
+      (err) => err.message.includes("toBeTruthy"),
     );
   });
 
-  await t.step("should negate toBeFalsy matcher", () => {
+  await t.step("should negate toBeFalsy matcher", async () => {
     // This should pass
     expect(true).not.toBeFalsy();
 
     // This should throw
-    assertThrows(
+    await expectToThrowAsync(
       () => expect(false).not.toBeFalsy(),
-      Error,
-      "toBeFalsy",
+      (err) => err.message.includes("toBeFalsy"),
     );
   });
 
-  await t.step("should work with soft assertions", () => {
+  await t.step("should work with soft assertions", async () => {
     // Create a custom expect with a mock assert function to verify soft assertions
     let lastAssertSoft = false;
     const customAssert = (
@@ -119,17 +123,17 @@ Deno.test("expect.not", async (t) => {
 
     // Test soft assertion with negation
     customExpect.soft(1).not.toBe(2);
+    await waitForMatcher();
     assertEquals(lastAssertSoft, true, "Expected soft assertion to be true");
   });
 
-  await t.step("should allow chaining .not multiple times", () => {
+  await t.step("should allow chaining .not multiple times", async () => {
     // .not.not should be equivalent to no .not
     expect(1).not.not.toBe(1);
 
-    assertThrows(
+    await expectToThrowAsync(
       () => expect(1).not.not.toBe(2),
-      Error,
-      "toBe",
+      (err) => err.message.includes("toBe"),
     );
   });
 });

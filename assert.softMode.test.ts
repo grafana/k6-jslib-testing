@@ -3,6 +3,10 @@ import { assert as denoAssert } from "@std/assert";
 import { assert, AssertionFailedError } from "./assert.ts";
 import exec from "k6-execution-shim";
 import { expect } from "./expect.ts";
+import { setupFastDenoTests, waitForMatcher } from "./test_helpers.ts";
+
+// Configure fast microtask-based delays for Deno tests
+setupFastDenoTests();
 
 // Store the original functions to restore later
 const originalTestFail = exec.test.fail;
@@ -82,6 +86,7 @@ Deno.test({
 
           // This should use exec.test.fail
           customExpect.soft(false).toBeTruthy();
+          await waitForMatcher();
 
           denoAssert(failCalled, "exec.test.fail was not called");
           denoAssert(
@@ -109,6 +114,7 @@ Deno.test({
 
           // Default behavior is now softMode='fail', so it should call exec.test.fail
           expect.soft(false).toBeTruthy();
+          await waitForMatcher();
 
           denoAssert(failCalled, "exec.test.fail was not called");
           denoAssert(
@@ -145,6 +151,7 @@ Deno.test({
           // Non-soft assertions should still abort
           try {
             customExpect(false).toBeTruthy();
+            await waitForMatcher();
             denoAssert(false, "expect did not abort");
           } catch (e) {
             denoAssert(abortCalled, "exec.test.abort was not called");
