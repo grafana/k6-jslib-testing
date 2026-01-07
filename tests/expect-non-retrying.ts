@@ -1,6 +1,5 @@
 // @ts-types="../dist/index.d.ts"
 import { colorize, expect } from "../dist/index.js";
-import type { NonRetryingExpectation } from "../expectNonRetrying.ts";
 import { createMockAssertFn, failTest, passTest } from "./testing.ts";
 import type { ExpectFunction } from "../expect.ts";
 import { dedent, trimEmptyLines } from "./utils.ts";
