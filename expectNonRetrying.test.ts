@@ -227,7 +227,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     };
 
     // Test passing case with default precision
-    createExpectation(1.23, config).toBeCloseTo(1.22);
+    createExpectation(1.234, config).toBeCloseTo(1.235);
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -323,8 +323,8 @@ Deno.test("NonRetryingExpectation", async (t) => {
     createExpectation(1.5, config).toBeCloseTo(2, 0);
     assert(assertCalled, "Assert should have been called");
     assert(
-      assertCondition,
-      "Condition should be true when rounding to integers",
+      !assertCondition,
+      "Condition should be false when rounding to integers",
     );
   });
 
