@@ -2,7 +2,7 @@
 import { colorize, expect } from "../dist/index.js";
 import { createMockAssertFn, failTest, passTest } from "./testing.ts";
 import type { ExpectFunction } from "../expect.ts";
-import { dedent } from "./utils.ts";
+import { dedent, trimEmptyLines } from "./utils.ts";
 import execution from "k6/execution";
 
 export default async function testExpectNonRetrying() {
@@ -1715,7 +1715,7 @@ async function runTestCase(
       "Line: ...",
     );
 
-    if (normalized.trim() !== testCase.expectedError.trim()) {
+    if (trimEmptyLines(normalized) !== trimEmptyLines(testCase.expectedError)) {
       return fail(
         testCase.name,
         `Formatted error message does not match the expected output.\nExpected:\n${testCase.expectedError}\n\nActual:\n${normalized}`,
