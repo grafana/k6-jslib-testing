@@ -1,3 +1,4 @@
+// @ts-types="../../dist/index.d.ts"
 import { expect } from "../../dist/index.js";
 
 export const options = {
