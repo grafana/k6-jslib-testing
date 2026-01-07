@@ -1,14 +1,20 @@
+import type { Page } from "k6/browser";
 import { colorize, expect as globalExpect } from "../dist/index.js";
 
 export const expect = globalExpect.configure({
   soft: true,
 });
 
-const context = [];
+const context: string[] = [];
 
-export const testItems = [];
+interface TestItem {
+  name: string;
+  assertion: () => void;
+}
 
-export function describe(name, fn) {
+export const testItems: TestItem[] = [];
+
+export function describe(name: string, fn: () => void) {
   context.push(name);
 
   fn();
@@ -16,7 +22,7 @@ export function describe(name, fn) {
   context.pop();
 }
 
-export function it(name, fn) {
+export function it(name: string, fn: () => void) {
   testItems.push({
     name: [...context, name].join(" > "),
     assertion: fn,
@@ -26,7 +32,11 @@ export function it(name, fn) {
 /**
  * Render an element into the body of the given page.
  */
-export function renderElement(page, tagName, attrs) {
+export function renderElement(
+  page: Page,
+  tagName: keyof HTMLElementTagNameMap,
+  attrs: Record<string, string>,
+) {
   return page.evaluate(([tagName, attrs]) => {
     const el = document.createElement(tagName);
 
@@ -35,18 +45,23 @@ export function renderElement(page, tagName, attrs) {
     });
 
     document.body.appendChild(el);
-  }, [tagName, attrs]);
+  }, [tagName, attrs] as const);
+}
+
+interface ExpectWithSpyResult {
+  passed: boolean;
+  message: string | null;
 }
 
 export function makeExpectWithSpy() {
-  const result = {
+  const result: ExpectWithSpyResult = {
     passed: true,
     message: null,
   };
 
   const expectFn = expect.configure({
     colorize: false,
-    assertFn(condition, message) {
+    assertFn(condition: boolean, message: string) {
       result.passed = condition;
 
       // Remove
@@ -60,10 +75,14 @@ export function makeExpectWithSpy() {
   return [result, expectFn];
 }
 
-export function failTest(testName, message) {
+export function failTest(testName: string, message: string) {
   class TestFailureError extends Error {
-    constructor(testName, message) {
+    testName: string;
+    failureMessage: string;
+
+    constructor(testName: string, message: string) {
       super(colorize(`✗ ${testName}: ${message}`, "red"));
+
       this.name = "TestFailureError";
       this.testName = testName;
       this.failureMessage = message;
@@ -73,12 +92,12 @@ export function failTest(testName, message) {
   throw new TestFailureError(testName, message);
 }
 
-export function passTest(testName) {
+export function passTest(testName: string) {
   console.log(colorize(`✓ ${testName}`, "green"));
 }
 
 export function createMockAssertFn() {
-  const mockFn = function (condition, message, soft = false) {
+  const mockFn = function (condition: boolean, message: string, soft = false) {
     mockFn.called = true;
     mockFn.calls.push({
       condition,
@@ -89,7 +108,11 @@ export function createMockAssertFn() {
 
   // Initialize state
   mockFn.called = false;
-  mockFn.calls = [];
+  mockFn.calls = [] as Array<{
+    condition: boolean;
+    message: string;
+    soft: boolean;
+  }>;
 
   return mockFn;
 }

@@ -24,10 +24,5 @@
     "./utils/**/*.ts",
     "./types.d.ts"
   ],
-  "exclude": [
-    "dist",
-    "tests",
-    "**/*.test.ts",
-    "**/*.js"
-  ]
+  "exclude": ["dist", "**/*.test.ts", "**/*.js"]
 }

@@ -4,7 +4,7 @@ import {
   it,
   makeExpectWithSpy,
   renderElement,
-} from "../testing.js";
+} from "../testing.ts";
 import { dedent } from "../utils.js";
 
 describe("toHaveAttribute(attribute)", () => {

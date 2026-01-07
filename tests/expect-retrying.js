@@ -1,7 +1,7 @@
 import "./expectations/toHaveAttribute.js";
 
 import { browser } from "k6/browser";
-import { expect, failTest, passTest, testItems } from "./testing.js";
+import { expect, failTest, passTest, testItems } from "./testing.ts";
 
 export const options = {
   scenarios: {

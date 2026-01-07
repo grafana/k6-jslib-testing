@@ -1,5 +1,5 @@
 import { expect } from "../dist/index.js";
-import { createMockAssertFn, failTest, passTest } from "./testing.js";
+import { createMockAssertFn, failTest, passTest } from "./testing.ts";
 
 export default function testExpectNonRetrying() {
   TEST_CASES.forEach(runTest);
