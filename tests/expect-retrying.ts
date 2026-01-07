@@ -7,7 +7,7 @@ import {
   type Page,
 } from "k6/browser";
 import { expect, testItems } from "./testing.ts";
-import { dedent } from "./utils.ts";
+import { dedent, trimEmptyLines } from "./utils.ts";
 import type { ExpectFunction } from "../expect.ts";
 import execution from "k6/execution";
 import { colorize } from "../colors.ts";
@@ -69,7 +69,7 @@ const standardTestCases: TestCase[] = [
     name: "toBeChecked (fail)",
     selector: "#notToBeCheckedCheckbox",
     expectedError: dedent`
-        Error: expect(locator).toBeChecked()
+         Error: expect(locator).toBeChecked()
             At: ...
 
       Expected: checked
@@ -154,7 +154,7 @@ const standardTestCases: TestCase[] = [
         selector: "#notToBeEmptyInput",
 
         expectedError: dedent`
-            Error: expect(locator).toBeEmpty()
+             Error: expect(locator).toBeEmpty()
                 At: ...
 
           Expected: empty
@@ -182,7 +182,7 @@ const standardTestCases: TestCase[] = [
         selector: "#notToBeEmptyText",
 
         expectedError: dedent`
-            Error: expect(locator).toBeEmpty()
+             Error: expect(locator).toBeEmpty()
                 At: ...
 
           Expected: empty
@@ -1275,9 +1275,9 @@ async function runTestCase(
     const normalized = error.message.replace(/At: .*$/mg, "At: ...").replace(
       /Line: \d+$/mg,
       "Line: ...",
-    ).trim();
+    );
 
-    if (normalized !== testCase.expectedError.trim()) {
+    if (trimEmptyLines(normalized) !== trimEmptyLines(testCase.expectedError)) {
       return fail(
         testCase.name,
         `Formatted error message does not match the expected output.\nExpected:\n${testCase.expectedError}\n\nActual:\n${normalized}`,
