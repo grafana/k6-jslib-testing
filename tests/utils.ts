@@ -1,7 +1,7 @@
 /**
  * Naive dedent implementation.
  */
-export function dedent(strings) {
+export function dedent(strings: TemplateStringsArray) {
   const text = strings.join("");
   const lines = text.split("\n");
 

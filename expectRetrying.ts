@@ -39,7 +39,9 @@ interface ToHaveTextOptions extends RetryConfig {
  * Retrying expectations are used to assert that a condition is met within a given timeout.
  * The provided assertion function is called repeatedly until the condition is met or the timeout is reached.
  */
-export type RetryingExpectation = LocatorExpectation | PageExpectation;
+export type RetryingExpectation<
+  T extends Locator | Page,
+> = T extends Locator ? LocatorExpectation : PageExpectation;
 
 /**
  * LocatorExpectation defines methods for asserting on Locator objects (DOM elements).
@@ -778,16 +780,26 @@ export function createPageExpectation(
  * @param isNegated whether the expectation is negated
  * @returns an expectation object exposing the appropriate methods
  */
-export function createExpectation(
-  target: Locator | Page,
+export function createExpectation<T extends Locator | Page>(
+  target: T,
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
-): RetryingExpectation {
+): RetryingExpectation<T> {
   if (isPage(target)) {
-    return createPageExpectation(target, config, message, isNegated);
+    return createPageExpectation(
+      target,
+      config,
+      message,
+      isNegated,
+    ) as RetryingExpectation<T>;
   } else if (isLocator(target)) {
-    return createLocatorExpectation(target, config, message, isNegated);
+    return createLocatorExpectation(
+      target,
+      config,
+      message,
+      isNegated,
+    ) as RetryingExpectation<T>;
   } else {
     throw new Error(
       "Invalid target for retrying expectation. Expected Locator or Page object.",

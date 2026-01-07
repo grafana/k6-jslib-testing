@@ -34,7 +34,7 @@ export interface ExpectFunction {
   <T>(
     value: T,
     message?: string,
-  ): T extends Locator | Page ? RetryingExpectation
+  ): T extends Locator | Page ? RetryingExpectation<T>
     : NonRetryingExpectation;
 
   /**
@@ -44,7 +44,7 @@ export interface ExpectFunction {
   soft<T>(
     value: T,
     message?: string,
-  ): T extends Locator | Page ? RetryingExpectation : NonRetryingExpectation;
+  ): T extends Locator | Page ? RetryingExpectation<T> : NonRetryingExpectation;
 
   /**
    * Creates a new expect instance with the given configuration.
@@ -75,20 +75,21 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
     function <T>(
       value: T,
       message?: string,
-    ): T extends Locator | Page ? RetryingExpectation : NonRetryingExpectation {
+    ): T extends Locator | Page ? RetryingExpectation<T>
+      : NonRetryingExpectation {
       if (isLocator(value) || isPage(value)) {
         return createRetryingExpectation(
           value as Locator | Page,
           config,
           message,
-        ) as T extends Locator | Page ? RetryingExpectation
+        ) as T extends Locator | Page ? RetryingExpectation<T>
           : NonRetryingExpectation;
       } else {
         return createNonRetryingExpectation(
           value,
           config,
           message,
-        ) as T extends Locator | Page ? RetryingExpectation
+        ) as T extends Locator | Page ? RetryingExpectation<T>
           : NonRetryingExpectation;
       }
     },
@@ -96,21 +97,21 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
       soft<T>(
         value: T,
         message?: string,
-      ): T extends Locator | Page ? RetryingExpectation
+      ): T extends Locator | Page ? RetryingExpectation<T>
         : NonRetryingExpectation {
         if (isLocator(value) || isPage(value)) {
           return createRetryingExpectation(
             value as Locator | Page,
             { ...config, soft: true },
             message,
-          ) as T extends Locator | Page ? RetryingExpectation
+          ) as T extends Locator | Page ? RetryingExpectation<T>
             : NonRetryingExpectation;
         } else {
           return createNonRetryingExpectation(
             value,
             { ...config, soft: true },
             message,
-          ) as T extends Locator | Page ? RetryingExpectation
+          ) as T extends Locator | Page ? RetryingExpectation<T>
             : NonRetryingExpectation;
         }
       },
