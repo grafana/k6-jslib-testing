@@ -1,6 +1,6 @@
-import "./expectations/toHaveAttribute.js";
+import "./expectations/toHaveAttribute.ts";
 
-import { browser } from "k6/browser";
+import { browser, type Locator, type Page } from "k6/browser";
 import { expect, failTest, passTest, testItems } from "./testing.ts";
 
 export const options = {
@@ -16,8 +16,33 @@ export const options = {
   },
 };
 
+interface LocatorTestCase {
+  name: string;
+  suite?: undefined;
+  selector: string;
+  pass?: boolean;
+  assertion: (locator: Locator) => Promise<void> | void;
+}
+
+interface PageTestCase {
+  name: string;
+  suite?: undefined;
+  selector?: undefined;
+  pass?: boolean;
+  assertion: (context: { page: Page }) => Promise<void> | void;
+}
+
+interface TestSuite {
+  suite: string;
+  selector?: undefined;
+  assertion?: undefined;
+  children: TestCase[];
+}
+
+type TestCase = TestSuite | LocatorTestCase | PageTestCase;
+
 // First run the standard tests
-const standardTestCases = [
+const standardTestCases: TestCase[] = [
   {
     name: "toBeChecked",
     selector: "#toBeCheckedCheckbox",
@@ -287,7 +312,7 @@ const standardTestCases = [
 ];
 
 // Then run the negation tests
-const negationTestCases = [
+const negationTestCases: TestCase[] = [
   {
     name: "not.toBeChecked",
     selector: "#notToBeCheckedCheckbox",
@@ -381,7 +406,9 @@ const negationTestCases = [
   },
 ];
 
-function flattenSuites(tests) {
+function flattenSuites(
+  tests: TestCase[],
+): Array<LocatorTestCase | PageTestCase> {
   return tests.flatMap((testOrSuite) => {
     if (testOrSuite.suite !== undefined) {
       return flattenSuites(testOrSuite.children).map((child) => ({
@@ -409,7 +436,9 @@ export default async function testExpectRetrying() {
       if (testCase.selector) {
         const locator = page.locator(testCase.selector);
         await testCase.assertion(locator);
-      } else {
+      }
+
+      if (testCase.selector === undefined) {
         await testCase.assertion({ page });
       }
 
@@ -427,8 +456,10 @@ export default async function testExpectRetrying() {
         continue;
       }
 
-      console.error(`Test case "${testCase.name}" failed: ${error.message}`);
-      failTest(testCase.name, error.message);
+      const message = error instanceof Error ? error.message : String(error);
+
+      console.error(`Test case "${testCase.name}" failed: ${message}`);
+      failTest(testCase.name, message);
     } finally {
       await page.close();
     }
@@ -443,14 +474,18 @@ export default async function testExpectRetrying() {
       if (testCase.selector) {
         const locator = page.locator(testCase.selector);
         await testCase.assertion(locator);
-      } else {
+      }
+
+      if (testCase.selector === undefined) {
         await testCase.assertion({ page });
       }
 
       passTest(testCase.name);
     } catch (error) {
-      console.error(`Test case "${testCase.name}" failed: ${error.message}`);
-      failTest(testCase.name, error.message);
+      const message = error instanceof Error ? error.message : String(error);
+
+      console.error(`Test case "${testCase.name}" failed: ${message}`);
+      failTest(testCase.name, message);
     } finally {
       await page.close();
     }

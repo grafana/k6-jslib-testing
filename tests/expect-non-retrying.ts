@@ -1,3 +1,6 @@
+import type { NonRetryingExpectation } from "../expectNonRetrying.ts";
+
+// @ts-types="../dist/index.d.ts"
 import { expect } from "../dist/index.js";
 import { createMockAssertFn, failTest, passTest } from "./testing.ts";
 
@@ -10,7 +13,15 @@ export default function testExpectNonRetrying() {
   testNegation();
 }
 
-const TEST_CASES = [
+interface TestCase {
+  name: string;
+  matcher: keyof NonRetryingExpectation;
+  value: unknown;
+  arg?: unknown[] | unknown;
+  expectedCondition: boolean;
+}
+
+const TEST_CASES: TestCase[] = [
   {
     name: "toBe",
     matcher: "toBe",
@@ -189,16 +200,16 @@ const TEST_CASES = [
   },
 ];
 
-function runTest(testCase) {
+function runTest(testCase: TestCase) {
   const mockAssertFn = createMockAssertFn();
   const testExpect = expect.configure({ assertFn: mockAssertFn });
 
-  // Dynamically call the matcher with appropriate arguments
-  if (Array.isArray(testCase.arg)) {
-    testExpect(testCase.value)[testCase.matcher](...testCase.arg);
-  } else {
-    testExpect(testCase.value)[testCase.matcher](testCase.arg);
-  }
+  const args = Array.isArray(testCase.arg) ? testCase.arg : [testCase.arg];
+  const matcher = testExpect(testCase.value)[testCase.matcher] as (
+    ...args: unknown[]
+  ) => void;
+
+  matcher(...args);
 
   // Verify the mock assertions
   if (!mockAssertFn.called) {
@@ -378,7 +389,10 @@ function testToContain() {
           "toContain with unsupported type",
           "expected to throw an Error",
         );
+
+        return;
       }
+
       if (
         !error.message.includes("only supported for strings, arrays, and sets")
       ) {
@@ -386,7 +400,10 @@ function testToContain() {
           "toContain with unsupported type",
           "expected error message to mention supported types",
         );
+
+        return;
       }
+
       passTest("toContain with unsupported type");
     }
   };
@@ -528,7 +545,10 @@ function testToContainEqual() {
           "toContainEqual with unsupported type",
           "expected to throw an Error",
         );
+
+        return;
       }
+
       if (
         !error.message.includes("only supported for arrays and sets")
       ) {
@@ -536,7 +556,10 @@ function testToContainEqual() {
           "toContainEqual with unsupported type",
           "expected error message to mention supported types",
         );
+
+        return;
       }
+
       passTest("toContainEqual with unsupported type");
     }
   };
@@ -784,7 +807,10 @@ function testToHaveProperty() {
           "toHaveProperty with unsupported type",
           "expected to throw an Error",
         );
+
+        return;
       }
+
       if (
         !error.message.includes("only supported for objects")
       ) {
@@ -792,7 +818,10 @@ function testToHaveProperty() {
           "toHaveProperty with unsupported type",
           "expected error message to mention supported types",
         );
+
+        return;
       }
+
       passTest("toHaveProperty with unsupported type");
     }
   };
@@ -913,38 +942,52 @@ function testToHaveProperty() {
   playwrightExamplesTest();
 }
 
+interface NegatedTestCase {
+  name: string;
+  matcher: keyof NonRetryingExpectation;
+  value: unknown;
+  arg?: unknown[] | unknown;
+  expectedCondition: boolean;
+}
+
 function testNegation() {
   // Test cases for negation
-  const negationTestCases = [
+  const negationTestCases: NegatedTestCase[] = [
     {
       name: "not.toBe",
+      matcher: "toBe",
       value: 1,
       arg: 2,
       expectedCondition: true, // 1 is not 2, so this should be true
     },
     {
       name: "not.toEqual",
+      matcher: "toEqual",
       value: { a: 1 },
       arg: { a: 2 },
       expectedCondition: true, // Objects are not equal, so this should be true
     },
     {
       name: "not.toBeTruthy",
+      matcher: "toBeTruthy",
       value: false,
       expectedCondition: true, // false is not truthy, so this should be true
     },
     {
       name: "not.toBeFalsy",
+      matcher: "toBeFalsy",
       value: true,
       expectedCondition: true, // true is not falsy, so this should be true
     },
     {
       name: "not.toBeNull",
+      matcher: "toBeNull",
       value: 1,
       expectedCondition: true, // 1 is not null, so this should be true
     },
     {
       name: "not.toBeUndefined",
+      matcher: "toBeUndefined",
       value: 1,
       expectedCondition: true, // 1 is not undefined, so this should be true
     },
@@ -1017,15 +1060,14 @@ function testNegation() {
     const mockAssertFn = createMockAssertFn();
     const testExpect = expect.configure({ assertFn: mockAssertFn });
 
-    // Extract the matcher name from the test case name or use the provided matcher property
-    const matcher = testCase.matcher || testCase.name.substring(4);
+    const args = Array.isArray(testCase.arg) ? testCase.arg : [testCase.arg];
 
-    // Call the matcher with .not
-    if (testCase.arg !== undefined) {
-      testExpect(testCase.value).not[matcher](testCase.arg);
-    } else {
-      testExpect(testCase.value).not[matcher]();
-    }
+    // Extract the matcher name from the test case name or use the provided matcher property
+    const matcher = testExpect(testCase.value).not[testCase.matcher] as (
+      ...args: unknown[]
+    ) => void;
+
+    matcher(...args);
 
     // Verify the mock assertions
     if (!mockAssertFn.called) {
@@ -1039,7 +1081,9 @@ function testNegation() {
     if (mockAssertFn.calls[0].condition !== testCase.expectedCondition) {
       failTest(
         testCase.name,
-        `expected assertFn condition to be ${testCase.expectedCondition}`,
+        `expected assertFn condition to be ${testCase.expectedCondition}, but it was ${
+          mockAssertFn.calls[0].condition
+        }`,
       );
     }
 

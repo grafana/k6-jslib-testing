@@ -1,5 +1,12 @@
+interface Test {
+  name: string;
+  script: string;
+  expectedCode: number;
+  env: Record<string, string>;
+}
+
 async function runExitCodeTests() {
-  const tests = [
+  const tests: Test[] = [
     {
       name:
         "soft-default: expect.soft() with default configuration (softMode='fail')",
@@ -102,14 +109,14 @@ async function runIntegrationTests() {
         "run",
         "--quiet",
         "--summary-mode=disabled",
-        "tests/expect-non-retrying.js",
+        "tests/expect-non-retrying.ts",
       ],
       [
         "k6",
         "run",
         "--quiet",
         "--summary-mode=disabled",
-        "tests/expect-retrying.js",
+        "tests/expect-retrying.ts",
       ],
     ];
 

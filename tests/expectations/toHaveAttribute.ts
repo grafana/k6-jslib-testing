@@ -5,7 +5,7 @@ import {
   makeExpectWithSpy,
   renderElement,
 } from "../testing.ts";
-import { dedent } from "../utils.js";
+import { dedent } from "../utils.ts";
 
 describe("toHaveAttribute(attribute)", () => {
   it("should pass when attribute is present", async ({ page }) => {
@@ -41,7 +41,7 @@ describe("toHaveAttribute(attribute)", () => {
       Expected: Attribute 'data-attr' to be present
       Received: Attribute 'data-attr' was not present
 
-      Filename: expect-retrying.js
+      Filename: expect-retrying.ts
           Line: ...
 
     `);
@@ -82,7 +82,7 @@ describe("toHaveAttribute(attribute, expectedValue)", () => {
       Expected: Attribute 'data-attr' to have value 'exact value'
       Received: Attribute 'data-attr' was not present
 
-      Filename: expect-retrying.js
+      Filename: expect-retrying.ts
           Line: ...
 
     `);
@@ -108,7 +108,7 @@ describe("toHaveAttribute(attribute, expectedValue)", () => {
       Expected: Attribute 'data-attr' to have value 'expected value'
       Received: Attribute 'data-attr' had value 'unexpected value'
 
-      Filename: expect-retrying.js
+      Filename: expect-retrying.ts
           Line: ...
 
     `);
@@ -149,7 +149,7 @@ describe("not.toHaveAttribute(attribute)", () => {
       Expected: Attribute 'data-attr' to not be present
       Received: Attribute 'data-attr' was present
 
-      Filename: expect-retrying.js
+      Filename: expect-retrying.ts
           Line: ...
 
     `);
@@ -177,7 +177,7 @@ describe("not.toHaveAttribute(attribute, expectedValue)", () => {
       Expected: Attribute 'data-attr' to not have value 'unexpected value'
       Received: Attribute 'data-attr' had value 'unexpected value'
 
-      Filename: expect-retrying.js
+      Filename: expect-retrying.ts
           Line: ...
 
     `);

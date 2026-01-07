@@ -1,4 +1,6 @@
 import type { Page } from "k6/browser";
+
+// @ts-types="../dist/index.d.ts"
 import { colorize, expect as globalExpect } from "../dist/index.js";
 
 export const expect = globalExpect.configure({
@@ -7,9 +9,13 @@ export const expect = globalExpect.configure({
 
 const context: string[] = [];
 
+interface Context {
+  page: Page;
+}
+
 interface TestItem {
   name: string;
-  assertion: () => void;
+  assertion: (context: Context) => Promise<void> | void;
 }
 
 export const testItems: TestItem[] = [];
@@ -22,7 +28,10 @@ export function describe(name: string, fn: () => void) {
   context.pop();
 }
 
-export function it(name: string, fn: () => void) {
+export function it(
+  name: string,
+  fn: (context: Context) => Promise<void> | void,
+) {
   testItems.push({
     name: [...context, name].join(" > "),
     assertion: fn,
@@ -72,7 +81,7 @@ export function makeExpectWithSpy() {
     },
   });
 
-  return [result, expectFn];
+  return [result, expectFn] as const;
 }
 
 export function failTest(testName: string, message: string) {
