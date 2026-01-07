@@ -1,241 +1,935 @@
 // @ts-types="../dist/index.d.ts"
-import { expect } from "../dist/index.js";
+import { colorize, expect } from "../dist/index.js";
 import type { NonRetryingExpectation } from "../expectNonRetrying.ts";
 import { createMockAssertFn, failTest, passTest } from "./testing.ts";
+import type { ExpectFunction } from "../expect.ts";
+import { dedent } from "./utils.ts";
+import execution from "k6/execution";
 
-export default function testExpectNonRetrying() {
-  TEST_CASES.forEach(runTest);
+export default async function testExpectNonRetrying() {
+  const failed: TestCase[] = [];
+  const testCases = [...TEST_CASES, ...NEGATION_TEST_CASES];
+
+  for (const testCase of testCases) {
+    const passed = await runTestCase(testCase);
+
+    if (!passed) {
+      failed.push(testCase);
+    }
+  }
+
+  if (failed.length > 0) {
+    // @ts-expect-error There seems to be some weird interaction with @types/k6 and the k6 package
+    execution.test.fail(`${failed.length}/${testCases.length} tests failed.`);
+  }
+
   testToBeInstanceOf();
   testToContain();
   testToContainEqual();
   testToHaveProperty();
-  testNegation();
+  testDoubleNegation();
+}
+
+interface Context {
+  expect: ExpectFunction;
 }
 
 interface TestCase {
   name: string;
-  matcher: keyof NonRetryingExpectation;
-  value: unknown;
-  arg?: unknown[] | unknown;
-  expectedCondition: boolean;
+  expectedError?: string;
+  assertion: (context: Context) => Promise<void> | void;
 }
 
 const TEST_CASES: TestCase[] = [
   {
-    name: "toBe",
-    matcher: "toBe",
-    value: true,
-    arg: true,
-    expectedCondition: true,
+    name: "toBe (pass)",
+    assertion: ({ expect }) => {
+      expect(true).toBe(true);
+    },
   },
   {
-    name: "toBeCloseTo",
-    matcher: "toBeCloseTo",
-    value: 10,
-    arg: [9.9, 0.1],
-    expectedCondition: true,
+    name: "toBe (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBe(expected)
+            At: ...
+
+      Expected: false
+      Received: true
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(true).toBe(false);
+    },
   },
   {
-    name: "toBeCloseTo",
-    matcher: "toBeCloseTo",
-    value: 10,
-    arg: [11, 1],
-    expectedCondition: true,
+    name: "toBeCloseTo (pass)",
+    assertion: ({ expect }) => {
+      expect(10).toBeCloseTo(9.9, 0.1);
+    },
   },
   {
-    name: "toBeDefined",
-    matcher: "toBeDefined",
-    value: 10,
-    expectedCondition: true,
+    name: "toBeCloseTo (fail)",
+    expectedError: dedent`
+                    Error: expect(received).toBeCloseTo(expected, precision)
+                       At: ...
+
+       Expected precision: 0.1
+      Expected difference: < 0.39716411736214075
+      Received difference: 5
+
+                 Filename: expect-non-retrying.ts
+                     Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(10).toBeCloseTo(5, 0.1);
+    },
   },
   {
-    name: "toBeFalsy",
-    matcher: "toBeFalsy",
-    value: false,
-    expectedCondition: true,
+    name: "toBeDefined (pass)",
+    assertion: ({ expect }) => {
+      expect(10).toBeDefined();
+    },
   },
   {
-    name: "toBeGreaterThan",
-    matcher: "toBeGreaterThan",
-    value: 2,
-    arg: 1,
-    expectedCondition: true,
+    name: "toBeDefined (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeDefined()
+            At: ...
+
+      Received: undefined
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(undefined).toBeDefined();
+    },
   },
   {
-    name: "toBeGreaterThanOrEqual",
-    matcher: "toBeGreaterThanOrEqual",
-    value: 2,
-    arg: 1,
-    expectedCondition: true,
+    name: "toBeFalsy (pass)",
+    assertion: ({ expect }) => {
+      expect(false).toBeFalsy();
+    },
   },
   {
-    name: "toBeLessThan",
-    matcher: "toBeLessThan",
-    value: 1,
-    arg: 2,
-    expectedCondition: true,
+    name: "toBeFalsy (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeFalsy()
+            At: ...
+
+      Received: true
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+
+    `,
+    assertion: ({ expect }) => {
+      expect(true).toBeFalsy();
+    },
   },
   {
-    name: "toBeLessThanOrEqual",
-    matcher: "toBeLessThanOrEqual",
-    value: 1,
-    arg: 2,
-    expectedCondition: true,
+    name: "toBeGreaterThan (pass)",
+    assertion: ({ expect }) => {
+      expect(2).toBeGreaterThan(1);
+    },
   },
   {
-    name: "toBeNaN",
-    matcher: "toBeNaN",
-    value: NaN,
-    expectedCondition: true,
+    name: "toBeGreaterThan (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeGreaterThan(expected)
+            At: ...
+
+      Expected: > 2
+      Received: 1
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(1).toBeGreaterThan(2);
+    },
   },
   {
-    name: "toBeNull",
-    matcher: "toBeNull",
-    value: null,
-    expectedCondition: true,
+    name: "toBeGreaterThanOrEqual (pass)",
+    assertion: ({ expect }) => {
+      expect(2).toBeGreaterThanOrEqual(1);
+    },
   },
   {
-    name: "toBeTruthy",
-    matcher: "toBeTruthy",
-    value: true,
-    expectedCondition: true,
+    name: "toBeGreaterThanOrEqual (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeGreaterThanOrEqual(expected)
+            At: ...
+
+      Expected: >= 2
+      Received: 1
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(1).toBeGreaterThanOrEqual(2);
+    },
   },
   {
-    name: "toBeUndefined",
-    matcher: "toBeUndefined",
-    value: undefined,
-    expectedCondition: true,
+    name: "toBeLessThan (pass)",
+    assertion: ({ expect }) => {
+      expect(1).toBeLessThan(2);
+    },
   },
   {
-    name: "toEqual",
-    matcher: "toEqual",
-    value: { a: 1 },
-    arg: { a: 1 },
-    expectedCondition: true,
+    name: "toBeLessThan (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeLessThan(expected)
+            At: ...
+
+      Expected: < 1
+      Received: 2
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(2).toBeLessThan(1);
+    },
   },
   {
-    name: "toHaveLength",
-    matcher: "toHaveLength",
-    value: [1, 2, 3],
-    arg: 3,
-    expectedCondition: true,
+    name: "toBeLessThanOrEqual (pass)",
+    assertion: ({ expect }) => {
+      expect(1).toBeLessThanOrEqual(2);
+    },
   },
   {
-    name: "toContain with String",
-    matcher: "toContain",
-    value: "hello world",
-    arg: "world",
-    expectedCondition: true,
+    name: "toBeLessThanOrEqual (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeLessThanOrEqual(expected)
+            At: ...
+
+      Expected: <= 1
+      Received: 2
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(2).toBeLessThanOrEqual(1);
+    },
   },
   {
-    name: "toContain with Array",
-    matcher: "toContain",
-    value: [1, 2, 3],
-    arg: 2,
-    expectedCondition: true,
+    name: "toBeNaN (pass)",
+    assertion: ({ expect }) => {
+      expect(NaN).toBeNaN();
+    },
   },
   {
-    name: "toContain with Set",
-    matcher: "toContain",
-    value: new Set([1, 2, 3]),
-    arg: 2,
-    expectedCondition: true,
+    name: "toBeNaN (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeNaN()
+            At: ...
+
+      Received: 10
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(10).toBeNaN();
+    },
   },
   {
-    name: "toContainEqual with Array",
-    matcher: "toContainEqual",
-    value: [{ id: 1 }, { id: 2 }],
-    arg: { id: 1 },
-    expectedCondition: true,
+    name: "toBeNull (pass)",
+    assertion: ({ expect }) => {
+      expect(null).toBeNull();
+    },
   },
   {
-    name: "toContainEqual with Set",
-    matcher: "toContainEqual",
-    value: new Set([{ id: 1 }, { id: 2 }]),
-    arg: { id: 1 },
-    expectedCondition: true,
+    name: "toBeNull (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeNull()
+            At: ...
+
+      Received: 1
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(1).toBeNull();
+    },
   },
   {
-    name: "toHaveProperty with simple property",
-    matcher: "toHaveProperty",
-    value: { a: 1 },
-    arg: "a",
-    expectedCondition: true,
+    name: "toBeTruthy (pass)",
+    assertion: ({ expect }) => {
+      expect(true).toBeTruthy();
+    },
   },
   {
-    name: "toHaveProperty with nested property",
-    matcher: "toHaveProperty",
-    value: { a: { b: 2 } },
-    arg: "a.b",
-    expectedCondition: true,
+    name: "toBeTruthy (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeTruthy()
+            At: ...
+
+      Received: false
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(false).toBeTruthy();
+    },
   },
   {
-    name: "toHaveProperty with array index",
-    matcher: "toHaveProperty",
-    value: { a: [1, 2, 3] },
-    arg: "a[1]",
-    expectedCondition: true,
+    name: "toBeUndefined (pass)",
+    assertion: ({ expect }) => {
+      expect(undefined).toBeUndefined();
+    },
   },
   {
-    name: "toHaveProperty with expected value",
-    matcher: "toHaveProperty",
-    value: { a: 1 },
-    arg: ["a", 1],
-    expectedCondition: true,
+    name: "toBeUndefined (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeUndefined()
+            At: ...
+
+      Received: 1
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(1).toBeUndefined();
+    },
   },
   {
-    name: "toHaveProperty with nested expected value",
-    matcher: "toHaveProperty",
-    value: { a: { b: 2 } },
-    arg: ["a.b", 2],
-    expectedCondition: true,
+    name: "toEqual (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).toEqual({ a: 1 });
+    },
   },
   {
-    name: "toHaveProperty with array index and expected value",
-    matcher: "toHaveProperty",
-    value: { a: [1, 2, 3] },
-    arg: ["a[1]", 2],
-    expectedCondition: true,
+    name: "toEqual (fail)",
+    expectedError: dedent`
+         Error: expect(received).toEqual(expected)
+            At: ...
+
+      Expected: {"a":2}
+      Received: {"a":1}
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).toEqual({ a: 2 });
+    },
+  },
+  {
+    name: "toHaveLength (pass)",
+    assertion: ({ expect }) => {
+      expect([1, 2, 3]).toHaveLength(3);
+    },
+  },
+  {
+    name: "toHaveLength (fail)",
+    expectedError: dedent`
+                Error: expect(received).toHaveLength(expected)
+                   At: ...
+
+      Expected length: 5
+      Received length: 3
+       Received array: undefined
+
+             Filename: expect-non-retrying.ts
+                 Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect([1, 2, 3]).toHaveLength(5);
+    },
+  },
+  {
+    name: "toContain with String (pass)",
+    assertion: ({ expect }) => {
+      expect("hello world").toContain("world");
+    },
+  },
+  {
+    name: "toContain with String (fail)",
+    expectedError: dedent`
+                    Error: expect(received).toContain(expected)
+                       At: ...
+
+      Expected to contain: universe
+          Received string: hello world
+
+                 Filename: expect-non-retrying.ts
+                     Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect("hello world").toContain("universe");
+    },
+  },
+  {
+    name: "toContain with Array (pass)",
+    assertion: ({ expect }) => {
+      expect([1, 2, 3]).toContain(2);
+    },
+  },
+  {
+    name: "toContain with Array (fail)",
+    expectedError: dedent`
+                    Error: expect(received).toContain(expected)
+                       At: ...
+
+      Expected to contain: 5
+           Received array: [1,2,3]
+
+                 Filename: expect-non-retrying.ts
+                     Line: ...
+
+    `,
+    assertion: ({ expect }) => {
+      expect([1, 2, 3]).toContain(5);
+    },
+  },
+  {
+    name: "toContain with Set (pass)",
+    assertion: ({ expect }) => {
+      expect(new Set([1, 2, 3])).toContain(2);
+    },
+  },
+  {
+    name: "toContain with Set (fail)",
+    expectedError: dedent`
+                    Error: expect(received).toContain(expected)
+                       At: ...
+
+      Expected to contain: 5
+             Received set: {}
+
+                 Filename: expect-non-retrying.ts
+                     Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(new Set([1, 2, 3])).toContain(5);
+    },
+  },
+  {
+    name: "toContainEqual with Array (pass)",
+    assertion: ({ expect }) => {
+      expect([{ id: 1 }, { id: 2 }]).toContainEqual({ id: 1 });
+    },
+  },
+  {
+    name: "toContainEqual with Array (fail)",
+    expectedError: dedent`
+                          Error: expect(received).toContainEqual(expected)
+                             At: ...
+
+      Expected to contain equal: {"id":5}
+                 Received array: [{"id":1},{"id":2}]
+
+                       Filename: expect-non-retrying.ts
+                           Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect([{ id: 1 }, { id: 2 }]).toContainEqual({ id: 5 });
+    },
+  },
+  {
+    name: "toContainEqual with Set (pass)",
+    assertion: ({ expect }) => {
+      expect(new Set([{ id: 1 }, { id: 2 }])).toContainEqual({ id: 1 });
+    },
+  },
+  {
+    name: "toContainEqual with Set (fail)",
+    expectedError: dedent`
+                          Error: expect(received).toContainEqual(expected)
+                             At: ...
+
+      Expected to contain equal: {"id":5}
+                   Received set: {}
+
+                       Filename: expect-non-retrying.ts
+                           Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(new Set([{ id: 1 }, { id: 2 }])).toContainEqual({ id: 5 });
+    },
+  },
+  {
+    name: "toHaveProperty with simple property (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).toHaveProperty("a");
+    },
+  },
+  {
+    name: "toHaveProperty with simple property (fail)",
+    expectedError: dedent`
+                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                              At: ...
+
+                   Property path: b
+      Expected property to exist: 
+                 Received object: {"a":1}
+
+                        Filename: expect-non-retrying.ts
+                            Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).toHaveProperty("b");
+    },
+  },
+  {
+    name: "toHaveProperty with nested property (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: { b: 2 } }).toHaveProperty("a.b");
+    },
+  },
+  {
+    name: "toHaveProperty with nested property (fail)",
+    expectedError: dedent`
+                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                              At: ...
+
+                   Property path: a.c
+      Expected property to exist: 
+                 Received object: {"a":{"b":2}}
+
+                        Filename: expect-non-retrying.ts
+                            Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: { b: 2 } }).toHaveProperty("a.c");
+    },
+  },
+  {
+    name: "toHaveProperty with array index (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: [1, 2, 3] }).toHaveProperty("a[1]");
+    },
+  },
+  {
+    name: "toHaveProperty with array index (fail)",
+    expectedError: dedent`
+                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                              At: ...
+
+                   Property path: a[5]
+      Expected property to exist: 
+                 Received object: {"a":[1,2,3]}
+
+                        Filename: expect-non-retrying.ts
+                            Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: [1, 2, 3] }).toHaveProperty("a[5]");
+    },
+  },
+  {
+    name: "toHaveProperty with expected value (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).toHaveProperty("a", 1);
+    },
+  },
+  {
+    name: "toHaveProperty with expected value (fail)",
+    expectedError: dedent`
+                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                              At: ...
+
+                   Property path: a
+      Expected property to equal: 2
+                 Received object: {"a":1}
+
+                        Filename: expect-non-retrying.ts
+                            Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).toHaveProperty("a", 2);
+    },
+  },
+  {
+    name: "toHaveProperty with nested expected value (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: { b: 2 } }).toHaveProperty("a.b", 2);
+    },
+  },
+  {
+    name: "toHaveProperty with nested expected value (fail)",
+    expectedError: dedent`
+                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                              At: ...
+
+                   Property path: a.b
+      Expected property to equal: 5
+                 Received object: {"a":{"b":2}}
+
+                        Filename: expect-non-retrying.ts
+                            Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: { b: 2 } }).toHaveProperty("a.b", 5);
+    },
+  },
+  {
+    name: "toHaveProperty with array index and expected value (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: [1, 2, 3] }).toHaveProperty("a[1]", 2);
+    },
+  },
+  {
+    name: "toHaveProperty with array index and expected value (fail)",
+    expectedError: dedent`
+                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                              At: ...
+
+                   Property path: a[1]
+      Expected property to equal: 5
+                 Received object: {"a":[1,2,3]}
+
+                        Filename: expect-non-retrying.ts
+                            Line: ...
+
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: [1, 2, 3] }).toHaveProperty("a[1]", 5);
+    },
   },
 ];
 
-function runTest(testCase: TestCase) {
-  const mockAssertFn = createMockAssertFn();
-  const testExpect = expect.configure({ assertFn: mockAssertFn });
+const NEGATION_TEST_CASES: TestCase[] = [
+  {
+    name: "not.toBe (pass)",
+    assertion: ({ expect }) => {
+      expect(1).not.toBe(2);
+    },
+  },
+  {
+    name: "not.toBe (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBe(expected)
+            At: ...
 
-  const args = Array.isArray(testCase.arg) ? testCase.arg : [testCase.arg];
-  const matcherFn = testExpect(testCase.value)[testCase.matcher] as (
-    ...args: unknown[]
-  ) => void;
+      Expected: 1
+      Received: 1
 
-  // Dynamically call the matcher with appropriate arguments
-  matcherFn(...args);
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(1).not.toBe(1);
+    },
+  },
+  {
+    name: "not.toEqual (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).not.toEqual({ a: 2 });
+    },
+  },
+  {
+    name: "not.toEqual (fail)",
+    expectedError: dedent`
+         Error: expect(received).toEqual(expected)
+            At: ...
 
-  // Verify the mock assertions
-  if (!mockAssertFn.called) {
-    failTest(testCase.name, "expected assertFn to be called");
-  }
+      Expected: {"a":1}
+      Received: {"a":1}
 
-  if (mockAssertFn.calls.length !== 1) {
-    failTest(testCase.name, "expected assertFn to be called once");
-  }
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).not.toEqual({ a: 1 });
+    },
+  },
+  {
+    name: "not.toBeTruthy (pass)",
+    assertion: ({ expect }) => {
+      expect(false).not.toBeTruthy();
+    },
+  },
+  {
+    name: "not.toBeTruthy (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeTruthy()
+            At: ...
 
-  if (mockAssertFn.calls[0].condition !== testCase.expectedCondition) {
-    failTest(
-      testCase.name,
-      `expected assertFn condition to be ${testCase.expectedCondition}`,
-    );
-  }
+      Received: true
 
-  if (mockAssertFn.calls[0].soft !== false) {
-    failTest(
-      testCase.name,
-      "expected assertFn to be called with soft === false",
-    );
-  }
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(true).not.toBeTruthy();
+    },
+  },
+  {
+    name: "not.toBeFalsy (pass)",
+    assertion: ({ expect }) => {
+      expect(true).not.toBeFalsy();
+    },
+  },
+  {
+    name: "not.toBeFalsy (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeFalsy()
+            At: ...
 
-  passTest(testCase.name);
-}
+      Received: false
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(false).not.toBeFalsy();
+    },
+  },
+  {
+    name: "not.toBeNull (pass)",
+    assertion: ({ expect }) => {
+      expect(1).not.toBeNull();
+    },
+  },
+  {
+    name: "not.toBeNull (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeNull()
+            At: ...
+
+      Received: null
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(null).not.toBeNull();
+    },
+  },
+  {
+    name: "not.toBeUndefined (pass)",
+    assertion: ({ expect }) => {
+      expect(1).not.toBeUndefined();
+    },
+  },
+  {
+    name: "not.toBeUndefined (fail)",
+    expectedError: dedent`
+         Error: expect(received).toBeUndefined()
+            At: ...
+
+      Received: undefined
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(undefined).not.toBeUndefined();
+    },
+  },
+  {
+    name: "not.toContain with string (pass)",
+    assertion: ({ expect }) => {
+      expect("hello world").not.toContain("universe");
+    },
+  },
+  {
+    name: "not.toContain with string (fail)",
+    expectedError: dedent`
+                        Error: expect(received).toContain(expected)
+                           At: ...
+
+      Expected not to contain: world
+              Received string: hello world
+
+                     Filename: expect-non-retrying.ts
+                         Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect("hello world").not.toContain("world");
+    },
+  },
+  {
+    name: "not.toContain with array (pass)",
+    assertion: ({ expect }) => {
+      expect([1, 2, 3]).not.toContain(4);
+    },
+  },
+  {
+    name: "not.toContain with array (fail)",
+    expectedError: dedent`
+                        Error: expect(received).toContain(expected)
+                           At: ...
+
+      Expected not to contain: 2
+               Received array: [1,2,3]
+
+                     Filename: expect-non-retrying.ts
+                         Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect([1, 2, 3]).not.toContain(2);
+    },
+  },
+  {
+    name: "not.toContain with set (pass)",
+    assertion: ({ expect }) => {
+      expect(new Set([1, 2, 3])).not.toContain(4);
+    },
+  },
+  {
+    name: "not.toContain with set (fail)",
+    expectedError: dedent`
+                        Error: expect(received).toContain(expected)
+                           At: ...
+
+      Expected not to contain: 2
+                 Received set: {}
+
+                     Filename: expect-non-retrying.ts
+                         Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(new Set([1, 2, 3])).not.toContain(2);
+    },
+  },
+  {
+    name: "not.toContainEqual with array (pass)",
+    assertion: ({ expect }) => {
+      expect([{ id: 1 }, { id: 2 }]).not.toContainEqual({ id: 3 });
+    },
+  },
+  {
+    name: "not.toContainEqual with array (fail)",
+    expectedError: dedent`
+                              Error: expect(received).toContainEqual(expected)
+                                 At: ...
+
+      Expected not to contain equal: {"id":1}
+                     Received array: [{"id":1},{"id":2}]
+
+                           Filename: expect-non-retrying.ts
+                               Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect([{ id: 1 }, { id: 2 }]).not.toContainEqual({ id: 1 });
+    },
+  },
+  {
+    name: "not.toContainEqual with set (pass)",
+    assertion: ({ expect }) => {
+      expect(new Set([{ id: 1 }, { id: 2 }])).not.toContainEqual({ id: 3 });
+    },
+  },
+  {
+    name: "not.toContainEqual with set (fail)",
+    expectedError: dedent`
+                              Error: expect(received).toContainEqual(expected)
+                                 At: ...
+
+      Expected not to contain equal: {"id":1}
+                       Received set: {}
+
+                           Filename: expect-non-retrying.ts
+                               Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect(new Set([{ id: 1 }, { id: 2 }])).not.toContainEqual({ id: 1 });
+    },
+  },
+  {
+    name: "not.toHaveProperty with missing property (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).not.toHaveProperty("b");
+    },
+  },
+  {
+    name: "not.toHaveProperty with missing property (fail)",
+    expectedError: dedent`
+                               Error: expect(received).toHaveProperty(keyPath, expected?)
+                                  At: ...
+
+                       Property path: a
+      Expected property not to exist: 
+                     Received object: {"a":1}
+
+                            Filename: expect-non-retrying.ts
+                                Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).not.toHaveProperty("a");
+    },
+  },
+  {
+    name: "not.toHaveProperty with existing property but wrong value (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).not.toHaveProperty("a", 2);
+    },
+  },
+  {
+    name: "not.toHaveProperty with existing property but wrong value (fail)",
+    expectedError: dedent`
+                               Error: expect(received).toHaveProperty(keyPath, expected?)
+                                  At: ...
+
+                       Property path: a
+      Expected property not to equal: 1
+                     Received object: {"a":1}
+
+                            Filename: expect-non-retrying.ts
+                                Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: 1 }).not.toHaveProperty("a", 1);
+    },
+  },
+  {
+    name: "not.toHaveProperty with nested missing property (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: { b: 1 } }).not.toHaveProperty("a.c");
+    },
+  },
+  {
+    name: "not.toHaveProperty with nested missing property (fail)",
+    expectedError: dedent`
+                               Error: expect(received).toHaveProperty(keyPath, expected?)
+                                  At: ...
+
+                       Property path: a.b
+      Expected property not to exist: 
+                     Received object: {"a":{"b":1}}
+
+                            Filename: expect-non-retrying.ts
+                                Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: { b: 1 } }).not.toHaveProperty("a.b");
+    },
+  },
+  {
+    name: "not.toHaveProperty with array index out of bounds (pass)",
+    assertion: ({ expect }) => {
+      expect({ a: [1, 2, 3] }).not.toHaveProperty("a[5]");
+    },
+  },
+  {
+    name: "not.toHaveProperty with array index out of bounds (fail)",
+    expectedError: dedent`
+                               Error: expect(received).toHaveProperty(keyPath, expected?)
+                                  At: ...
+
+                       Property path: a[1]
+      Expected property not to exist: 
+                     Received object: {"a":[1,2,3]}
+
+                            Filename: expect-non-retrying.ts
+                                Line: ...
+    `,
+    assertion: ({ expect }) => {
+      expect({ a: [1, 2, 3] }).not.toHaveProperty("a[1]");
+    },
+  },
+];
 
 class Example {}
 function testToBeInstanceOf() {
@@ -942,142 +1636,7 @@ function testToHaveProperty() {
   playwrightExamplesTest();
 }
 
-function testNegation() {
-  // Test cases for negation
-  const negationTestCases: TestCase[] = [
-    {
-      name: "not.toBe",
-      matcher: "toBe",
-      value: 1,
-      arg: 2,
-      expectedCondition: true, // 1 is not 2, so this should be true
-    },
-    {
-      name: "not.toEqual",
-      matcher: "toEqual",
-      value: { a: 1 },
-      arg: { a: 2 },
-      expectedCondition: true, // Objects are not equal, so this should be true
-    },
-    {
-      name: "not.toBeTruthy",
-      matcher: "toBeTruthy",
-      value: false,
-      expectedCondition: true, // false is not truthy, so this should be true
-    },
-    {
-      name: "not.toBeFalsy",
-      matcher: "toBeFalsy",
-      value: true,
-      expectedCondition: true, // true is not falsy, so this should be true
-    },
-    {
-      name: "not.toBeNull",
-      matcher: "toBeNull",
-      value: 1,
-      expectedCondition: true, // 1 is not null, so this should be true
-    },
-    {
-      name: "not.toBeUndefined",
-      matcher: "toBeUndefined",
-      value: 1,
-      expectedCondition: true, // 1 is not undefined, so this should be true
-    },
-    {
-      name: "not.toContain with string",
-      matcher: "toContain",
-      value: "hello world",
-      arg: "universe",
-      expectedCondition: true, // "hello world" does not contain "universe", so this should be true
-    },
-    {
-      name: "not.toContain with array",
-      matcher: "toContain",
-      value: [1, 2, 3],
-      arg: 4,
-      expectedCondition: true, // [1, 2, 3] does not contain 4, so this should be true
-    },
-    {
-      name: "not.toContain with set",
-      matcher: "toContain",
-      value: new Set([1, 2, 3]),
-      arg: 4,
-      expectedCondition: true, // new Set([1, 2, 3]) does not contain 4, so this should be true
-    },
-    {
-      name: "not.toContainEqual with array",
-      matcher: "toContainEqual",
-      value: [{ id: 1 }, { id: 2 }],
-      arg: { id: 3 },
-      expectedCondition: true, // [{ id: 1 }, { id: 2 }] does not contain { id: 3 }, so this should be true
-    },
-    {
-      name: "not.toContainEqual with set",
-      matcher: "toContainEqual",
-      value: new Set([{ id: 1 }, { id: 2 }]),
-      arg: { id: 3 },
-      expectedCondition: true, // new Set([{ id: 1 }, { id: 2 }]) does not contain { id: 3 }, so this should be true
-    },
-    {
-      name: "not.toHaveProperty with missing property",
-      matcher: "toHaveProperty",
-      value: { a: 1 },
-      arg: "b",
-      expectedCondition: true, // { a: 1 } does not have property 'b', so this should be true
-    },
-    {
-      name: "not.toHaveProperty with existing property but wrong value",
-      matcher: "toHaveProperty",
-      value: { a: 1 },
-      arg: ["a", 2],
-      expectedCondition: true, // { a: 1 } has property 'a' but not with value 2, so this should be true
-    },
-    {
-      name: "not.toHaveProperty with nested missing property",
-      matcher: "toHaveProperty",
-      value: { a: { b: 1 } },
-      arg: "a.c",
-      expectedCondition: true, // { a: { b: 1 } } does not have property 'a.c', so this should be true
-    },
-    {
-      name: "not.toHaveProperty with array index out of bounds",
-      matcher: "toHaveProperty",
-      value: { a: [1, 2, 3] },
-      arg: "a[5]",
-      expectedCondition: true, // { a: [1, 2, 3] } does not have property 'a[5]', so this should be true
-    },
-  ];
-
-  negationTestCases.forEach((testCase) => {
-    const mockAssertFn = createMockAssertFn();
-    const testExpect = expect.configure({ assertFn: mockAssertFn });
-
-    const args = Array.isArray(testCase.arg) ? testCase.arg : [testCase.arg];
-    const matcherFn = testExpect(testCase.value).not[testCase.matcher] as (
-      ...args: unknown[]
-    ) => void;
-
-    matcherFn(...args);
-
-    // Verify the mock assertions
-    if (!mockAssertFn.called) {
-      failTest(testCase.name, "expected assertFn to be called");
-    }
-
-    if (mockAssertFn.calls.length !== 1) {
-      failTest(testCase.name, "expected assertFn to be called once");
-    }
-
-    if (mockAssertFn.calls[0].condition !== testCase.expectedCondition) {
-      failTest(
-        testCase.name,
-        `expected assertFn condition to be ${testCase.expectedCondition}`,
-      );
-    }
-
-    passTest(testCase.name);
-  });
-
+function testDoubleNegation() {
   // Test double negation
   const mockAssertFn = createMockAssertFn();
   const testExpect = expect.configure({ assertFn: mockAssertFn });
@@ -1097,4 +1656,73 @@ function testNegation() {
   }
 
   passTest("not.not.toBe");
+}
+
+class AssertionFailed {
+  message: string;
+
+  constructor(message: string) {
+    this.message = message;
+  }
+}
+
+const testExpect = expect.configure({
+  colorize: false,
+  assertFn: (condition, message) => {
+    if (!condition) {
+      throw new AssertionFailed(message);
+    }
+  },
+});
+
+function fail(testName: string, message: string) {
+  console.log(colorize("✗ " + testName + ":\n" + message + "\n", "red"));
+
+  return false;
+}
+
+function pass(testName: string) {
+  console.log(colorize("✓ " + testName, "green"));
+
+  return true;
+}
+
+async function runTestCase(
+  testCase: TestCase,
+) {
+  try {
+    await testCase.assertion({ expect: testExpect });
+
+    if (testCase.expectedError) {
+      return fail(testCase.name, "Expected test to fail but it passed");
+    }
+
+    return pass(testCase.name);
+  } catch (error) {
+    if (error instanceof AssertionFailed === false) {
+      throw error;
+    }
+
+    if (testCase.expectedError === undefined) {
+      return fail(
+        testCase.name,
+        "Expected test to pass but it failed with error: \n" + error.message,
+      );
+    }
+
+    // Optionally verify the error message matches expected
+    const normalized = error.message.replace(/At: .*$/mg, "At: ...").replace(
+      /Line: \d+$/mg,
+      "Line: ...",
+    );
+
+    if (normalized.trim() !== testCase.expectedError.trim()) {
+      return fail(
+        testCase.name,
+        `Formatted error message does not match the expected output.\nExpected:\n${testCase.expectedError}\n\nActual:\n${normalized}`,
+      );
+    }
+
+    return pass(testCase.name);
+  }
 }
