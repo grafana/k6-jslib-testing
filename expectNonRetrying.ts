@@ -24,8 +24,14 @@ export interface OtherwiseErrorContext {
 
 /**
  * Callback function type for .otherwise() method.
+ *
+ * Supports both synchronous and asynchronous callbacks. Async callbacks are fully awaited
+ * for retrying matchers (toBeVisible, toHaveText, etc.) but not for non-retrying matchers
+ * (toBe, toEqual, etc.).
  */
-export type OtherwiseCallback = (context: OtherwiseErrorContext) => void;
+export type OtherwiseCallback = (
+  context: OtherwiseErrorContext,
+) => void | Promise<void>;
 
 export interface NonRetryingExpectation {
   /**

@@ -370,12 +370,12 @@ export function createLocatorExpectation(
 
       if (otherwiseCallback) {
         try {
-          otherwiseCallback({
+          await Promise.resolve(otherwiseCallback({
             message: errorMessage,
             expected: expected.toString(),
             received: "unknown",
             matcherName,
-          });
+          }));
         } catch (callbackError) {
           console.error("Error in .otherwise() callback:", callbackError);
         }
@@ -607,12 +607,12 @@ export function createLocatorExpectation(
 
         if (otherwiseCallback) {
           try {
-            otherwiseCallback({
+            await Promise.resolve(otherwiseCallback({
               message: errorMessage,
               expected: info.expected,
               received: info.received,
               matcherName,
-            });
+            }));
           } catch (callbackError) {
             console.error("Error in .otherwise() callback:", callbackError);
           }
@@ -668,12 +668,12 @@ export function createLocatorExpectation(
 
         if (otherwiseCallback) {
           try {
-            otherwiseCallback({
+            await Promise.resolve(otherwiseCallback({
               message: errorMessage,
               expected: expectedValue,
               received: "unknown",
               matcherName: "toHaveValue",
-            });
+            }));
           } catch (callbackError) {
             console.error("Error in .otherwise() callback:", callbackError);
           }
@@ -823,12 +823,12 @@ export function createPageExpectation(
 
       if (otherwiseCallback) {
         try {
-          otherwiseCallback({
+          await Promise.resolve(otherwiseCallback({
             message: errorMessage,
             expected: expected.toString(),
             received: "unknown",
             matcherName,
-          });
+          }));
         } catch (callbackError) {
           console.error("Error in .otherwise() callback:", callbackError);
         }
@@ -998,12 +998,12 @@ async function createMatcher(
 
     if (otherwiseCallback) {
       try {
-        otherwiseCallback({
+        await Promise.resolve(otherwiseCallback({
           message: errorMessage,
           expected,
           received,
           matcherName,
-        });
+        }));
       } catch (callbackError) {
         console.error("Error in .otherwise() callback:", callbackError);
       }
