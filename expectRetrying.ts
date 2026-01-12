@@ -571,7 +571,7 @@ export function createLocatorExpectation(
         matcherName: "toHaveValue",
         expected: expectedValue,
         received: "unknown",
-        matcherSpecific: { isNegated },
+        matcherSpecific: { isNegated, timeout: options.timeout },
         customMessage: message,
       };
 
