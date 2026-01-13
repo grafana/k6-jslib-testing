@@ -1,6 +1,6 @@
 import { expect } from "../dist/index.js";
 
-export default function() {
+export default function () {
   console.log("Testing .otherwise() feature with soft mode...\n");
 
   // Configure expect with soft mode
@@ -25,9 +25,13 @@ export default function() {
   }
 
   if (callbackInvoked && errorContext && errorContext.matcherName === "toBe") {
-    console.log("  ✓ Test 1 passed: Callback was invoked with correct error context\n");
+    console.log(
+      "  ✓ Test 1 passed: Callback was invoked with correct error context\n",
+    );
   } else {
-    console.log("  ✗ Test 1 failed: Callback was not invoked or context is incorrect\n");
+    console.log(
+      "  ✗ Test 1 failed: Callback was not invoked or context is incorrect\n",
+    );
   }
 
   // Test 2: Soft expectation - callback should NOT execute on success
@@ -77,9 +81,13 @@ export default function() {
   }
 
   if (otherwiseBeforeNot) {
-    console.log("  ✓ Test 4 passed: Callback works when .otherwise() is after .not\n");
+    console.log(
+      "  ✓ Test 4 passed: Callback works when .otherwise() is after .not\n",
+    );
   } else {
-    console.log("  ✗ Test 4 failed: Callback did not work when .otherwise() is after .not\n");
+    console.log(
+      "  ✗ Test 4 failed: Callback did not work when .otherwise() is after .not\n",
+    );
   }
 
   // Test 5: Multiple .otherwise() calls (last wins)
@@ -99,7 +107,9 @@ export default function() {
   }
 
   if (!firstCallback && secondCallback) {
-    console.log("  ✓ Test 5 passed: Only second callback was invoked (last wins)\n");
+    console.log(
+      "  ✓ Test 5 passed: Only second callback was invoked (last wins)\n",
+    );
   } else {
     console.log("  ✗ Test 5 failed: Wrong callbacks invoked\n");
   }
@@ -110,7 +120,8 @@ export default function() {
 
   try {
     softExpect("hello").otherwise((ctx) => {
-      hasMessage = ctx.message && ctx.message.includes("Expected") && ctx.message.includes("Received");
+      hasMessage = ctx.message && ctx.message.includes("Expected") &&
+        ctx.message.includes("Received");
       console.log("  Message present:", hasMessage);
     }).toBe("world");
   } catch (e) {

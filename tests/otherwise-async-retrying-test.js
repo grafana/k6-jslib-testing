@@ -16,7 +16,8 @@ export const options = {
 
 const testCases = [
   {
-    name: ".otherwise() async callback with toBeVisible completes before assertion",
+    name:
+      ".otherwise() async callback with toBeVisible completes before assertion",
     selector: "#nonexistent-element",
     assertion: async (locator) => {
       let asyncCallbackExecuted = false;

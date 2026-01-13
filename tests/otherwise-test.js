@@ -1,6 +1,6 @@
 import { expect } from "../dist/index.js";
 
-export default function() {
+export default function () {
   console.log("Testing .otherwise() feature...\n");
 
   // Test 1: Non-retrying expectation - callback should execute on failure
