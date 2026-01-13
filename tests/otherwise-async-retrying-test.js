@@ -25,14 +25,14 @@ const testCases = [
 
       try {
         await expect(locator)
-          .otherwise(async (ctx) => {
+          .otherwise(async (_ctx) => {
             asyncCallbackExecuted = true;
             // Simulate async operation like screenshot
             await new Promise((resolve) => setTimeout(resolve, 50));
             asyncOperationCompleted = true;
           })
           .toBeVisible();
-      } catch (e) {
+      } catch (_e) {
         // Expected to fail
       }
 
@@ -54,12 +54,12 @@ const testCases = [
 
       try {
         await expect(locator)
-          .otherwise(async (ctx) => {
+          .otherwise(async (_ctx) => {
             await new Promise((resolve) => setTimeout(resolve, 20));
             callbackCompleted = true;
           })
           .toHaveText("Wrong Title That Does Not Exist");
-      } catch (e) {
+      } catch (_e) {
         // Expected to fail
       }
 
@@ -76,11 +76,11 @@ const testCases = [
 
       try {
         await expect(locator)
-          .otherwise((ctx) => {
+          .otherwise((_ctx) => {
             syncCallback = true;
           })
           .toBeVisible();
-      } catch (e) {
+      } catch (_e) {
         // Expected to fail
       }
 
@@ -98,12 +98,12 @@ const testCases = [
       try {
         // body IS visible, so .not.toBeVisible() should fail
         await expect(locator)
-          .not.otherwise(async (ctx) => {
+          .not.otherwise(async (_ctx) => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             notAsyncCallback = true;
           })
           .toBeVisible();
-      } catch (e) {
+      } catch (_e) {
         // Expected to fail
       }
 
@@ -120,12 +120,12 @@ const testCases = [
 
       try {
         await expect(locator)
-          .otherwise(async (ctx) => {
+          .otherwise(async (_ctx) => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             attributeCallback = true;
           })
           .toHaveAttribute("nonexistent-attr", "value");
-      } catch (e) {
+      } catch (_e) {
         // Expected to fail
       }
 
@@ -144,6 +144,7 @@ const testCases = [
       try {
         await expect(locator)
           .otherwise(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 10));
             firstCallback = true;
           })
           .otherwise(async () => {
@@ -151,7 +152,7 @@ const testCases = [
             secondCallback = true;
           })
           .toBeVisible();
-      } catch (e) {
+      } catch (_e) {
         // Expected to fail
       }
 
@@ -172,10 +173,11 @@ const testCases = [
       try {
         await expect(locator)
           .otherwise(async (ctx) => {
+            await new Promise((resolve) => setTimeout(resolve, 10));
             errorContext = ctx;
           })
           .toBeVisible();
-      } catch (e) {
+      } catch (_e) {
         // Expected to fail
       }
 

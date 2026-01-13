@@ -15,7 +15,7 @@ export default function () {
       console.log("  Callback executed!");
       console.log("  Error context:", JSON.stringify(ctx, null, 2));
     }).toBe(10);
-  } catch (e) {
+  } catch (_e) {
     // Expected to throw
   }
 
@@ -48,7 +48,7 @@ export default function () {
       notCallbackInvoked = true;
       console.log("  Callback executed with .not!");
     }).not.toBe(5);
-  } catch (e) {
+  } catch (_e) {
     // Expected to throw
   }
 
@@ -70,7 +70,7 @@ export default function () {
       secondCallback = true;
       console.log("  Second callback executed!");
     }).toBe(10);
-  } catch (e) {
+  } catch (_e) {
     // Expected to throw
   }
 
