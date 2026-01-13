@@ -1944,7 +1944,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     // ... existing test ...
   });
 
-  await t.step("otherwise() executes callback on failure", () => {
+  await t.step("ifFails() executes callback on failure", () => {
     let callbackInvoked = false;
     let errorContext: any = null;
 
@@ -1963,7 +1963,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .otherwise((ctx) => {
+        .ifFails((ctx) => {
           callbackInvoked = true;
           errorContext = ctx;
         })
@@ -1983,7 +1983,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("otherwise() NOT executed on success", () => {
+  await t.step("ifFails() NOT executed on success", () => {
     let callbackInvoked = false;
 
     const mockAssert = (condition: boolean) => {
@@ -1993,7 +1993,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config = createTestConfig({ assertFn: mockAssert });
 
     createExpectation(5, config)
-      .otherwise(() => {
+      .ifFails(() => {
         callbackInvoked = true;
       })
       .toBe(5);
@@ -2001,7 +2001,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assert(!callbackInvoked, "Callback should NOT be invoked on success");
   });
 
-  await t.step("otherwise() works with .not", () => {
+  await t.step("ifFails() works with .not", () => {
     let callbackInvoked = false;
 
     const mockAssert = (
@@ -2019,7 +2019,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .otherwise(() => {
+        .ifFails(() => {
           callbackInvoked = true;
         })
         .not.toBe(5);
@@ -2030,7 +2030,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assert(callbackInvoked, "Callback should be invoked with .not");
   });
 
-  await t.step("otherwise() works when chained after .not", () => {
+  await t.step("ifFails() works when chained after .not", () => {
     let callbackInvoked = false;
 
     const mockAssert = (
@@ -2048,7 +2048,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .not.otherwise(() => {
+        .not.ifFails(() => {
           callbackInvoked = true;
         })
         .toBe(5);
@@ -2062,7 +2062,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("otherwise() last callback wins", () => {
+  await t.step("ifFails() last callback wins", () => {
     let firstCalled = false;
     let secondCalled = false;
 
@@ -2081,10 +2081,10 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .otherwise(() => {
+        .ifFails(() => {
           firstCalled = true;
         })
-        .otherwise(() => {
+        .ifFails(() => {
           secondCalled = true;
         })
         .toBe(10);
@@ -2096,7 +2096,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assert(secondCalled, "Second callback should be invoked");
   });
 
-  await t.step("otherwise() callback error doesn't prevent assertion", () => {
+  await t.step("ifFails() callback error doesn't prevent assertion", () => {
     let assertCalled = false;
 
     const mockAssert = (
@@ -2115,7 +2115,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .otherwise(() => {
+        .ifFails(() => {
           throw new Error("Callback error");
         })
         .toBe(10);

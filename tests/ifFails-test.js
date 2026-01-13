@@ -1,7 +1,7 @@
 import { expect } from "../dist/index.js";
 
 export default function () {
-  console.log("Testing .otherwise() feature...\n");
+  console.log("Testing .ifFails() feature...\n");
 
   // Test 1: Non-retrying expectation - callback should execute on failure
   console.log("Test 1: Non-retrying expectation failure");
@@ -9,7 +9,7 @@ export default function () {
   let errorContext = null;
 
   try {
-    expect(5).otherwise((ctx) => {
+    expect(5).ifFails((ctx) => {
       callbackInvoked = true;
       errorContext = ctx;
       console.log("  Callback executed!");
@@ -29,7 +29,7 @@ export default function () {
   console.log("Test 2: Non-retrying expectation success");
   let successCallback = false;
 
-  expect(5).otherwise(() => {
+  expect(5).ifFails(() => {
     successCallback = true;
   }).toBe(5);
 
@@ -44,7 +44,7 @@ export default function () {
   let notCallbackInvoked = false;
 
   try {
-    expect(5).otherwise(() => {
+    expect(5).ifFails(() => {
       notCallbackInvoked = true;
       console.log("  Callback executed with .not!");
     }).not.toBe(5);
@@ -58,15 +58,15 @@ export default function () {
     console.log("  ✗ Test 3 failed: Callback did not work with .not\n");
   }
 
-  // Test 4: Multiple .otherwise() calls (last wins)
-  console.log("Test 4: Multiple .otherwise() calls");
+  // Test 4: Multiple .ifFails() calls (last wins)
+  console.log("Test 4: Multiple .ifFails() calls");
   let firstCallback = false;
   let secondCallback = false;
 
   try {
-    expect(5).otherwise(() => {
+    expect(5).ifFails(() => {
       firstCallback = true;
-    }).otherwise(() => {
+    }).ifFails(() => {
       secondCallback = true;
       console.log("  Second callback executed!");
     }).toBe(10);

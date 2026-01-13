@@ -275,14 +275,14 @@ Expected property to equal: 43
                       Line: 555
 ```
 
-##### Error Callbacks with .otherwise()
+##### Error Callbacks with .ifFails()
 
-The `.otherwise()` method allows you to execute a callback function when an
+The `.ifFails()` method allows you to execute a callback function when an
 assertion fails, providing powerful debugging capabilities without interrupting
 your test workflow. This is particularly useful for capturing screenshots,
 logging response bodies, or performing cleanup actions before the test fails.
 
-The `.otherwise()` method can be chained with any matcher and works seamlessly
+The `.ifFails()` method can be chained with any matcher and works seamlessly
 with both retrying and non-retrying assertions, as well as with `.not` and
 `.soft()` modifiers.
 
@@ -291,7 +291,7 @@ with both retrying and non-retrying assertions, as well as with `.not` and
 The callback receives an error context object with the following properties:
 
 ```javascript
-.otherwise((context) => {
+.ifFails((context) => {
   // context.message - Full error message
   // context.expected - Expected value as string
   // context.received - Received value as string
@@ -307,7 +307,7 @@ test will wait for the async operation to complete before failing.
 
 ```javascript
 await expect(page.locator(".button"))
-  .otherwise(async (ctx) => {
+  .ifFails(async (ctx) => {
     await page.screenshot({ path: "failure.png" });
   })
   .toBeVisible();
@@ -321,7 +321,7 @@ for these matchers.
 
 ```javascript
 expect(response.status)
-  .otherwise((ctx) => {
+  .ifFails((ctx) => {
     console.log(`API returned ${ctx.received}, response body:`);
     console.log(response.body);
   })
@@ -332,7 +332,7 @@ expect(response.status)
 
 ```javascript
 await expect(page.locator(".success-message"))
-  .otherwise(async (ctx) => {
+  .ifFails(async (ctx) => {
     console.log(`Expected element not visible: ${ctx.matcherName}`);
     await page.screenshot({
       path: "failure.png",
@@ -348,7 +348,7 @@ await expect(page.locator(".success-message"))
 // Callback executes but test continues
 await expect
   .soft(page.locator("h1"))
-  .otherwise(async (ctx) => {
+  .ifFails(async (ctx) => {
     console.log(`Title mismatch: "${ctx.received}"`);
     await page.screenshot({ path: "title-failure.png" });
   })

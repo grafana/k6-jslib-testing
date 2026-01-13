@@ -17,7 +17,7 @@ export const options = {
 const testCases = [
   {
     name:
-      ".otherwise() async callback with toBeVisible completes before assertion",
+      ".ifFails() async callback with toBeVisible completes before assertion",
     selector: "#nonexistent-element",
     assertion: async (locator) => {
       let asyncCallbackExecuted = false;
@@ -25,7 +25,7 @@ const testCases = [
 
       try {
         await expect(locator)
-          .otherwise(async (_ctx) => {
+          .ifFails(async (_ctx) => {
             asyncCallbackExecuted = true;
             // Simulate async operation like screenshot
             await new Promise((resolve) => setTimeout(resolve, 50));
@@ -47,14 +47,14 @@ const testCases = [
     },
   },
   {
-    name: ".otherwise() async callback with toHaveText",
+    name: ".ifFails() async callback with toHaveText",
     selector: "h1",
     assertion: async (locator) => {
       let callbackCompleted = false;
 
       try {
         await expect(locator)
-          .otherwise(async (_ctx) => {
+          .ifFails(async (_ctx) => {
             await new Promise((resolve) => setTimeout(resolve, 20));
             callbackCompleted = true;
           })
@@ -69,14 +69,14 @@ const testCases = [
     },
   },
   {
-    name: ".otherwise() sync callback still works with retrying matchers",
+    name: ".ifFails() sync callback still works with retrying matchers",
     selector: "#another-nonexistent",
     assertion: async (locator) => {
       let syncCallback = false;
 
       try {
         await expect(locator)
-          .otherwise((_ctx) => {
+          .ifFails((_ctx) => {
             syncCallback = true;
           })
           .toBeVisible();
@@ -90,7 +90,7 @@ const testCases = [
     },
   },
   {
-    name: ".otherwise() async callback with .not modifier",
+    name: ".ifFails() async callback with .not modifier",
     selector: "body",
     assertion: async (locator) => {
       let notAsyncCallback = false;
@@ -98,7 +98,7 @@ const testCases = [
       try {
         // body IS visible, so .not.toBeVisible() should fail
         await expect(locator)
-          .not.otherwise(async (_ctx) => {
+          .not.ifFails(async (_ctx) => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             notAsyncCallback = true;
           })
@@ -113,14 +113,14 @@ const testCases = [
     },
   },
   {
-    name: ".otherwise() async callback with toHaveAttribute",
+    name: ".ifFails() async callback with toHaveAttribute",
     selector: "body",
     assertion: async (locator) => {
       let attributeCallback = false;
 
       try {
         await expect(locator)
-          .otherwise(async (_ctx) => {
+          .ifFails(async (_ctx) => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             attributeCallback = true;
           })
@@ -135,7 +135,7 @@ const testCases = [
     },
   },
   {
-    name: ".otherwise() multiple async callbacks - last wins",
+    name: ".ifFails() multiple async callbacks - last wins",
     selector: "#nonexistent",
     assertion: async (locator) => {
       let firstCallback = false;
@@ -143,11 +143,11 @@ const testCases = [
 
       try {
         await expect(locator)
-          .otherwise(async () => {
+          .ifFails(async () => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             firstCallback = true;
           })
-          .otherwise(async () => {
+          .ifFails(async () => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             secondCallback = true;
           })
@@ -165,14 +165,14 @@ const testCases = [
     },
   },
   {
-    name: ".otherwise() async callback receives correct error context",
+    name: ".ifFails() async callback receives correct error context",
     selector: "#nonexistent",
     assertion: async (locator) => {
       let errorContext = null;
 
       try {
         await expect(locator)
-          .otherwise(async (ctx) => {
+          .ifFails(async (ctx) => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             errorContext = ctx;
           })
@@ -199,7 +199,7 @@ const testCases = [
   },
 ];
 
-export default async function testOtherwiseAsyncRetrying() {
+export default async function testIfFailsAsyncRetrying() {
   const baseUrl = __ENV.TEST_SERVER_BASE_URL ?? "http://localhost:8000";
   const context = await browser.newContext();
 

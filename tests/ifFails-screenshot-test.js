@@ -16,14 +16,14 @@ export const options = {
 
 const testCases = [
   {
-    name: ".otherwise() takes actual screenshot before assertion fails",
+    name: ".ifFails() takes actual screenshot before assertion fails",
     assertion: async ({ page }) => {
       let screenshotTaken = false;
       let callbackExecuted = false;
 
       try {
         await expect(page.locator("#element-that-does-not-exist"))
-          .otherwise(async (_ctx) => {
+          .ifFails(async (_ctx) => {
             callbackExecuted = true;
             // Real screenshot
             await page.screenshot({ path: "test-failure-screenshot.png" });
@@ -44,7 +44,7 @@ const testCases = [
   },
 ];
 
-export default async function testOtherwiseScreenshot() {
+export default async function testIfFailsScreenshot() {
   const baseUrl = __ENV.TEST_SERVER_BASE_URL ?? "http://localhost:8000";
   const context = await browser.newContext();
 

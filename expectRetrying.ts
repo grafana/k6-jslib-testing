@@ -19,7 +19,7 @@ import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
 import { isLocator, isPage } from "./expectations/utils.ts";
 import type { ExpectationFailed } from "./expectations/result.ts";
-import type { OtherwiseCallback } from "./expectNonRetrying.ts";
+import type { IfFailsCallback } from "./expectNonRetrying.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
   /**
@@ -62,7 +62,7 @@ export interface LocatorExpectation {
    * @param callback Function to execute on failure
    * @returns The same expectation for method chaining
    */
-  otherwise(callback: OtherwiseCallback): LocatorExpectation;
+  ifFails(callback: IfFailsCallback): LocatorExpectation;
 
   /**
    * Ensures the Locator points to a checked input.
@@ -160,7 +160,7 @@ export interface PageExpectation {
    * @param callback Function to execute on failure
    * @returns The same expectation for method chaining
    */
-  otherwise(callback: OtherwiseCallback): PageExpectation;
+  ifFails(callback: IfFailsCallback): PageExpectation;
 
   /**
    * Ensures that the Page's title matches the given title.
@@ -182,7 +182,7 @@ export interface PageExpectation {
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
- * @param otherwiseCallback optional callback to execute when assertion fails
+ * @param ifFailsCallback optional callback to execute when assertion fails
  * @returns an expectation object over the locator exposing locator-specific methods
  */
 export function createLocatorExpectation(
@@ -190,7 +190,7 @@ export function createLocatorExpectation(
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
-  otherwiseCallback?: OtherwiseCallback,
+  ifFailsCallback?: IfFailsCallback,
 ): LocatorExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -252,7 +252,7 @@ export function createLocatorExpectation(
     isNegated,
     message,
     softMode: config.softMode,
-    otherwiseCallback,
+    ifFailsCallback,
   };
 
   const matchText = async (
@@ -368,16 +368,16 @@ export function createLocatorExpectation(
         MatcherErrorRendererRegistry.getConfig(),
       );
 
-      if (otherwiseCallback) {
+      if (ifFailsCallback) {
         try {
-          await Promise.resolve(otherwiseCallback({
+          await Promise.resolve(ifFailsCallback({
             message: errorMessage,
             expected: expected.toString(),
             received: "unknown",
             matcherName,
           }));
         } catch (callbackError) {
-          console.error("Error in .otherwise() callback:", callbackError);
+          console.error("Error in .ifFails() callback:", callbackError);
         }
       }
 
@@ -392,11 +392,11 @@ export function createLocatorExpectation(
         config,
         message,
         !isNegated,
-        otherwiseCallback,
+        ifFailsCallback,
       );
     },
 
-    otherwise(callback: OtherwiseCallback): LocatorExpectation {
+    ifFails(callback: IfFailsCallback): LocatorExpectation {
       return createLocatorExpectation(
         locator,
         config,
@@ -605,16 +605,16 @@ export function createLocatorExpectation(
           MatcherErrorRendererRegistry.getConfig(),
         );
 
-        if (otherwiseCallback) {
+        if (ifFailsCallback) {
           try {
-            await Promise.resolve(otherwiseCallback({
+            await Promise.resolve(ifFailsCallback({
               message: errorMessage,
               expected: info.expected,
               received: info.received,
               matcherName,
             }));
           } catch (callbackError) {
-            console.error("Error in .otherwise() callback:", callbackError);
+            console.error("Error in .ifFails() callback:", callbackError);
           }
         }
 
@@ -666,16 +666,16 @@ export function createLocatorExpectation(
           MatcherErrorRendererRegistry.getConfig(),
         );
 
-        if (otherwiseCallback) {
+        if (ifFailsCallback) {
           try {
-            await Promise.resolve(otherwiseCallback({
+            await Promise.resolve(ifFailsCallback({
               message: errorMessage,
               expected: expectedValue,
               received: "unknown",
               matcherName: "toHaveValue",
             }));
           } catch (callbackError) {
-            console.error("Error in .otherwise() callback:", callbackError);
+            console.error("Error in .ifFails() callback:", callbackError);
           }
         }
 
@@ -694,7 +694,7 @@ export function createLocatorExpectation(
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
- * @param otherwiseCallback optional callback to execute when assertion fails
+ * @param ifFailsCallback optional callback to execute when assertion fails
  * @returns an expectation object over the page exposing page-specific methods
  */
 export function createPageExpectation(
@@ -702,7 +702,7 @@ export function createPageExpectation(
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
-  otherwiseCallback?: OtherwiseCallback,
+  ifFailsCallback?: IfFailsCallback,
 ): PageExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   const usedAssert = config.assertFn ?? assert;
@@ -821,16 +821,16 @@ export function createPageExpectation(
         MatcherErrorRendererRegistry.getConfig(),
       );
 
-      if (otherwiseCallback) {
+      if (ifFailsCallback) {
         try {
-          await Promise.resolve(otherwiseCallback({
+          await Promise.resolve(ifFailsCallback({
             message: errorMessage,
             expected: expected.toString(),
             received: "unknown",
             matcherName,
           }));
         } catch (callbackError) {
-          console.error("Error in .otherwise() callback:", callbackError);
+          console.error("Error in .ifFails() callback:", callbackError);
         }
       }
 
@@ -845,11 +845,11 @@ export function createPageExpectation(
         config,
         message,
         !isNegated,
-        otherwiseCallback,
+        ifFailsCallback,
       );
     },
 
-    otherwise(callback: OtherwiseCallback): PageExpectation {
+    ifFails(callback: IfFailsCallback): PageExpectation {
       return createPageExpectation(page, config, message, isNegated, callback);
     },
 
@@ -947,7 +947,7 @@ async function createMatcher(
     options = {},
     message,
     softMode,
-    otherwiseCallback,
+    ifFailsCallback,
   }: {
     locator: Locator;
     retryConfig: RetryConfig;
@@ -957,7 +957,7 @@ async function createMatcher(
     options?: Partial<RetryConfig>;
     message?: string;
     softMode?: SoftMode;
-    otherwiseCallback?: OtherwiseCallback;
+    ifFailsCallback?: IfFailsCallback;
   },
 ): Promise<void> {
   const info = createMatcherInfo(matcherName, expected, received, {
@@ -996,16 +996,16 @@ async function createMatcher(
         MatcherErrorRendererRegistry.getConfig(),
       );
 
-    if (otherwiseCallback) {
+    if (ifFailsCallback) {
       try {
-        await Promise.resolve(otherwiseCallback({
+        await Promise.resolve(ifFailsCallback({
           message: errorMessage,
           expected,
           received,
           matcherName,
         }));
       } catch (callbackError) {
-        console.error("Error in .otherwise() callback:", callbackError);
+        console.error("Error in .ifFails() callback:", callbackError);
       }
     }
 

@@ -13,9 +13,9 @@ import {
 } from "./render.ts";
 
 /**
- * Error context provided to .otherwise() callbacks when assertions fail.
+ * Error context provided to .ifFails() callbacks when assertions fail.
  */
-export interface OtherwiseErrorContext {
+export interface IfFailsErrorContext {
   message: string; // Fully rendered error message
   expected: string; // String representation of expected value
   received: string; // String representation of received value
@@ -23,14 +23,14 @@ export interface OtherwiseErrorContext {
 }
 
 /**
- * Callback function type for .otherwise() method.
+ * Callback function type for .ifFails() method.
  *
  * Supports both synchronous and asynchronous callbacks. Async callbacks are fully awaited
  * for retrying matchers (toBeVisible, toHaveText, etc.) but not for non-retrying matchers
  * (toBe, toEqual, etc.).
  */
-export type OtherwiseCallback = (
-  context: OtherwiseErrorContext,
+export type IfFailsCallback = (
+  context: IfFailsErrorContext,
 ) => void | Promise<void>;
 
 export interface NonRetryingExpectation {
@@ -47,7 +47,7 @@ export interface NonRetryingExpectation {
    * @param callback Function to execute on failure
    * @returns The same expectation for method chaining
    */
-  otherwise(callback: OtherwiseCallback): NonRetryingExpectation;
+  ifFails(callback: IfFailsCallback): NonRetryingExpectation;
 
   /**
    * Asserts that the value is equal to the expected value.
@@ -185,7 +185,7 @@ export interface NonRetryingExpectation {
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
- * @param otherwiseCallback optional callback to execute when assertion fails
+ * @param ifFailsCallback optional callback to execute when assertion fails
  * @returns an expectation object over the given value exposing the Expectation set of methods
  */
 export function createExpectation(
@@ -193,7 +193,7 @@ export function createExpectation(
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
-  otherwiseCallback?: OtherwiseCallback,
+  ifFailsCallback?: IfFailsCallback,
 ): NonRetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -282,7 +282,7 @@ export function createExpectation(
     isNegated,
     message,
     softMode: config.softMode,
-    otherwiseCallback,
+    ifFailsCallback,
   };
 
   const expectation: NonRetryingExpectation = {
@@ -292,11 +292,11 @@ export function createExpectation(
         config,
         message,
         !isNegated,
-        otherwiseCallback,
+        ifFailsCallback,
       );
     },
 
-    otherwise(callback: OtherwiseCallback): NonRetryingExpectation {
+    ifFails(callback: IfFailsCallback): NonRetryingExpectation {
       return createExpectation(received, config, message, isNegated, callback);
     },
 
@@ -590,7 +590,7 @@ function createMatcher(
     matcherSpecific = {},
     message,
     softMode,
-    otherwiseCallback,
+    ifFailsCallback,
   }: {
     usedAssert: typeof assert;
     isSoft: boolean;
@@ -598,7 +598,7 @@ function createMatcher(
     matcherSpecific?: Record<string, unknown>;
     message?: string;
     softMode?: SoftMode;
-    otherwiseCallback?: OtherwiseCallback;
+    ifFailsCallback?: IfFailsCallback;
   },
 ): void {
   const info = createMatcherInfo(
@@ -614,7 +614,7 @@ function createMatcher(
   const finalResult = isNegated ? !result : result;
 
   // Execute callback on failure BEFORE usedAssert
-  if (!finalResult && otherwiseCallback) {
+  if (!finalResult && ifFailsCallback) {
     try {
       const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
         .render(
@@ -622,7 +622,7 @@ function createMatcher(
           MatcherErrorRendererRegistry.getConfig(),
         );
 
-      otherwiseCallback({
+      ifFailsCallback({
         message: errorMessage,
         expected: typeof expected === "string"
           ? expected
@@ -633,7 +633,7 @@ function createMatcher(
         matcherName,
       });
     } catch (callbackError) {
-      console.error("Error in .otherwise() callback:", callbackError);
+      console.error("Error in .ifFails() callback:", callbackError);
     }
   }
 

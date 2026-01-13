@@ -1,7 +1,7 @@
 import { expect } from "../dist/index.js";
 
 export default function () {
-  console.log("Testing .otherwise() feature with soft mode...\n");
+  console.log("Testing .ifFails() feature with soft mode...\n");
 
   // Configure expect with soft mode
   const softExpect = expect.configure({ soft: true, softMode: "throw" });
@@ -12,7 +12,7 @@ export default function () {
   let errorContext = null;
 
   try {
-    softExpect(5).otherwise((ctx) => {
+    softExpect(5).ifFails((ctx) => {
       callbackInvoked = true;
       errorContext = ctx;
       console.log("  Callback executed!");
@@ -38,7 +38,7 @@ export default function () {
   console.log("Test 2: Soft expectation success");
   let successCallback = false;
 
-  softExpect(5).otherwise(() => {
+  softExpect(5).ifFails(() => {
     successCallback = true;
   }).toBe(5);
 
@@ -53,7 +53,7 @@ export default function () {
   let notCallbackInvoked = false;
 
   try {
-    softExpect(5).otherwise(() => {
+    softExpect(5).ifFails(() => {
       notCallbackInvoked = true;
       console.log("  Callback executed with .not!");
     }).not.toBe(5);
@@ -67,38 +67,38 @@ export default function () {
     console.log("  ✗ Test 3 failed: Callback did not work with .not\n");
   }
 
-  // Test 4: .otherwise() before .not
-  console.log("Test 4: .otherwise() before .not");
-  let otherwiseBeforeNot = false;
+  // Test 4: .ifFails() before .not
+  console.log("Test 4: .ifFails() before .not");
+  let ifFailsBeforeNot = false;
 
   try {
-    softExpect(5).not.otherwise(() => {
-      otherwiseBeforeNot = true;
-      console.log("  Callback executed when .otherwise() is after .not!");
+    softExpect(5).not.ifFails(() => {
+      ifFailsBeforeNot = true;
+      console.log("  Callback executed when .ifFails() is after .not!");
     }).toBe(5);
   } catch (_e) {
     // Expected
   }
 
-  if (otherwiseBeforeNot) {
+  if (ifFailsBeforeNot) {
     console.log(
-      "  ✓ Test 4 passed: Callback works when .otherwise() is after .not\n",
+      "  ✓ Test 4 passed: Callback works when .ifFails() is after .not\n",
     );
   } else {
     console.log(
-      "  ✗ Test 4 failed: Callback did not work when .otherwise() is after .not\n",
+      "  ✗ Test 4 failed: Callback did not work when .ifFails() is after .not\n",
     );
   }
 
-  // Test 5: Multiple .otherwise() calls (last wins)
-  console.log("Test 5: Multiple .otherwise() calls");
+  // Test 5: Multiple .ifFails() calls (last wins)
+  console.log("Test 5: Multiple .ifFails() calls");
   let firstCallback = false;
   let secondCallback = false;
 
   try {
-    softExpect(5).otherwise(() => {
+    softExpect(5).ifFails(() => {
       firstCallback = true;
-    }).otherwise(() => {
+    }).ifFails(() => {
       secondCallback = true;
       console.log("  Second callback executed (as expected)!");
     }).toBe(10);
@@ -119,7 +119,7 @@ export default function () {
   let hasMessage = false;
 
   try {
-    softExpect("hello").otherwise((ctx) => {
+    softExpect("hello").ifFails((ctx) => {
       hasMessage = ctx.message && ctx.message.includes("Expected") &&
         ctx.message.includes("Received");
       console.log("  Message present:", hasMessage);
