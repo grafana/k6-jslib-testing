@@ -1,6 +1,5 @@
 // @ts-types="../dist/index.d.ts"
-import { colorize, expect } from "../dist/index.js";
-import type { ExpectFunction } from "../expect.ts";
+import { colorize, expect, type ExpectFunction } from "../dist/index.js";
 import { dedent, trimEmptyLines } from "./utils.ts";
 import execution from "k6/execution";
 
@@ -44,7 +43,9 @@ export default async function testExpectNonRetrying() {
     DOUBLE_NEGATION_TEST_CASES,
   ];
 
-  for (const testCase of flattenTestSuite(testCases)) {
+  const allTests = flattenTestSuite(testCases);
+
+  for (const testCase of allTests) {
     const passed = await runTestCase(testCase);
 
     if (!passed) {
@@ -54,7 +55,7 @@ export default async function testExpectNonRetrying() {
 
   if (failed.length > 0) {
     // @ts-expect-error There seems to be some weird interaction with @types/k6 and the k6 package
-    execution.test.fail(`${failed.length}/${testCases.length} tests failed.`);
+    execution.test.fail(`${failed.length}/${allTests.length} tests failed.`);
   }
 }
 
@@ -1195,7 +1196,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
                                Property path: a
               Expected property not to equal: 1
                              Received object: {"a":1}
-
+ 
                                     Filename: expect-non-retrying.ts
                                         Line: ...
             `,
@@ -1207,12 +1208,12 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
         {
           suite: "with missing nested property",
           children: [{
-            name: "not.toHaveProperty with nested missing pass",
+            name: "pass",
             assertion: ({ expect }) => {
               expect({ a: { b: 1 } }).not.toHaveProperty("a.c");
             },
           }, {
-            name: "not.toHaveProperty with nested missing fail",
+            name: "fail",
             expectedError: dedent`
                                        Error: expect(received).toHaveProperty(keyPath, expected?)
                                           At: ...
@@ -1233,13 +1234,13 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
           suite: "with array index out of bounds",
           children: [
             {
-              name: "not.toHaveProperty with array index out of pass",
+              name: "pass",
               assertion: ({ expect }) => {
                 expect({ a: [1, 2, 3] }).not.toHaveProperty("a[5]");
               },
             },
             {
-              name: "not.toHaveProperty with array index out of fail",
+              name: "fail",
               expectedError: dedent`
                                          Error: expect(received).toHaveProperty(keyPath, expected?)
                                             At: ...
@@ -1427,7 +1428,12 @@ async function runTestCase(
     }
 
     if (error instanceof AssertionFailed === false) {
-      throw error;
+      return fail(
+        testCase.name,
+        `Unexpected error thrown: ${error}\n${
+          error instanceof Error ? error.stack : ""
+        }`,
+      );
     }
 
     if (testCase.expectedError === undefined) {
