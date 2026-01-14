@@ -39,7 +39,6 @@ export default async function testExpectNonRetrying() {
     TO_CONTAIN_TESTS,
     TO_CONTAIN_EQUAL_TESTS,
     TO_HAVE_PROPERTY_TESTS,
-    PLAYWRIGHT_EXAMPLES_TESTS,
     DOUBLE_NEGATION_TEST_CASES,
   ];
 
@@ -1260,69 +1259,68 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
         },
       ],
     },
-  ],
-};
-
-const PLAYWRIGHT_EXAMPLES_TESTS: TestSuite = {
-  suite: "Playwright examples for toHaveProperty",
-  children: [
     {
-      name: "example 1",
-      assertion: ({ expect }) => {
-        const value = {
-          a: {
-            b: [42],
+      suite: "Playwright examples",
+      children: [
+        {
+          name: "example 1",
+          assertion: ({ expect }) => {
+            const value = {
+              a: {
+                b: [42],
+              },
+              c: true,
+            };
+            expect(value).toHaveProperty("a.b");
           },
-          c: true,
-        };
-        expect(value).toHaveProperty("a.b");
-      },
-    },
-    {
-      name: "example 2",
-      assertion: ({ expect }) => {
-        const value = {
-          a: {
-            b: [42],
+        },
+        {
+          name: "example 2",
+          assertion: ({ expect }) => {
+            const value = {
+              a: {
+                b: [42],
+              },
+              c: true,
+            };
+            expect(value).toHaveProperty("a.b", [42]);
           },
-          c: true,
-        };
-        expect(value).toHaveProperty("a.b", [42]);
-      },
-    },
-    {
-      name: "example 3",
-      assertion: ({ expect }) => {
-        const value = {
-          a: {
-            b: [42],
+        },
+        {
+          name: "example 3",
+          assertion: ({ expect }) => {
+            const value = {
+              a: {
+                b: [42],
+              },
+              c: true,
+            };
+            expect(value).toHaveProperty("a.b[0]", 42);
           },
-          c: true,
-        };
-        expect(value).toHaveProperty("a.b[0]", 42);
-      },
-    },
-    {
-      name: "example 4",
-      assertion: ({ expect }) => {
-        const value = {
-          a: { b: [42] },
-          c: true,
-        };
-        expect(value).toHaveProperty("c");
-      },
-    },
-    {
-      name: "example 5",
-      assertion: ({ expect }) => {
-        const value = {
-          a: {
-            b: [42],
+        },
+        {
+          name: "example 4",
+          assertion: ({ expect }) => {
+            const value = {
+              a: { b: [42] },
+              c: true,
+            };
+            expect(value).toHaveProperty("c");
           },
-          c: true,
-        };
-        expect(value).toHaveProperty("c", true);
-      },
+        },
+        {
+          name: "example 5",
+          assertion: ({ expect }) => {
+            const value = {
+              a: {
+                b: [42],
+              },
+              c: true,
+            };
+            expect(value).toHaveProperty("c", true);
+          },
+        },
+      ],
     },
   ],
 };
