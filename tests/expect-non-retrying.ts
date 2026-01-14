@@ -111,7 +111,7 @@ const TO_BE_TESTS: TestSuite = {
           },
         },
         {
-          name: "not.fail",
+          name: "fail",
           expectedError: dedent`
                Error: expect(received).toBe(expected)
                   At: ...
@@ -265,12 +265,12 @@ const TO_BE_FALSY_TESTS: TestSuite = {
   }, {
     suite: "negated",
     children: [{
-      name: "not.pass",
+      name: "pass",
       assertion: ({ expect }) => {
         expect(true).not.toBeFalsy();
       },
     }, {
-      name: "not.fail",
+      name: "fail",
       expectedError: dedent`
            Error: expect(received).toBeFalsy()
               At: ...
@@ -311,12 +311,12 @@ const TO_BE_TRUTHY_TESTS: TestSuite = {
   }, {
     suite: "negated",
     children: [{
-      name: "not.pass",
+      name: "pass",
       assertion: ({ expect }) => {
         expect(false).not.toBeTruthy();
       },
     }, {
-      name: "not.fail",
+      name: "fail",
       expectedError: dedent`
            Error: expect(received).toBeTruthy()
               At: ...
@@ -505,12 +505,12 @@ const TO_BE_UNDEFINED_TESTS: TestSuite = {
   }, {
     suite: "negated",
     children: [{
-      name: "not.pass",
+      name: "pass",
       assertion: ({ expect }) => {
         expect(1).not.toBeUndefined();
       },
     }, {
-      name: "not.fail",
+      name: "fail",
       expectedError: dedent`
            Error: expect(received).toBeUndefined()
               At: ...
@@ -552,12 +552,12 @@ const TO_EQUAL_TESTS: TestSuite = {
   }, {
     suite: "negated",
     children: [{
-      name: "not.pass",
+      name: "pass",
       assertion: ({ expect }) => {
         expect({ a: 1 }).not.toEqual({ a: 2 });
       },
     }, {
-      name: "not.fail",
+      name: "fail",
       expectedError: dedent`
            Error: expect(received).toEqual(expected)
               At: ...
