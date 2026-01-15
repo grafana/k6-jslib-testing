@@ -17,7 +17,7 @@ export const options = {
 const testCases = [
   {
     name:
-      ".ifFails() async callback with toBeVisible completes before assertion",
+      ".with({ onFailure }) async callback with toBeVisible completes before assertion",
     selector: "#nonexistent-element",
     assertion: async (locator) => {
       let asyncCallbackExecuted = false;
@@ -25,11 +25,13 @@ const testCases = [
 
       try {
         await expect(locator)
-          .ifFails(async (_ctx) => {
-            asyncCallbackExecuted = true;
-            // Simulate async operation like screenshot
-            await new Promise((resolve) => setTimeout(resolve, 50));
-            asyncOperationCompleted = true;
+          .with({
+            onFailure: async (_ctx) => {
+              asyncCallbackExecuted = true;
+              // Simulate async operation like screenshot
+              await new Promise((resolve) => setTimeout(resolve, 50));
+              asyncOperationCompleted = true;
+            },
           })
           .toBeVisible();
       } catch (_e) {
@@ -47,16 +49,18 @@ const testCases = [
     },
   },
   {
-    name: ".ifFails() async callback with toHaveText",
+    name: ".with({ onFailure }) async callback with toHaveText",
     selector: "h1",
     assertion: async (locator) => {
       let callbackCompleted = false;
 
       try {
         await expect(locator)
-          .ifFails(async (_ctx) => {
-            await new Promise((resolve) => setTimeout(resolve, 20));
-            callbackCompleted = true;
+          .with({
+            onFailure: async (_ctx) => {
+              await new Promise((resolve) => setTimeout(resolve, 20));
+              callbackCompleted = true;
+            },
           })
           .toHaveText("Wrong Title That Does Not Exist");
       } catch (_e) {
@@ -69,15 +73,18 @@ const testCases = [
     },
   },
   {
-    name: ".ifFails() sync callback still works with retrying matchers",
+    name:
+      ".with({ onFailure }) sync callback still works with retrying matchers",
     selector: "#another-nonexistent",
     assertion: async (locator) => {
       let syncCallback = false;
 
       try {
         await expect(locator)
-          .ifFails((_ctx) => {
-            syncCallback = true;
+          .with({
+            onFailure: (_ctx) => {
+              syncCallback = true;
+            },
           })
           .toBeVisible();
       } catch (_e) {
@@ -90,7 +97,7 @@ const testCases = [
     },
   },
   {
-    name: ".ifFails() async callback with .not modifier",
+    name: ".with({ onFailure }) async callback with .not modifier",
     selector: "body",
     assertion: async (locator) => {
       let notAsyncCallback = false;
@@ -98,9 +105,11 @@ const testCases = [
       try {
         // body IS visible, so .not.toBeVisible() should fail
         await expect(locator)
-          .not.ifFails(async (_ctx) => {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-            notAsyncCallback = true;
+          .not.with({
+            onFailure: async (_ctx) => {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              notAsyncCallback = true;
+            },
           })
           .toBeVisible();
       } catch (_e) {
@@ -113,16 +122,18 @@ const testCases = [
     },
   },
   {
-    name: ".ifFails() async callback with toHaveAttribute",
+    name: ".with({ onFailure }) async callback with toHaveAttribute",
     selector: "body",
     assertion: async (locator) => {
       let attributeCallback = false;
 
       try {
         await expect(locator)
-          .ifFails(async (_ctx) => {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-            attributeCallback = true;
+          .with({
+            onFailure: async (_ctx) => {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              attributeCallback = true;
+            },
           })
           .toHaveAttribute("nonexistent-attr", "value");
       } catch (_e) {
@@ -135,7 +146,7 @@ const testCases = [
     },
   },
   {
-    name: ".ifFails() multiple async callbacks - last wins",
+    name: ".with({ onFailure }) multiple async callbacks - last wins",
     selector: "#nonexistent",
     assertion: async (locator) => {
       let firstCallback = false;
@@ -143,13 +154,17 @@ const testCases = [
 
       try {
         await expect(locator)
-          .ifFails(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-            firstCallback = true;
+          .with({
+            onFailure: async () => {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              firstCallback = true;
+            },
           })
-          .ifFails(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-            secondCallback = true;
+          .with({
+            onFailure: async () => {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              secondCallback = true;
+            },
           })
           .toBeVisible();
       } catch (_e) {
@@ -165,16 +180,18 @@ const testCases = [
     },
   },
   {
-    name: ".ifFails() async callback receives correct error context",
+    name: ".with({ onFailure }) async callback receives correct error context",
     selector: "#nonexistent",
     assertion: async (locator) => {
       let errorContext = null;
 
       try {
         await expect(locator)
-          .ifFails(async (ctx) => {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-            errorContext = ctx;
+          .with({
+            onFailure: async (ctx) => {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              errorContext = ctx;
+            },
           })
           .toBeVisible();
       } catch (_e) {

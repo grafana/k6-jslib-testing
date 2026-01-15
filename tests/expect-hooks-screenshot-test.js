@@ -16,18 +16,20 @@ export const options = {
 
 const testCases = [
   {
-    name: ".ifFails() takes actual screenshot before assertion fails",
+    name: ".with({ onFailure }) takes actual screenshot before assertion fails",
     assertion: async ({ page }) => {
       let screenshotTaken = false;
       let callbackExecuted = false;
 
       try {
         await expect(page.locator("#element-that-does-not-exist"))
-          .ifFails(async (_ctx) => {
-            callbackExecuted = true;
-            // Real screenshot
-            await page.screenshot({ path: "test-failure-screenshot.png" });
-            screenshotTaken = true;
+          .with({
+            onFailure: async (_ctx) => {
+              callbackExecuted = true;
+              // Real screenshot
+              await page.screenshot({ path: "test-failure-screenshot.png" });
+              screenshotTaken = true;
+            },
           })
           .toBeVisible();
       } catch (_e) {

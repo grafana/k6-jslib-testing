@@ -275,27 +275,30 @@ Expected property to equal: 43
                       Line: 555
 ```
 
-##### Error Callbacks with .ifFails()
+##### Lifecycle Hooks with .with()
 
-The `.ifFails()` method allows you to execute a callback function when an
-assertion fails, providing powerful debugging capabilities without interrupting
-your test workflow. This is particularly useful for capturing screenshots,
-logging response bodies, or performing cleanup actions before the test fails.
+The `.with()` method allows you to register lifecycle hooks for expectations.
+Currently, it supports the `onFailure` hook, which executes a callback when an
+assertion fails. This provides powerful debugging capabilities without
+interrupting your test workflow, such as capturing screenshots, logging response
+bodies, or performing cleanup actions before the test fails.
 
-The `.ifFails()` method can be chained with any matcher and works seamlessly
-with both retrying and non-retrying assertions, as well as with `.not` and
-`.soft()` modifiers.
+The `.with()` method can be chained with any matcher and works seamlessly with
+both retrying and non-retrying assertions, as well as with `.not` and `.soft()`
+modifiers.
 
-**Callback Signature:**
+**Hook Configuration:**
 
 The callback receives an error context object with the following properties:
 
 ```javascript
-.ifFails((context) => {
-  // context.message - Full error message
-  // context.expected - Expected value as string
-  // context.received - Received value as string
-  // context.matcherName - Matcher name (e.g., "toBe", "toBeVisible")
+.with({
+  onFailure: (context) => {
+    // context.message - Full error message
+    // context.expected - Expected value as string
+    // context.received - Received value as string
+    // context.matcherName - Matcher name (e.g., "toBe", "toBeVisible")
+  }
 })
 ```
 
@@ -307,8 +310,10 @@ test will wait for the async operation to complete before failing.
 
 ```javascript
 await expect(page.locator(".button"))
-  .ifFails(async (ctx) => {
-    await page.screenshot({ path: "failure.png" });
+  .with({
+    onFailure: async (ctx) => {
+      await page.screenshot({ path: "failure.png" });
+    },
   })
   .toBeVisible();
 ```
@@ -321,9 +326,11 @@ for these matchers.
 
 ```javascript
 expect(response.status)
-  .ifFails((ctx) => {
-    console.log(`API returned ${ctx.received}, response body:`);
-    console.log(response.body);
+  .with({
+    onFailure: (ctx) => {
+      console.log(`API returned ${ctx.received}, response body:`);
+      console.log(response.body);
+    },
   })
   .toBe(200);
 ```
@@ -332,12 +339,14 @@ expect(response.status)
 
 ```javascript
 await expect(page.locator(".success-message"))
-  .ifFails(async (ctx) => {
-    console.log(`Expected element not visible: ${ctx.matcherName}`);
-    await page.screenshot({
-      path: "failure.png",
-      fullPage: true,
-    });
+  .with({
+    onFailure: async (ctx) => {
+      console.log(`Expected element not visible: ${ctx.matcherName}`);
+      await page.screenshot({
+        path: "failure.png",
+        fullPage: true,
+      });
+    },
   })
   .toBeVisible();
 ```
@@ -348,13 +357,24 @@ await expect(page.locator(".success-message"))
 // Callback executes but test continues
 await expect
   .soft(page.locator("h1"))
-  .ifFails(async (ctx) => {
-    console.log(`Title mismatch: "${ctx.received}"`);
-    await page.screenshot({ path: "title-failure.png" });
+  .with({
+    onFailure: async (ctx) => {
+      console.log(`Title mismatch: "${ctx.received}"`);
+      await page.screenshot({ path: "title-failure.png" });
+    },
   })
   .toHaveText("Expected Title");
 // Test continues even after failure
 ```
+
+**Future Hooks:**
+
+The `.with()` API is designed to be extensible. Future versions may support
+additional hooks such as:
+
+- `onBefore` - Execute before the matcher runs
+- `onAfter` - Execute after the matcher completes (success or failure)
+- `onRetry` - Execute on each retry attempt for retrying matchers
 
 #### 6. Configuration
 

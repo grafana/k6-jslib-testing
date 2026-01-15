@@ -1,6 +1,7 @@
 export { expect } from "./expect.ts";
 export { colorize } from "./colors.ts";
 export type {
-  IfFailsCallback,
-  IfFailsErrorContext,
+  ExpectHooks,
+  FailureCallback,
+  FailureContext,
 } from "./expectNonRetrying.ts";

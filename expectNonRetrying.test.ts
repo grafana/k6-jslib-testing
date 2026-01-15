@@ -1944,7 +1944,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     // ... existing test ...
   });
 
-  await t.step("ifFails() executes callback on failure", () => {
+  await t.step("with({ onFailure }) executes callback on failure", () => {
     let callbackInvoked = false;
     let errorContext: any = null;
 
@@ -1963,9 +1963,11 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .ifFails((ctx) => {
-          callbackInvoked = true;
-          errorContext = ctx;
+        .with({
+          onFailure: (ctx) => {
+            callbackInvoked = true;
+            errorContext = ctx;
+          },
         })
         .toBe(10);
     } catch (e) {
@@ -1983,7 +1985,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("ifFails() NOT executed on success", () => {
+  await t.step("with({ onFailure }) NOT executed on success", () => {
     let callbackInvoked = false;
 
     const mockAssert = (condition: boolean) => {
@@ -1993,15 +1995,17 @@ Deno.test("NonRetryingExpectation", async (t) => {
     const config = createTestConfig({ assertFn: mockAssert });
 
     createExpectation(5, config)
-      .ifFails(() => {
-        callbackInvoked = true;
+      .with({
+        onFailure: () => {
+          callbackInvoked = true;
+        },
       })
       .toBe(5);
 
     assert(!callbackInvoked, "Callback should NOT be invoked on success");
   });
 
-  await t.step("ifFails() works with .not", () => {
+  await t.step("with({ onFailure }) works with .not", () => {
     let callbackInvoked = false;
 
     const mockAssert = (
@@ -2019,8 +2023,10 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .ifFails(() => {
-          callbackInvoked = true;
+        .with({
+          onFailure: () => {
+            callbackInvoked = true;
+          },
         })
         .not.toBe(5);
     } catch (e) {
@@ -2030,7 +2036,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assert(callbackInvoked, "Callback should be invoked with .not");
   });
 
-  await t.step("ifFails() works when chained after .not", () => {
+  await t.step("with({ onFailure }) works when chained after .not", () => {
     let callbackInvoked = false;
 
     const mockAssert = (
@@ -2048,8 +2054,10 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .not.ifFails(() => {
-          callbackInvoked = true;
+        .not.with({
+          onFailure: () => {
+            callbackInvoked = true;
+          },
         })
         .toBe(5);
     } catch (e) {
@@ -2062,7 +2070,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     );
   });
 
-  await t.step("ifFails() last callback wins", () => {
+  await t.step("with({ onFailure }) last callback wins", () => {
     let firstCalled = false;
     let secondCalled = false;
 
@@ -2081,11 +2089,15 @@ Deno.test("NonRetryingExpectation", async (t) => {
 
     try {
       createExpectation(5, config)
-        .ifFails(() => {
-          firstCalled = true;
+        .with({
+          onFailure: () => {
+            firstCalled = true;
+          },
         })
-        .ifFails(() => {
-          secondCalled = true;
+        .with({
+          onFailure: () => {
+            secondCalled = true;
+          },
         })
         .toBe(10);
     } catch (e) {
@@ -2096,36 +2108,41 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assert(secondCalled, "Second callback should be invoked");
   });
 
-  await t.step("ifFails() callback error doesn't prevent assertion", () => {
-    let assertCalled = false;
+  await t.step(
+    "with({ onFailure }) callback error doesn't prevent assertion",
+    () => {
+      let assertCalled = false;
 
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-      softMode?: SoftMode,
-    ) => {
-      assertCalled = true;
-      if (!condition) {
-        throw new Error(message);
+      const mockAssert = (
+        condition: boolean,
+        message: string,
+        soft?: boolean,
+        softMode?: SoftMode,
+      ) => {
+        assertCalled = true;
+        if (!condition) {
+          throw new Error(message);
+        }
+      };
+
+      const config = createTestConfig({ assertFn: mockAssert });
+
+      try {
+        createExpectation(5, config)
+          .with({
+            onFailure: () => {
+              throw new Error("Callback error");
+            },
+          })
+          .toBe(10);
+      } catch (e) {
+        // Expected to throw from assertion, not callback
       }
-    };
 
-    const config = createTestConfig({ assertFn: mockAssert });
-
-    try {
-      createExpectation(5, config)
-        .ifFails(() => {
-          throw new Error("Callback error");
-        })
-        .toBe(10);
-    } catch (e) {
-      // Expected to throw from assertion, not callback
-    }
-
-    assert(
-      assertCalled,
-      "Assert should still be called despite callback error",
-    );
-  });
+      assert(
+        assertCalled,
+        "Assert should still be called despite callback error",
+      );
+    },
+  );
 });
