@@ -26,3 +26,17 @@ export function dedent(strings: TemplateStringsArray) {
 
   return lines.map((line) => line.slice(minIndent)).join("\n");
 }
+
+export function trimEmptyLines(text: string) {
+  const lines = text.split("\n");
+
+  while (lines.length > 0 && /^\s*$/.test(lines[0])) {
+    lines.shift();
+  }
+
+  while (lines.length > 0 && /^\s*$/.test(lines[lines.length - 1])) {
+    lines.pop();
+  }
+
+  return lines.join("\n");
+}
