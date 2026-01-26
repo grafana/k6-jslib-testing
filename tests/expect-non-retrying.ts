@@ -113,7 +113,7 @@ const TO_BE_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-               Error: expect(received).toBe(expected)
+               Error: expect(received).not.toBe(expected)
                   At: ...
 
             Expected: 1
