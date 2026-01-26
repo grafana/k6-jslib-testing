@@ -17,7 +17,6 @@ import { parseStackTrace } from "./stacktrace.ts";
 import type { Locator, Page } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
-import { isLocator, isPage } from "./expectations/utils.ts";
 import type { ExpectationFailed } from "./expectations/result.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
@@ -786,25 +785,10 @@ export function createExpectation<T extends Locator | Page>(
   message?: string,
   isNegated: boolean = false,
 ): RetryingExpectation<T> {
-  if (isPage(target)) {
-    return createPageExpectation(
-      target,
-      config,
-      message,
-      isNegated,
-    ) as RetryingExpectation<T>;
-  } else if (isLocator(target)) {
-    return createLocatorExpectation(
-      target,
-      config,
-      message,
-      isNegated,
-    ) as RetryingExpectation<T>;
-  } else {
-    throw new Error(
-      "Invalid target for retrying expectation. Expected Locator or Page object.",
-    );
-  }
+  return {
+    ...createPageExpectation(target as Page, config, message, isNegated),
+    ...createLocatorExpectation(target as Locator, config, message, isNegated),
+  } as unknown as RetryingExpectation<T>;
 }
 
 // Helper function to create common matcher info

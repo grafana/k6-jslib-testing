@@ -8,7 +8,7 @@ import {
   createExpectation as createRetryingExpectation,
   type RetryingExpectation,
 } from "./expectRetrying.ts";
-import { isLocator, isPage } from "./expectations/utils.ts";
+import { createMatchers, type MatchersFor } from "./expect/index.ts";
 
 /**
  * The expect function is used to assert that a value meets certain conditions.
@@ -34,8 +34,7 @@ export interface ExpectFunction {
   <T>(
     value: T,
     message?: string,
-  ): T extends Locator | Page ? RetryingExpectation<T>
-    : NonRetryingExpectation;
+  ): Expectations<T>;
 
   /**
    * The soft function can be used to assert that a value meets certain conditions, but
@@ -44,7 +43,7 @@ export interface ExpectFunction {
   soft<T>(
     value: T,
     message?: string,
-  ): T extends Locator | Page ? RetryingExpectation<T> : NonRetryingExpectation;
+  ): Expectations<T>;
 
   /**
    * Creates a new expect instance with the given configuration.
@@ -55,6 +54,47 @@ export interface ExpectFunction {
    * The configuration used by the expect function.
    */
   readonly config: ExpectConfig;
+}
+
+type Expectations<T> =
+  & MatchersFor<T>
+  & NonRetryingExpectation
+  & (T extends Page | Locator ? RetryingExpectation<T> : Record<string, never>)
+  & { not: Expectations<T> };
+
+function createExpectations<T>(
+  received: T,
+  config: ExpectConfig,
+  message: string | undefined,
+  isNegated: boolean,
+): Expectations<T> {
+  return {
+    ...createNonRetryingExpectation(received, config, message, isNegated),
+    ...createRetryingExpectation(
+      received as Locator | Page,
+      config,
+      message,
+      isNegated,
+    ),
+
+    ...createMatchers<T>({
+      received: received,
+      config,
+      negated: isNegated,
+      fail(message) {
+        config.assertFn?.(false, message, config.soft, config.softMode);
+      },
+    }),
+
+    get not() {
+      return createExpectations(
+        received,
+        config,
+        message,
+        !isNegated,
+      );
+    },
+  } as unknown as Expectations<T>;
 }
 
 /**
@@ -75,45 +115,20 @@ function makeExpect(baseConfig?: Partial<ExpectConfig>): ExpectFunction {
     function <T>(
       value: T,
       message?: string,
-    ): T extends Locator | Page ? RetryingExpectation<T>
-      : NonRetryingExpectation {
-      if (isLocator(value) || isPage(value)) {
-        return createRetryingExpectation(
-          value as Locator | Page,
-          config,
-          message,
-        ) as T extends Locator | Page ? RetryingExpectation<T>
-          : NonRetryingExpectation;
-      } else {
-        return createNonRetryingExpectation(
-          value,
-          config,
-          message,
-        ) as T extends Locator | Page ? RetryingExpectation<T>
-          : NonRetryingExpectation;
-      }
+    ): Expectations<T> {
+      return createExpectations(value, config, message, false);
     },
     {
       soft<T>(
         value: T,
         message?: string,
-      ): T extends Locator | Page ? RetryingExpectation<T>
-        : NonRetryingExpectation {
-        if (isLocator(value) || isPage(value)) {
-          return createRetryingExpectation(
-            value as Locator | Page,
-            { ...config, soft: true },
-            message,
-          ) as T extends Locator | Page ? RetryingExpectation<T>
-            : NonRetryingExpectation;
-        } else {
-          return createNonRetryingExpectation(
-            value,
-            { ...config, soft: true },
-            message,
-          ) as T extends Locator | Page ? RetryingExpectation<T>
-            : NonRetryingExpectation;
-        }
+      ): Expectations<T> {
+        return createExpectations(
+          value,
+          { ...config, soft: true },
+          message,
+          false,
+        );
       },
       configure(newConfig: Partial<ExpectConfig>): ExpectFunction {
         return makeExpect(newConfig);
