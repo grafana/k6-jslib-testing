@@ -1,3 +1,5 @@
+import "./formats/index.ts";
+
 export { type AnyError, AssertionFailed, type ErrorFormats } from "./errors.ts";
 
 export * from "./formatting/values.ts";
