@@ -1,5 +1,5 @@
 import { extend } from "../extend.ts";
-import { AssertionFailed } from "../index.ts";
+import { AssertionFailed } from "../errors.ts";
 
 declare module "../extend.ts" {
   export interface Matchers<Received> {
