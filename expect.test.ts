@@ -118,7 +118,7 @@ Deno.test("expect.not", async (t) => {
     const customExpect = expect.configure({ assertFn: customAssert });
 
     // Test soft assertion with negation
-    customExpect.soft(1).not.toBe(2);
+    customExpect.soft(1).not.toEqual(2);
     assertEquals(lastAssertSoft, true, "Expected soft assertion to be true");
   });
 
