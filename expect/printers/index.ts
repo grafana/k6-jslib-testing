@@ -12,10 +12,7 @@ function normalizeMessage(
     .map((group) => {
       return Object.fromEntries(
         Object.entries(group).flatMap(([key, value]) => {
-          if (
-            value === null || value === undefined || value === false ||
-            value === 0
-          ) {
+          if (!value && value !== "") {
             return [];
           }
 
