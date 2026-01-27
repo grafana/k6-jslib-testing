@@ -19,6 +19,7 @@ import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
 import { isLocator, isPage } from "./expectations/utils.ts";
 import type { ExpectationFailed } from "./expectations/result.ts";
+import type { ExpectHooks, FailureCallback } from "./expectNonRetrying.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
   /**
@@ -52,6 +53,15 @@ export interface LocatorExpectation {
    * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
    */
   not: LocatorExpectation;
+
+  /**
+   * Registers lifecycle hooks for this expectation. Currently supports onFailure callback
+   * to execute when the assertion fails after all retries are exhausted.
+   *
+   * @param hooks Lifecycle hooks configuration
+   * @returns The same expectation for method chaining
+   */
+  with(hooks: ExpectHooks): LocatorExpectation;
 
   /**
    * Ensures the Locator points to a checked input.
@@ -142,6 +152,15 @@ export interface PageExpectation {
   not: PageExpectation;
 
   /**
+   * Registers lifecycle hooks for this expectation. Currently supports onFailure callback
+   * to execute when the assertion fails after all retries are exhausted.
+   *
+   * @param hooks Lifecycle hooks configuration
+   * @returns The same expectation for method chaining
+   */
+  with(hooks: ExpectHooks): PageExpectation;
+
+  /**
    * Ensures that the Page's title matches the given title.
    */
   toHaveTitle(
@@ -161,6 +180,7 @@ export interface PageExpectation {
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
+ * @param hooks optional lifecycle hooks for the expectation
  * @returns an expectation object over the locator exposing locator-specific methods
  */
 export function createLocatorExpectation(
@@ -168,6 +188,7 @@ export function createLocatorExpectation(
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
+  hooks?: ExpectHooks,
 ): LocatorExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -229,6 +250,7 @@ export function createLocatorExpectation(
     isNegated,
     message,
     softMode: config.softMode,
+    onFailureCallback: hooks?.onFailure,
   };
 
   const matchText = async (
@@ -337,21 +359,52 @@ export function createLocatorExpectation(
         customMessage: message,
       };
 
-      usedAssert(
-        false,
-        MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        config.softMode,
+      const errorMessage = MatcherErrorRendererRegistry.getRenderer(
+        "toHaveText",
+      ).render(
+        info,
+        MatcherErrorRendererRegistry.getConfig(),
       );
+
+      if (matcherConfig.onFailureCallback) {
+        try {
+          await Promise.resolve(matcherConfig.onFailureCallback({
+            message: errorMessage,
+            expected: expected.toString(),
+            received: "unknown",
+            matcherName,
+          }));
+        } catch (callbackError) {
+          console.error(
+            "Error in expectation failure callback:",
+            callbackError,
+          );
+        }
+      }
+
+      usedAssert(false, errorMessage, isSoft, config.softMode);
     }
   };
 
   const expectation: LocatorExpectation = {
     get not(): LocatorExpectation {
-      return createLocatorExpectation(locator, config, message, !isNegated);
+      return createLocatorExpectation(
+        locator,
+        config,
+        message,
+        !isNegated,
+        hooks,
+      );
+    },
+
+    with(newHooks: ExpectHooks): LocatorExpectation {
+      return createLocatorExpectation(
+        locator,
+        config,
+        message,
+        isNegated,
+        newHooks,
+      );
     },
 
     async toBeChecked(
@@ -546,15 +599,30 @@ export function createLocatorExpectation(
             `Timeout waiting for element matching locator (${retryConfig.timeout}ms)`,
         };
 
-        usedAssert(
-          false,
-          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-          config.softMode,
+        const errorMessage = MatcherErrorRendererRegistry.getRenderer(
+          matcherName,
+        ).render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
         );
+
+        if (matcherConfig.onFailureCallback) {
+          try {
+            await Promise.resolve(matcherConfig.onFailureCallback({
+              message: errorMessage,
+              expected: info.expected,
+              received: info.received,
+              matcherName,
+            }));
+          } catch (callbackError) {
+            console.error(
+              "Error in expectation failure callback:",
+              callbackError,
+            );
+          }
+        }
+
+        usedAssert(false, errorMessage, isSoft, config.softMode);
       }
     },
 
@@ -595,15 +663,30 @@ export function createLocatorExpectation(
           );
         }, { ...retryConfig, ...options });
       } catch (_) {
-        usedAssert(
-          false,
-          MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-          config.softMode,
+        const errorMessage = MatcherErrorRendererRegistry.getRenderer(
+          "toHaveValue",
+        ).render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
         );
+
+        if (matcherConfig.onFailureCallback) {
+          try {
+            await Promise.resolve(matcherConfig.onFailureCallback({
+              message: errorMessage,
+              expected: expectedValue,
+              received: "unknown",
+              matcherName: "toHaveValue",
+            }));
+          } catch (callbackError) {
+            console.error(
+              "Error in expectation failure callback:",
+              callbackError,
+            );
+          }
+        }
+
+        usedAssert(false, errorMessage, isSoft, config.softMode);
       }
     },
   };
@@ -618,6 +701,7 @@ export function createLocatorExpectation(
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
+ * @param hooks optional lifecycle hooks for the expectation
  * @returns an expectation object over the page exposing page-specific methods
  */
 export function createPageExpectation(
@@ -625,6 +709,7 @@ export function createPageExpectation(
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
+  hooks?: ExpectHooks,
 ): PageExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   const usedAssert = config.assertFn ?? assert;
@@ -736,21 +821,46 @@ export function createPageExpectation(
         customMessage: message,
       };
 
-      usedAssert(
-        false,
-        MatcherErrorRendererRegistry.getRenderer("toHaveTitle").render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        config.softMode,
+      const errorMessage = MatcherErrorRendererRegistry.getRenderer(
+        "toHaveTitle",
+      ).render(
+        info,
+        MatcherErrorRendererRegistry.getConfig(),
       );
+
+      if (hooks?.onFailure) {
+        try {
+          await Promise.resolve(hooks.onFailure({
+            message: errorMessage,
+            expected: expected.toString(),
+            received: "unknown",
+            matcherName,
+          }));
+        } catch (callbackError) {
+          console.error(
+            "Error in expectation failure callback:",
+            callbackError,
+          );
+        }
+      }
+
+      usedAssert(false, errorMessage, isSoft, config.softMode);
     }
   };
 
   const expectation: PageExpectation = {
     get not(): PageExpectation {
-      return createPageExpectation(page, config, message, !isNegated);
+      return createPageExpectation(
+        page,
+        config,
+        message,
+        !isNegated,
+        hooks,
+      );
+    },
+
+    with(newHooks: ExpectHooks): PageExpectation {
+      return createPageExpectation(page, config, message, isNegated, newHooks);
     },
 
     toHaveTitle(
@@ -847,6 +957,7 @@ async function createMatcher(
     options = {},
     message,
     softMode,
+    onFailureCallback,
   }: {
     locator: Locator;
     retryConfig: RetryConfig;
@@ -856,6 +967,7 @@ async function createMatcher(
     options?: Partial<RetryConfig>;
     message?: string;
     softMode?: SoftMode;
+    onFailureCallback?: FailureCallback;
   },
 ): Promise<void> {
   const info = createMatcherInfo(matcherName, expected, received, {
@@ -887,15 +999,27 @@ async function createMatcher(
       );
     }, { ...retryConfig, ...options });
   } catch (_) {
-    usedAssert(
-      false,
-      MatcherErrorRendererRegistry.getRenderer(matcherName).render(
+    // Final timeout - execute callback BEFORE usedAssert
+    const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+      .render(
         info,
         MatcherErrorRendererRegistry.getConfig(),
-      ),
-      isSoft,
-      softMode,
-    );
+      );
+
+    if (onFailureCallback) {
+      try {
+        await Promise.resolve(onFailureCallback({
+          message: errorMessage,
+          expected,
+          received,
+          matcherName,
+        }));
+      } catch (callbackError) {
+        console.error("Error in expectation failure callback:", callbackError);
+      }
+    }
+
+    usedAssert(false, errorMessage, isSoft, softMode);
   }
 }
 

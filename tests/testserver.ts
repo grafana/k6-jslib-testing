@@ -5,7 +5,11 @@ const port = Number(Deno.env.get("TEST_SERVER_PORT") ?? "8000");
 Deno.serve({ hostname: "127.0.0.1", port }, (req: Request) => {
   const pathname = new URL(req.url).pathname;
   if (pathname === "/") {
-    const filepath = new URL("./test.html", import.meta.url).pathname;
+    const fileUrl = new URL("./test.html", import.meta.url);
+    // Use fromFileUrl to properly convert file:// URL to filesystem path on all platforms
+    const filepath = fileUrl.protocol === "file:"
+      ? fileUrl.pathname.replace(/^\/([A-Za-z]:)/, "$1") // Fix Windows drive letter
+      : fileUrl.pathname;
 
     // Try to read the file content to verify it exists and has content
     try {

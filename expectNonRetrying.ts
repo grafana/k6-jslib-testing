@@ -12,11 +12,58 @@ import {
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 
+/**
+ * Error context provided to failure callbacks when assertions fail.
+ */
+export interface FailureContext {
+  message: string; // Fully rendered error message
+  expected: string; // String representation of expected value
+  received: string; // String representation of received value
+  matcherName: string; // e.g., "toBe", "toBeVisible"
+}
+
+/**
+ * Callback function type for failure hooks.
+ *
+ * Supports both synchronous and asynchronous callbacks. Async callbacks are fully awaited
+ * for retrying matchers (toBeVisible, toHaveText, etc.) but not for non-retrying matchers
+ * (toBe, toEqual, etc.).
+ */
+export type FailureCallback = (
+  context: FailureContext,
+) => void | Promise<void>;
+
+/**
+ * Lifecycle hooks for expectations. Allows custom behavior at key points
+ * during expectation execution.
+ */
+export interface ExpectHooks {
+  /**
+   * Callback to execute when an assertion fails. Receives error context
+   * including the rendered message, expected/received values, and matcher name.
+   * Useful for taking screenshots or capturing state before the assertion throws.
+   *
+   * For retrying matchers (toBeVisible, toHaveText, etc.), async callbacks are
+   * fully awaited. For non-retrying matchers (toBe, toEqual, etc.), async callbacks
+   * can be used but will not be awaited.
+   */
+  onFailure?: FailureCallback;
+}
+
 export interface NonRetryingExpectation {
   /**
    * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
    */
   not: NonRetryingExpectation;
+
+  /**
+   * Registers lifecycle hooks for this expectation. Currently supports onFailure callback
+   * to execute when the assertion fails.
+   *
+   * @param hooks Lifecycle hooks configuration
+   * @returns The same expectation for method chaining
+   */
+  with(hooks: ExpectHooks): NonRetryingExpectation;
 
   /**
    * Asserts that the value is equal to the expected value.
@@ -154,6 +201,7 @@ export interface NonRetryingExpectation {
  * @param config the configuration for the expectation
  * @param message the optional custom message for the expectation
  * @param isNegated whether the expectation is negated
+ * @param hooks optional lifecycle hooks for the expectation
  * @returns an expectation object over the given value exposing the Expectation set of methods
  */
 export function createExpectation(
@@ -161,6 +209,7 @@ export function createExpectation(
   config: ExpectConfig,
   message?: string,
   isNegated: boolean = false,
+  hooks?: ExpectHooks,
 ): NonRetryingExpectation {
   // In order to facilitate testing, we support passing in a custom assert function.
   // As a result, we need to make sure that the assert function is always available, and
@@ -249,11 +298,22 @@ export function createExpectation(
     isNegated,
     message,
     softMode: config.softMode,
+    onFailureCallback: hooks?.onFailure,
   };
 
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
-      return createExpectation(received, config, message, !isNegated);
+      return createExpectation(
+        received,
+        config,
+        message,
+        !isNegated,
+        hooks,
+      );
+    },
+
+    with(newHooks: ExpectHooks): NonRetryingExpectation {
+      return createExpectation(received, config, message, isNegated, newHooks);
     },
 
     toBe(expected: unknown): void {
@@ -545,6 +605,7 @@ function createMatcher(
     matcherSpecific = {},
     message,
     softMode,
+    onFailureCallback,
   }: {
     usedAssert: typeof assert;
     isSoft: boolean;
@@ -552,6 +613,7 @@ function createMatcher(
     matcherSpecific?: Record<string, unknown>;
     message?: string;
     softMode?: SoftMode;
+    onFailureCallback?: FailureCallback;
   },
 ): void {
   const info = createMatcherInfo(
@@ -566,6 +628,31 @@ function createMatcher(
   // If isNegated is true, we want to invert the result
   const finalResult = isNegated ? !result : result;
 
+  // Execute callback on failure BEFORE usedAssert
+  if (!finalResult && onFailureCallback) {
+    try {
+      const errorMessage = MatcherErrorRendererRegistry.getRenderer(matcherName)
+        .render(
+          info,
+          MatcherErrorRendererRegistry.getConfig(),
+        );
+
+      onFailureCallback({
+        message: errorMessage,
+        expected: typeof expected === "string"
+          ? expected
+          : JSON.stringify(expected),
+        received: typeof received === "string"
+          ? received
+          : JSON.stringify(received),
+        matcherName,
+      });
+    } catch (callbackError) {
+      console.error("Error in expectation failure callback:", callbackError);
+    }
+  }
+
+  // Always proceed with assertion
   usedAssert(
     finalResult,
     MatcherErrorRendererRegistry.getRenderer(matcherName).render(
