@@ -298,7 +298,7 @@ const standardTestCases: TestCase[] = [
       Expected: wrong-value
       Received: unknown
       Call log: 
-        - expect.toHaveValue with timeout undefinedms
+        - expect.toHaveValue with timeout 5000ms
         - waiting for locator
 
       Filename: expect-retrying.ts
@@ -1157,7 +1157,7 @@ const negationTestCases: TestCase[] = [
       Expected: test-value
       Received: unknown
       Call log: 
-        - expect.toHaveValue with timeout undefinedms
+        - expect.toHaveValue with timeout 5000ms
         - waiting for locator
 
       Filename: expect-retrying.ts
