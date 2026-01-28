@@ -42,7 +42,6 @@ const buildOptions = {
 
   // Generate source maps for the output files
   sourcemap: true,
-  sourceRoot: process.env.NODE_ENV === "production" ? "dest/" : ".",
 
   // The sources in in the source map are relative to the outdir, which means that
   // the paths are mapped incorrectly when hosted in jslib.k6.io. For instance,
