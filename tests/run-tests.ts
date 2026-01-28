@@ -1,4 +1,4 @@
-interface Test {
+interface ExitCodeTest {
   name: string;
   script: string;
   expectedCode: number;
@@ -6,37 +6,37 @@ interface Test {
 }
 
 async function runExitCodeTests() {
-  const tests: Test[] = [
+  const tests: ExitCodeTest[] = [
     {
       name:
         "soft-default: expect.soft() with default configuration (softMode='fail')",
-      script: "tests/exit-codes/soft-default.js",
+      script: "tests/exit-codes/soft-default.ts",
       expectedCode: 110,
       env: {},
     },
     {
       name: "soft-mode-throw: expect.configure({ softMode: 'throw' }).soft()",
-      script: "tests/exit-codes/soft-mode-throw.js",
+      script: "tests/exit-codes/soft-mode-throw.ts",
       expectedCode: 0, // softMode='throw' logs error but doesn't fail test
       env: {},
     },
     {
       name: "soft-mode-fail: expect.configure({ softMode: 'fail' }).soft()",
-      script: "tests/exit-codes/soft-mode-fail.js",
+      script: "tests/exit-codes/soft-mode-fail.ts",
       expectedCode: 110,
       env: {},
     },
     {
       name:
         "env-soft-mode-throw: K6_TESTING_SOFT_MODE='throw' environment variable",
-      script: "tests/exit-codes/env-soft-mode-throw.js",
+      script: "tests/exit-codes/env-soft-mode-throw.ts",
       expectedCode: 0, // softMode='throw' logs error but doesn't fail test
       env: { K6_TESTING_SOFT_MODE: "throw" },
     },
     {
       name:
         "env-soft-mode-fail: K6_TESTING_SOFT_MODE='fail' environment variable",
-      script: "tests/exit-codes/env-soft-mode-fail.js",
+      script: "tests/exit-codes/env-soft-mode-fail.ts",
       expectedCode: 110,
       env: { K6_TESTING_SOFT_MODE: "fail" },
     },
@@ -109,14 +109,14 @@ async function runIntegrationTests() {
         "run",
         "--quiet",
         "--summary-mode=disabled",
-        "tests/expect-non-retrying.js",
+        "tests/expect-non-retrying.ts",
       ],
       [
         "k6",
         "run",
         "--quiet",
         "--summary-mode=disabled",
-        "tests/expect-retrying.js",
+        "tests/expect-retrying.ts",
       ],
       [
         "k6",

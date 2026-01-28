@@ -267,21 +267,20 @@ export function createExpectation(
     },
 
     toBeCloseTo(expected: number, precision: number = 2): void {
-      const tolerance = Math.pow(10, -precision) *
-        Math.max(Math.abs(received as number), Math.abs(expected));
-      const diff = Math.abs((received as number) - expected);
+      const expectedDiff = Math.pow(10, -precision) / 2;
+      const receivedDiff = Math.abs(expected - (received as number));
 
       createMatcher(
         "toBeCloseTo",
-        () => diff < tolerance,
+        () => receivedDiff < expectedDiff,
         expected,
         received,
         {
           ...matcherConfig,
           matcherSpecific: {
             precision,
-            difference: diff,
-            expectedDifference: tolerance,
+            difference: receivedDiff,
+            expectedDifference: expectedDiff,
           },
         },
       );
