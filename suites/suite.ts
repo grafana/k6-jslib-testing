@@ -8,9 +8,11 @@ import type {
   TestRunContext,
 } from "./types.ts";
 
+type Reporter = (result: TestCaseResult) => void;
+
 interface RunOptions {
   cwd?: string;
-  onTestCase?: (result: TestCaseResult) => void;
+  reporter?: Reporter;
 }
 
 interface TestCaseInstance {
@@ -38,7 +40,7 @@ function buildTestCaseInstances(root: TestGroup): TestCaseInstance[] {
   });
 }
 
-class TestSuite {
+export class TestSuite {
   #stack: TestGroup[] = [];
 
   #roots = new Map<string, TestGroup>();
@@ -99,7 +101,7 @@ class TestSuite {
   }
 
   async run(
-    { cwd, onTestCase: onTestDone }: RunOptions = {},
+    { cwd, reporter }: RunOptions = {},
   ): Promise<TestCaseResult[]> {
     const instances = Array.from(this.#roots.values()).flatMap((group) => {
       return buildTestCaseInstances({
@@ -115,7 +117,7 @@ class TestSuite {
     const handleTestCaseResult = (result: TestCaseResult) => {
       results.push(result);
 
-      onTestDone?.(result);
+      reporter?.(result);
     };
 
     for (const instance of instances) {
@@ -163,11 +165,3 @@ class TestSuite {
     this.#roots.clear();
   }
 }
-
-export const rootTestSuite = new TestSuite();
-
-export function createTestSuite(): TestSuite {
-  return new TestSuite();
-}
-
-export type { TestSuite };

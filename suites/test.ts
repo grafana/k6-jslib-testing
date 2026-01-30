@@ -1,4 +1,4 @@
-import { createTestSuite, type TestSuite } from "./suite.ts";
+import type { TestSuite } from "./suite.ts";
 
 // deno-lint-ignore no-explicit-any
 type DeepPartial<T> = T extends (...args: any[]) => any ? T
@@ -111,14 +111,6 @@ export interface TestFunction<Context, Options> {
    * @returns A new test function with the merged options.
    */
   configure(newOptions: DeepPartial<Options>): TestFunction<Context, Options>;
-
-  /**
-   * Creates a new test suite using the current test function configuration.
-   *
-   * @param suite An optional test suite to use as the base for the new suite. If not provided, a new suite will be created.
-   * @returns New test functions that will run tests in the given suite.
-   */
-  suite(suite?: TestSuite): TestFunctions<Context, Options>;
 }
 
 interface Disposable<Context> {
@@ -225,19 +217,9 @@ export function makeTestFunction<Context, Options>(
     }).test;
   }
 
-  function suiteFn(suite = createTestSuite()): TestFunctions<Context, Options> {
-    return makeTestFunction<Context, Options>({
-      suite,
-      options,
-      createContext,
-      mergeOptions,
-    });
-  }
-
   const test = Object.assign(testFn, {
     extend,
     configure,
-    suite: suiteFn,
   });
 
   return {

@@ -11,5 +11,4 @@ setRootDirectory(
 export { expect } from "./expect.ts";
 export { colorize } from "./colors.ts";
 
-export { createTestSuite, type TestSuite } from "./suites/suite.ts";
-export { defineSuite, describe, it, test } from "./suites/globals.ts";
+export { createTestSuite, type TestSuite } from "./suites/index.ts";

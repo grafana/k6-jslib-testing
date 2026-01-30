@@ -1,5 +1,5 @@
 // @ts-types="../../dist/index.d.ts"
-import { expect as baseExpect, test as baseTest } from "../../dist/index.js";
+import { createTestSuite, expect as baseExpect } from "../../dist/index.js";
 
 function makeExpectWithSpy() {
   const result: { passed: boolean; message: string | null } = {
@@ -23,6 +23,8 @@ function makeExpectWithSpy() {
   return [result, expectFn] as const;
 }
 
+const { suite, test: baseTest } = createTestSuite();
+
 const { describe, it, test } = baseTest.extend({
   defaultOptions: {},
 
@@ -42,4 +44,4 @@ const { describe, it, test } = baseTest.extend({
   },
 });
 
-export { describe, it, test };
+export { describe, it, suite, test };
