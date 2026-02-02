@@ -19,13 +19,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Asserts that the value is equal to the expected value.
-   *
-   * @param expected the expected value
-   */
-  toBe(expected: unknown): void;
-
-  /**
    * Asserts that the value is close to the expected value with a given precision.
    *
    * @param expected the expected value
@@ -254,16 +247,6 @@ export function createExpectation(
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
       return createExpectation(received, config, message, !isNegated);
-    },
-
-    toBe(expected: unknown): void {
-      createMatcher(
-        "toBe",
-        () => Object.is(received, expected),
-        expected,
-        received,
-        matcherConfig,
-      );
     },
 
     toBeCloseTo(expected: number, precision: number = 2): void {

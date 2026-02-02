@@ -3,7 +3,7 @@
 import { assert } from "@std/assert";
 import { createExpectation } from "./expectNonRetrying.ts";
 import type { ExpectConfig } from "./config.ts";
-import type { SoftMode } from "./assert.ts";
+import { createMatchers } from "./expect/index.ts";
 
 // Helper function to create a test config with correct defaults
 function createTestConfig(config: Partial<ExpectConfig> = {}): ExpectConfig {
@@ -16,191 +16,117 @@ function createTestConfig(config: Partial<ExpectConfig> = {}): ExpectConfig {
   };
 }
 
+function createMatchersWithSpy() {
+  let receivedMessage: string | null = null;
+
+  const spy = {
+    called: false,
+    getMessage() {
+      return receivedMessage;
+    },
+
+    reset() {
+      this.called = false;
+
+      receivedMessage = null;
+    },
+  };
+
+  return [spy, (received: unknown, customMessage?: string) =>
+    createMatchers({
+      received,
+      config: createTestConfig(),
+      negated: false,
+      message: customMessage,
+      fail(message) {
+        spy.called = true;
+        receivedMessage = message;
+      },
+    })] as const;
+}
+
 Deno.test("NonRetryingExpectation", async (t) => {
   await t.step("toBe", () => {
-    // Mock assert function
-    let assertCalled = false;
-    let assertCondition = false;
-    let assertSoft = false;
+    const [spy, createMatchers] = createMatchersWithSpy();
 
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-      assertSoft = !!soft;
-    };
+    createMatchers(true).toBe(true);
 
-    const config = createTestConfig({
-      assertFn: mockAssert,
-    });
-
-    // Test passing case
-    const expectation = createExpectation(true, config);
-    expectation.toBe(true);
-
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for matching values");
-    assert(!assertSoft, "Soft should be false by default");
+    assert(!spy.called, "fail() should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(true, config).toBe(false);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for non-matching values",
-    );
+    createMatchers(true).toBe(false);
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBe behavior with Object.is", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test NaN equality
-    createExpectation(NaN, config).toBe(NaN);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for NaN === NaN with Object.is",
-    );
+    createMatchers(NaN).toBe(NaN);
+    assert(!spy.called, "fail() should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test +0 and -0 inequality
-    createExpectation(0, config).toBe(0);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for +0 === +0");
+    createMatchers(-0).toBe(0);
+    assert(spy.called, "fail() should have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
-    createExpectation(0, config).toBe(-0);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for +0 !== -0 with Object.is",
-    );
+    createMatchers(0).toBe(-0);
+    assert(spy.called, "fail() should have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test object reference equality
     const obj = { a: 1 };
-    createExpectation(obj, config).toBe(obj);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for same object reference",
-    );
+    createMatchers(obj).toBe(obj);
+    assert(!spy.called, "fail() should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
-    createExpectation(obj, config).toBe({ a: 1 });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for different object references",
-    );
+    createMatchers(obj).toBe({ a: 1 });
+    assert(spy.called, "fail() should have been called");
   });
 
   await t.step("toBe with custom message", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-    let assertMessage = "";
-    let assertSoft = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-      assertMessage = message;
-      assertSoft = !!soft;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "pretty", // Change to pretty to see if custom message appears
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test with custom message for passing assertion
-    const expectation1 = createExpectation(1, config, "unexpected status");
-    expectation1.toBe(1);
+    createMatchers(1, "unexpected status").toBe(1);
 
     // In this test, even with a passing assertion, the custom message will be
     // present, but it won't be rendered.
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for matching values");
-    assert(!assertSoft, "Soft should be false by default");
+    assert(spy.getMessage() === null, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-    assertMessage = "";
+    spy.reset();
 
     // Test with custom message for failing assertion
-    const expectation2 = createExpectation(1, config, "unexpected status");
-    expectation2.toBe(0);
+    createMatchers(1, "unexpected status").toBe(0);
 
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for non-matching values",
-    );
     // For failing assertions, the custom message should appear as the error line
     assert(
-      assertMessage.includes("unexpected status"),
-      `Custom message should be included in the assert message. Got: ${assertMessage}`,
+      spy.getMessage()?.includes("unexpected status"),
+      `Custom message should be included in the assert message. Got: ${spy.getMessage()}`,
     );
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-    assertMessage = "";
+    spy.reset();
 
     // Test without custom message to ensure it still works
-    const expectation3 = createExpectation(1, config);
-    expectation3.toBe(1);
+    createMatchers(2).toBe(1);
 
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for matching values");
     // Message should not contain the custom message text
     assert(
-      !assertMessage.includes("unexpected status"),
+      !spy.getMessage()?.includes("unexpected status"),
       "Should not include custom message when none is provided",
     );
   });
@@ -1291,7 +1217,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     };
 
     // Test negated passing case
-    createExpectation(1, config).not.toBe(2);
+    createExpectation(1, config).not.toEqual(2);
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,
@@ -1303,7 +1229,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assertCondition = false;
 
     // Test negated failing case
-    createExpectation(1, config).not.toBe(1);
+    createExpectation(1, config).not.toEqual(1);
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
@@ -1315,7 +1241,7 @@ Deno.test("NonRetryingExpectation", async (t) => {
     assertCondition = false;
 
     // Test double negation
-    createExpectation(1, config).not.not.toBe(1);
+    createExpectation(1, config).not.not.toEqual(1);
     assert(assertCalled, "Assert should have been called");
     assert(
       assertCondition,

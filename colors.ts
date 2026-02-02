@@ -27,9 +27,11 @@ export const ANSI_COLORS = {
   darkGrey: "\x1b[90m",
 } as const;
 
+export type AnsiColor = keyof typeof ANSI_COLORS;
+
 export function colorize(
   text: string | undefined,
-  color: keyof typeof ANSI_COLORS,
+  color: AnsiColor,
 ): string {
   return `${ANSI_COLORS[color]}${text}${ANSI_COLORS.reset}`;
 }
