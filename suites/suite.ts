@@ -48,32 +48,34 @@ export class TestSuite {
   get #currentGroup() {
     const currentGroup = this.#stack[this.#stack.length - 1];
 
-    if (currentGroup === undefined) {
-      const stackTrace = parseStackTrace(new Error().stack);
-      const executionContext = captureExecutionContext(stackTrace);
-
-      if (executionContext === undefined) {
-        throw new Error(
-          "Could not determine execution context for root test suite",
-        );
-      }
-
-      let root = this.#roots.get(executionContext.filePath);
-
-      if (root === undefined) {
-        root = {
-          type: "group",
-          name: executionContext.filePath,
-          children: [],
-        };
-
-        this.#roots.set(executionContext.filePath, root);
-      }
-
-      return root;
+    if (currentGroup !== undefined) {
+      return currentGroup;
     }
 
-    return currentGroup;
+    const stackTrace = parseStackTrace(new Error().stack);
+    const executionContext = captureExecutionContext(stackTrace);
+
+    if (executionContext === undefined) {
+      throw new Error(
+        "Could not determine execution context for root test suite",
+      );
+    }
+
+    const existingRoot = this.#roots.get(executionContext.filePath);
+
+    if (existingRoot !== undefined) {
+      return existingRoot;
+    }
+
+    const newRoot: TestGroup = {
+      type: "group",
+      name: executionContext.filePath,
+      children: [],
+    };
+
+    this.#roots.set(executionContext.filePath, newRoot);
+
+    return newRoot;
   }
 
   add(test: TestCase) {
