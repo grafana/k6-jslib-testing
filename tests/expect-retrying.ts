@@ -6,7 +6,7 @@ import {
   type Locator,
   type Page,
 } from "k6/browser";
-import { expect, testItems } from "./testing.ts";
+import { expect } from "./helpers.ts";
 import { dedent, trimEmptyLines } from "./utils.ts";
 import type { ExpectFunction } from "../expect.ts";
 import execution from "k6/execution";
@@ -1216,7 +1216,7 @@ function pass(testName: string) {
 export default async function testExpectRetrying() {
   const context = await browser.newContext();
 
-  const testCases = [...testItems, ...standardTestCases, ...negationTestCases];
+  const testCases = [...standardTestCases, ...negationTestCases];
 
   const failed: TestCase[] = [];
 

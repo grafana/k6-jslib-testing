@@ -1,80 +1,103 @@
-import {
-  describe,
-  expect,
-  it,
-  makeExpectWithSpy,
-  renderElement,
-} from "../testing.ts";
+import { describe, it, renderElement } from "../helpers/browser.ts";
 import { dedent } from "../utils.ts";
 
-describe("toHaveAttribute(attribute)", () => {
-  it("should pass when attribute is present", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
+describe("attribute", () => {
+  it("should pass when attribute is present", async ({ expect, page, spy }) => {
     await renderElement(page, "div", {
       id: "my-elem",
       "data-attr": "some value",
     });
 
-    await expectWithSpy(page.locator("#my-elem"))
+    await spy.expect(page.locator("#my-elem"))
       .toHaveAttribute("data-attr");
 
-    expect(result.passed).toBe(true);
+    expect(spy.result.passed).toBe(true);
   });
 
-  it("should fail when attribute is not present", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
+  it("should fail when attribute is not present", async ({ expect, page, spy }) => {
     await renderElement(page, "div", {
       id: "my-elem",
     });
 
-    await expectWithSpy(page.locator("#my-elem"))
+    await spy.expect(page.locator("#my-elem"))
       .toHaveAttribute("data-attr");
 
-    expect(result.passed).toBe(false);
-    expect(result.message).toEqual(dedent`
+    expect(spy.result.passed).toBe(false);
+    expect(spy.result.message).toEqual(dedent`
 
          Error: expect(received).toHaveAttribute(expected)
             At: ...
 
       Expected: Attribute 'data-attr' to be present
       Received: Attribute 'data-attr' was not present
- 
-      Filename: expect-retrying.ts
+
+      Filename: toHaveAttribute.ts
           Line: ...
 
     `);
   });
+
+  describe("not", () => {
+    it("should pass when the attribute is not present", async ({ expect, page, spy }) => {
+      await renderElement(page, "div", {
+        id: "my-elem",
+      });
+
+      await spy.expect(page.locator("#my-elem")).not
+        .toHaveAttribute("data-attr");
+
+      expect(spy.result.passed).toBe(true);
+    });
+
+    it("should fail when the attribute is present", async ({ expect, page, spy }) => {
+      await renderElement(page, "div", {
+        id: "my-elem",
+        "data-attr": "some value",
+      });
+
+      await spy.expect(page.locator("#my-elem")).not
+        .toHaveAttribute("data-attr");
+
+      expect(spy.result.passed).toBe(false);
+      expect(spy.result.message).toEqual(dedent`
+
+           Error: expect(received).toHaveAttribute(expected)
+              At: ...
+
+        Expected: Attribute 'data-attr' to not be present
+        Received: Attribute 'data-attr' was present
+
+        Filename: toHaveAttribute.ts
+            Line: ...
+
+      `);
+    });
+  });
 });
 
-describe("toHaveAttribute(attribute, expectedValue)", () => {
-  it("should pass if the attribute has the given value", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
+describe("expected value", () => {
+  it("should pass if the attribute has the given value", async ({ expect, page, spy }) => {
     await renderElement(page, "div", {
       id: "my-elem",
       "data-attr": "exact value",
     });
 
-    await expectWithSpy(page.locator("#my-elem"))
+    await spy.expect(page.locator("#my-elem"))
       .toHaveAttribute("data-attr", "exact value");
 
-    expect(result.passed).toBe(true);
+    expect(spy.result.passed).toBe(true);
   });
 
-  it("should fail if the attribute is not present", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
+  it("should fail if the attribute is not present", async ({ expect, page, spy }) => {
     await renderElement(page, "div", {
       id: "my-elem",
     });
 
-    await expectWithSpy(page.locator("#my-elem"))
+    await spy.expect(page.locator("#my-elem"))
       .toHaveAttribute("data-attr", "exact value");
 
-    expect(result.passed).toBe(false);
-    expect(result.message).toEqual(dedent`
+    expect(spy.result.passed).toBe(false);
+    expect(spy.result.message).toEqual(dedent`
 
          Error: expect(received).toHaveAttribute(expected)
             At: ...
@@ -82,25 +105,23 @@ describe("toHaveAttribute(attribute, expectedValue)", () => {
       Expected: Attribute 'data-attr' to have value 'exact value'
       Received: Attribute 'data-attr' was not present
 
-      Filename: expect-retrying.ts
+      Filename: toHaveAttribute.ts
           Line: ...
 
     `);
   });
 
-  it("should fail if the attribute is not equal to the expected value", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
+  it("should fail if the attribute is not equal to the expected value", async ({ expect, page, spy }) => {
     await renderElement(page, "div", {
       id: "my-elem",
       "data-attr": "unexpected value",
     });
 
-    await expectWithSpy(page.locator("#my-elem"))
+    await spy.expect(page.locator("#my-elem"))
       .toHaveAttribute("data-attr", "expected value");
 
-    expect(result.passed).toBe(false);
-    expect(result.message).toEqual(dedent`
+    expect(spy.result.passed).toBe(false);
+    expect(spy.result.message).toEqual(dedent`
 
          Error: expect(received).toHaveAttribute(expected)
             At: ...
@@ -108,105 +129,58 @@ describe("toHaveAttribute(attribute, expectedValue)", () => {
       Expected: Attribute 'data-attr' to have value 'expected value'
       Received: Attribute 'data-attr' had value 'unexpected value'
 
-      Filename: expect-retrying.ts
-          Line: ...
-
-    `);
-  });
-});
-
-describe("not.toHaveAttribute(attribute)", () => {
-  it("should pass when the attribute is not present", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
-    await renderElement(page, "div", {
-      id: "my-elem",
-    });
-
-    await expectWithSpy(page.locator("#my-elem")).not
-      .toHaveAttribute("data-attr");
-
-    expect(result.passed).toBe(true);
-  });
-
-  it("should fail when the attribute is present", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
-    await renderElement(page, "div", {
-      id: "my-elem",
-      "data-attr": "some value",
-    });
-
-    await expectWithSpy(page.locator("#my-elem")).not
-      .toHaveAttribute("data-attr");
-
-    expect(result.passed).toBe(false);
-    expect(result.message).toEqual(dedent`
-
-         Error: expect(received).toHaveAttribute(expected)
-            At: ...
-
-      Expected: Attribute 'data-attr' to not be present
-      Received: Attribute 'data-attr' was present
-
-      Filename: expect-retrying.ts
-          Line: ...
-
-    `);
-  });
-});
-
-describe("not.toHaveAttribute(attribute, expectedValue)", () => {
-  it("should fail when the attribute has the expected value", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
-    await renderElement(page, "div", {
-      id: "my-elem",
-      "data-attr": "unexpected value",
-    });
-
-    await expectWithSpy(page.locator("#my-elem")).not
-      .toHaveAttribute("data-attr", "unexpected value");
-
-    expect(result.passed).toBe(false);
-    expect(result.message).toEqual(dedent`
-
-         Error: expect(received).toHaveAttribute(expected)
-            At: ...
- 
-      Expected: Attribute 'data-attr' to not have value 'unexpected value'
-      Received: Attribute 'data-attr' had value 'unexpected value'
-
-      Filename: expect-retrying.ts
+      Filename: toHaveAttribute.ts
           Line: ...
 
     `);
   });
 
-  it("should pass when the attribute is not equal to the expected value", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
+  describe("not", () => {
+    it("should fail when the attribute has the expected value", async ({ expect, page, spy }) => {
+      await renderElement(page, "div", {
+        id: "my-elem",
+        "data-attr": "unexpected value",
+      });
 
-    await renderElement(page, "div", {
-      id: "my-elem",
-      "data-attr": "any other value",
+      await spy.expect(page.locator("#my-elem")).not
+        .toHaveAttribute("data-attr", "unexpected value");
+
+      expect(spy.result.passed).toBe(false);
+      expect(spy.result.message).toEqual(dedent`
+
+           Error: expect(received).toHaveAttribute(expected)
+              At: ...
+  
+        Expected: Attribute 'data-attr' to not have value 'unexpected value'
+        Received: Attribute 'data-attr' had value 'unexpected value'
+
+        Filename: toHaveAttribute.ts
+            Line: ...
+
+      `);
     });
 
-    await expectWithSpy(page.locator("#my-elem")).not
-      .toHaveAttribute("data-attr", "unexpected value");
+    it("should pass when the attribute is not equal to the expected value", async ({ expect, page, spy }) => {
+      await renderElement(page, "div", {
+        id: "my-elem",
+        "data-attr": "any other value",
+      });
 
-    expect(result.passed).toBe(true);
-  });
+      await spy.expect(page.locator("#my-elem")).not
+        .toHaveAttribute("data-attr", "unexpected value");
 
-  it("should pass when the attribute is not present", async ({ page }) => {
-    const [result, expectWithSpy] = makeExpectWithSpy();
-
-    await renderElement(page, "div", {
-      id: "my-elem",
+      expect(spy.result.passed).toBe(true);
     });
 
-    await expectWithSpy(page.locator("#my-elem")).not
-      .toHaveAttribute("data-attr", "unexpected value");
+    it("should pass when the attribute is not present", async ({ expect, page, spy }) => {
+      await renderElement(page, "div", {
+        id: "my-elem",
+      });
 
-    expect(result.passed).toBe(true);
+      await spy.expect(page.locator("#my-elem")).not
+        .toHaveAttribute("data-attr", "unexpected value");
+
+      expect(spy.result.passed).toBe(true);
+    });
   });
 });

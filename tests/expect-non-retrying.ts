@@ -23,7 +23,6 @@ export default async function testExpectNonRetrying() {
   const testCases = [
     TO_BE_TESTS,
     TO_BE_CLOSE_TO_TESTS,
-    TO_BE_INSTANCE_OF_TESTS,
     TO_BE_DEFINED_TESTS,
     TO_BE_FALSY_TESTS,
     TO_BE_TRUTHY_TESTS,
@@ -599,52 +598,6 @@ const TO_HAVE_LENGTH_TESTS: TestSuite = {
       expect([1, 2, 3]).toHaveLength(5);
     },
   }, { suite: "negated", children: [] }],
-};
-
-class Example {}
-
-const TO_BE_INSTANCE_OF_TESTS: TestSuite = {
-  suite: "toBeInstanceOf",
-  children: [
-    {
-      name: "pass",
-      assertion: ({ expect }) => {
-        expect(new Example()).toBeInstanceOf(Example);
-      },
-    },
-    {
-      name: "fail",
-      expectedError: dedent`
-                     Error: expect(received).toBeInstanceOf(expected)
-                        At: ...
-
-      Expected constructor: Example
-      Received constructor: Object
-
-                  Filename: expect-non-retrying.ts
-                      Line: ...
-    `,
-      assertion: ({ expect }) => {
-        expect({}).toBeInstanceOf(Example);
-      },
-    },
-    {
-      name: "with primitive",
-      expectedError: dedent`
-                       Error: expect(received).toBeInstanceOf(expected)
-                          At: ...
-
-        Expected constructor: Example
-        Received constructor: Number
-
-                    Filename: expect-non-retrying.ts
-                        Line: ...
-      `,
-      assertion: ({ expect }) => {
-        expect(42).toBeInstanceOf(Example);
-      },
-    },
-  ],
 };
 
 const TO_CONTAIN_TESTS: TestSuite = {

@@ -16,7 +16,8 @@
     "strict": true,
     "noEmitOnError": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["@types/k6"]
   },
   "include": [
     "./*.ts",

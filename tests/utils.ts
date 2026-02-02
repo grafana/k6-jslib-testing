@@ -1,8 +1,25 @@
+function interweave(left: readonly string[], right: readonly string[]) {
+  const result: string[] = [];
+  const maxLength = Math.max(left.length, right.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    if (i < left.length) {
+      result.push(left[i]);
+    }
+
+    if (i < right.length) {
+      result.push(right[i]);
+    }
+  }
+
+  return result.join("");
+}
+
 /**
  * Naive dedent implementation.
  */
-export function dedent(strings: TemplateStringsArray) {
-  const text = strings.join("");
+export function dedent(strings: TemplateStringsArray, ...values: string[]) {
+  const text = interweave(strings.raw, values);
   const lines = text.split("\n");
 
   if (/^\s*$/.test(lines[0])) {
