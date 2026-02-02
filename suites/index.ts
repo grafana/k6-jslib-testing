@@ -1,14 +1,29 @@
 import type { ExpectConfig } from "../config.ts";
 import { TestSuite } from "./suite.ts";
-import { makeTestFunction } from "./test.ts";
-import { expect as globalExpect } from "../expect.ts";
+import { makeTestFunction, type TestFunction } from "./test.ts";
+import { expect as globalExpect, type ExpectFunction } from "../expect.ts";
 import { TestCaseError } from "./types.ts";
+
+type ExpectOptions = Partial<Omit<ExpectConfig, "assertFn">>;
 
 interface CreateTestSuiteOptions {
   /**
    * Configuration options for the `expect` function used in tests.
    */
-  expect?: Partial<Omit<ExpectConfig, "assertFn">>;
+  expect?: ExpectOptions;
+}
+
+type TestSuiteTestFunction = TestFunction<{
+  expect: ExpectFunction;
+}, {
+  expect?: ExpectOptions;
+}>;
+
+interface CreateTestSuiteResult {
+  suite: TestSuite;
+  test: TestSuiteTestFunction;
+  it: TestSuiteTestFunction;
+  describe: (name: string, callback: () => void) => void;
 }
 
 /**
@@ -20,7 +35,7 @@ interface CreateTestSuiteOptions {
  */
 export function createTestSuite(
   { expect: expectConfig }: CreateTestSuiteOptions = {},
-) {
+): CreateTestSuiteResult {
   const suite = new TestSuite();
 
   const { test, it, describe } = makeTestFunction({
