@@ -1,3 +1,5 @@
+import execution from "k6/execution";
+
 import { suite } from "./helpers/test.ts";
 
 import "./expectations/toBeInstanceOf.ts";
@@ -56,4 +58,8 @@ export default async function () {
   });
 
   console.log("\n\n" + messages.join("\n"));
+
+  execution.test.abort(
+    colorize(`✖ ${errors.length}/${results.length} tests failed.`, "red"),
+  );
 }
