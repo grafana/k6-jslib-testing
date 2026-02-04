@@ -21,13 +21,13 @@ extend("toBe", {
         received,
       });
     }
-  },
 
-  negate(received, expected) {
     return {
-      format: "expected-received",
-      expected,
-      received,
+      negate: {
+        format: "expected-received",
+        expected,
+        received,
+      },
     };
   },
 });

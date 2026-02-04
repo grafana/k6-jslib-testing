@@ -9,6 +9,10 @@ import { type AnyError, AssertionFailed } from "./errors.ts";
 import { formatErrorWithContext } from "./formatting/utils.ts";
 import { printError } from "./printers/index.ts";
 
+// Makes sure that the `Value` is async if the matcher function `Fn` is async.
+type KeepAsync<Fn extends MatcherFn, Value> = ReturnType<Fn> extends
+  Promise<infer _> ? Promise<Value> : Value;
+
 // We need to use `any` here for proper type inference of matcher functions.
 // deno-lint-ignore no-explicit-any
 type MatcherFn = (...args: any[]) => Promise<void> | void;
@@ -49,7 +53,7 @@ export interface Matchers<Received> {
 }
 
 /**
- * Utility interface for extractin only function properties from the `Matchers` interface.
+ * Utility interface for extracting only function properties from the `Matchers` interface.
  */
 type ValidMatchers<Received = unknown> = {
   [K in keyof Matchers<Received>]: Matchers<Received>[K] extends MatcherFn
@@ -76,8 +80,19 @@ type MatcherRegistry = {
   [Name in keyof ValidMatchers]?: MatcherFactory<ValidMatchers[Name]>;
 };
 
-type ReturnState<Fn extends MatcherFn, State> = ReturnType<Fn> extends
-  Promise<unknown> ? Promise<State> : State;
+export type NegationFn<Fn extends MatcherFn> = (
+  this: MatcherContext,
+  ...args: Parameters<Fn>
+) => AnyError;
+
+/**
+ * Represents the negated version of a succcesful assertion and is returned
+ * by the matcher in case of a successful match. The error provided will be
+ * used when the assertion has been called after the `not` property.
+ */
+export type NegatedResult<Fn extends MatcherFn> =
+  | { negate: NegationFn<Fn> | AnyError }
+  | NegationFn<Fn>;
 
 /**
  * Contains information about the call to `expect`, including the received value.
@@ -104,15 +119,6 @@ export interface MatcherContext {
 }
 
 /**
- * The context object that is available inside negated matcher implementations. It
- * contains additional information about the current expectation as well as
- * any state returned from the `matcher` function.
- */
-export interface NegatedMatcherContext<State> extends MatcherContext {
-  state: State;
-}
-
-/**
  * The interface that must be implemented when adding a new matcher. All matchers
  * must have a `match` function that performs the actual assertion logic, and
  * a `negate` function that provides the error details when the expectation is
@@ -120,7 +126,6 @@ export interface NegatedMatcherContext<State> extends MatcherContext {
  */
 export interface MatcherImpl<
   Matcher extends MatcherFn = MatcherFn,
-  State = unknown,
 > {
   /**
    * Performs the actual matching logic.
@@ -130,36 +135,21 @@ export interface MatcherImpl<
    * either because of a bug in the matcher implementation or because the user passed
    * invalid arguments to the matcher.
    *
-   * If the assertion passes, it can optionally return a state object that will be
-   * passed to the `negate` function in case of a negated expectation. This can be
-   * useful to avoid recomputing values in the `negate` function.
+   * If the assertion passes, it needs to provide a way to negate the result in case
+   * the assertion was called with the `not` property. This is done by returning either
+   * an object with a negate property or a function to negate the result.
    *
    * @param this The matcher context.
    * @param received The received value.
    * @param args The matcher arguments.
    *
-   * @returns An optional state object that will be passed to the negated matcher context.
+   * @returns The error of the matcher _if_ it was negated.
    */
   match(
     this: MatcherContext,
     received: unknown,
     ...args: Parameters<Matcher>
-  ): ReturnState<Matcher, State>;
-
-  /**
-   * The `negate` function is called when the expectation is negated (i.e. when using `.not`)
-   * and the expectation has passed. The function should return the error that should be
-   * printed to the user.
-   *
-   * @param this The negated matcher context, containing any state returned from the `match` function.
-   * @param received The received value.
-   * @param args the matcher arguments.
-   */
-  negate(
-    this: NegatedMatcherContext<State>,
-    received: unknown,
-    ...args: Parameters<Matcher>
-  ): AnyError;
+  ): KeepAsync<Matcher, NegatedResult<Matcher>>;
 }
 
 const registry: MatcherRegistry = {};
@@ -186,22 +176,28 @@ const registry: MatcherRegistry = {};
  * extend("toBeEven", {
  *   match(received) {
  *     // matcher logic
- *   },
  *
- *   negate() {
  *     // return negated error
- *   }
+ *     return {
+ *       negate: {
+ *         ...
+ *       }
+ *     }
+ *   },
  * })
  */
-export function extend<Name extends keyof ValidMatchers, State>(
+export function extend<Name extends keyof ValidMatchers>(
   name: Name,
-  matcher: MatcherImpl<ValidMatchers[Name], State>,
+  matcher: MatcherImpl<ValidMatchers[Name]>,
 ): void {
+  type CurrentMatcherFn = ValidMatchers[Name];
+  type CurrentNegatedResult = NegatedResult<CurrentMatcherFn>;
+
   registry[name] = (context: ExpectContext) => {
     // This is the function that will be called by the user, e.g. `expect(value).toBe(...)`.
     // It handles all the boilerplate around calling the matcher implementation, including
     // capturing the execution context, handling negation, formatting errors, etc.
-    return (...args: Parameters<ValidMatchers[Name]>) => {
+    return (...args: Parameters<CurrentMatcherFn>) => {
       const stackTrace = parseStackTrace(new Error().stack);
       const executionContext = captureExecutionContext(stackTrace);
 
@@ -211,26 +207,35 @@ export function extend<Name extends keyof ValidMatchers, State>(
         );
       }
 
+      function getNegationFunction(
+        result: CurrentNegatedResult,
+      ) {
+        if (typeof result === "function") {
+          return result;
+        }
+
+        const { negate } = result;
+
+        if (typeof negate === "function") {
+          return negate;
+        }
+
+        return () => negate;
+      }
+
       // Handle the successful case of the matcher both synchronously and asynchronously
-      function handleSuccess(matcherContext: MatcherContext, result: State) {
+      function handleSuccess(
+        matcherContext: MatcherContext,
+        result: CurrentNegatedResult,
+      ) {
         if (!context.negated) {
           return;
         }
 
-        const negatedContext: NegatedMatcherContext<State> = {
-          ...matcherContext,
-          state: result,
-        };
-
-        // If negated, the expectation actually failed so we call the negate function
-        // on the matcher to get the error details.
+        // If negated, the expectation actually failed so we used the negated result.
         return handleFail(
           matcherContext,
-          matcher.negate.call(
-            negatedContext,
-            matcherContext.received,
-            ...args,
-          ),
+          getNegationFunction(result).call(matcherContext, ...args),
         );
       }
 
@@ -289,14 +294,14 @@ export function extend<Name extends keyof ValidMatchers, State>(
           matcherContext,
           context.received,
           ...args,
-        ) as Promise<State> | State;
+        );
 
         // We can't use `await` because that would make synchronous matchers
         // asynchronous, so in order to catch errors we need to use the `then`
         // and `catch` methods.
         if (result instanceof Promise) {
           return result
-            .then((state) => handleSuccess(matcherContext, state))
+            .then((result) => handleSuccess(matcherContext, result))
             .catch((error) => handleError(matcherContext, error));
         }
 
