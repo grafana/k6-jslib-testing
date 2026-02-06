@@ -60,11 +60,6 @@ export interface NonRetryingExpectation {
   toBeNaN(): void;
 
   /**
-   * Ensures that value is null.
-   */
-  toBeNull(): void;
-
-  /**
    * Asserts that the value is equal to the expected value.
    *
    * @param expected the expected value
@@ -276,16 +271,6 @@ export function createExpectation(
         "toBeNaN",
         () => isNaN(received as number),
         "NaN",
-        JSON.stringify(received),
-        matcherConfig,
-      );
-    },
-
-    toBeNull(): void {
-      createMatcher(
-        "toBeNull",
-        () => received === null,
-        "null",
         JSON.stringify(received),
         matcherConfig,
       );

@@ -477,7 +477,29 @@ const TO_BE_NULL_TESTS: TestSuite = {
     assertion: ({ expect }) => {
       expect(1).toBeNull();
     },
-  }, { suite: "negated", children: [] }],
+  }, {
+    suite: "negated",
+    children: [{
+      name: "pass",
+      assertion: ({ expect }) => {
+        expect(1).not.toBeNull();
+      },
+    }, {
+      name: "fail",
+      expectedError: dedent`
+         Error: expect(received).not.toBeNull()
+            At: ...
+
+      Received: null
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+      assertion: ({ expect }) => {
+        expect(null).not.toBeNull();
+      },
+    }],
+  }],
 };
 
 const TO_BE_UNDEFINED_TESTS: TestSuite = {
