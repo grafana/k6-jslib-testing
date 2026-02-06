@@ -65,12 +65,6 @@ export interface NonRetryingExpectation {
   toBeNull(): void;
 
   /**
-   * Ensures that value is true in a boolean context, anything but false, 0, '', null, undefined or NaN.
-   * Use this method when you don't care about the specific value.
-   */
-  toBeTruthy(): void;
-
-  /**
    * Ensures that value is `undefined`.
    */
   toBeUndefined(): void;
@@ -297,16 +291,6 @@ export function createExpectation(
         "toBeNull",
         () => received === null,
         "null",
-        JSON.stringify(received),
-        matcherConfig,
-      );
-    },
-
-    toBeTruthy(): void {
-      createMatcher(
-        "toBeTruthy",
-        () => !!received,
-        "truthy",
         JSON.stringify(received),
         matcherConfig,
       );
