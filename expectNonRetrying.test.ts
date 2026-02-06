@@ -190,75 +190,31 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeFalsy", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation(false, config).toBeFalsy();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for falsy values");
+    createMatchers(false).toBeFalsy();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(true, config).toBeFalsy();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for truthy values");
+    createMatchers(true).toBeFalsy();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeFalsy with falsy values", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test all falsy values
     const falsyValues = [false, 0, "", null, undefined, NaN];
 
     for (const value of falsyValues) {
-      assertCalled = false;
-      assertCondition = false;
+      spy.reset();
 
-      createExpectation(value, config).toBeFalsy();
-      assert(assertCalled, `Assert should have been called for ${value}`);
-      assert(
-        assertCondition,
-        `Condition should be true for falsy value: ${value}`,
-      );
+      createMatchers(value).toBeFalsy();
+      assert(!spy.called, `Assert should not have been called for ${value}`);
     }
   });
 

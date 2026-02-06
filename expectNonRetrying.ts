@@ -19,11 +19,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Asserts that the value is truthy.
-   */
-  toBeFalsy(): void;
-
-  /**
    * Asserts that the value is greater than the expected value.
    *
    * @param expected the expected value
@@ -234,16 +229,6 @@ export function createExpectation(
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
       return createExpectation(received, config, message, !isNegated);
-    },
-
-    toBeFalsy(): void {
-      createMatcher(
-        "toBeFalsy",
-        () => !received,
-        "falsy",
-        JSON.stringify(received),
-        matcherConfig,
-      );
     },
 
     toBeGreaterThan(expected: number | bigint): void {

@@ -271,7 +271,7 @@ const TO_BE_FALSY_TESTS: TestSuite = {
     }, {
       name: "fail",
       expectedError: dedent`
-           Error: expect(received).toBeFalsy()
+           Error: expect(received).not.toBeFalsy()
               At: ...
 
         Received: false
