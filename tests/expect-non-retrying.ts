@@ -453,7 +453,29 @@ const TO_BE_NAN_TESTS: TestSuite = {
     assertion: ({ expect }) => {
       expect(10).toBeNaN();
     },
-  }, { suite: "negated", children: [] }],
+  }, {
+    suite: "negated",
+    children: [{
+      name: "pass",
+      assertion: ({ expect }) => {
+        expect(10).not.toBeNaN();
+      },
+    }, {
+      name: "fail",
+      expectedError: dedent`
+         Error: expect(received).not.toBeNaN()
+            At: ...
+
+      Received: NaN
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+      assertion: ({ expect }) => {
+        expect(NaN).not.toBeNaN();
+      },
+    }],
+  }],
 };
 
 const TO_BE_NULL_TESTS: TestSuite = {

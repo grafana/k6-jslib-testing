@@ -55,11 +55,6 @@ export interface NonRetryingExpectation {
   toBeLessThanOrEqual(expected: number | bigint): void;
 
   /**
-   * Ensures that value is NaN.
-   */
-  toBeNaN(): void;
-
-  /**
    * Asserts that the value is equal to the expected value.
    *
    * @param expected the expected value
@@ -262,16 +257,6 @@ export function createExpectation(
         () => (received as number) <= expected,
         expected,
         received,
-        matcherConfig,
-      );
-    },
-
-    toBeNaN(): void {
-      createMatcher(
-        "toBeNaN",
-        () => isNaN(received as number),
-        "NaN",
-        JSON.stringify(received),
         matcherConfig,
       );
     },

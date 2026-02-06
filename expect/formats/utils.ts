@@ -3,6 +3,10 @@ export function printJsValue(value: unknown): string {
     return "undefined";
   }
 
+  if (typeof value === "number") {
+    return String(value);
+  }
+
   if (typeof value === "symbol") {
     return String(value);
   }

@@ -429,39 +429,18 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeNaN", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation(NaN, config).toBeNaN();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for NaN");
+    createMatchers(NaN).toBeNaN();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(5, config).toBeNaN();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for non-NaN values");
+    createMatchers(5).toBeNaN();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeNull", () => {
