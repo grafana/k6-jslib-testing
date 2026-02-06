@@ -168,7 +168,7 @@ const TO_BE_CLOSE_TO_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-                          Error: expect(received).toBeCloseTo(expected, precision)
+                          Error: expect(received).not.toBeCloseTo(expected, precision)
                              At: ...
 
              Expected precision: 0.1

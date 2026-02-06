@@ -132,126 +132,46 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeCloseTo", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with default precision
-    createExpectation(1.234, config).toBeCloseTo(1.235);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for close numbers with default precision",
-    );
+    createMatchers(1.234).toBeCloseTo(1.235);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test passing case with custom precision
-    createExpectation(1.234, config).toBeCloseTo(1.2, 1);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for close numbers with custom precision",
-    );
+    createMatchers(1.234).toBeCloseTo(1.2, 1);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(1.23, config).toBeCloseTo(1.3);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for numbers that are not close",
-    );
+    createMatchers(1.23).toBeCloseTo(1.3);
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeCloseTo edge cases", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-    let debugInfo = {};
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-
-      // Extract debug info from the message
-      if (typeof message === "string" && message.includes("matcherSpecific")) {
-        try {
-          const match = message.match(/matcherSpecific: ({[^}]+})/);
-          if (match && match[1]) {
-            debugInfo = JSON.parse(match[1].replace(/'/g, '"'));
-          }
-        } catch (e) {
-          // Ignore parsing errors
-        }
-      }
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test with numbers that should be close enough
-    createExpectation(1.2345, config).toBeCloseTo(1.234, 3);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for numbers close with specified precision",
-    );
-
+    createMatchers(1.2345).toBeCloseTo(1.234, 3);
+    assert(!spy.called, "Assert should not have been called");
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-    debugInfo = {};
+    spy.reset();
 
     // Test with custom precision
-    createExpectation(1.1, config).toBeCloseTo(1.0, 0);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for numbers close with custom precision",
-    );
+    createMatchers(1.1).toBeCloseTo(1.0, 0);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-    debugInfo = {};
+    spy.reset();
 
     // Test with zero precision
-    createExpectation(1.5, config).toBeCloseTo(2, 0);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false when rounding to integers",
-    );
+    createMatchers(1.5).toBeCloseTo(2, 0);
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeDefined", () => {

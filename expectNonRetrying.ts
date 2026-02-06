@@ -19,14 +19,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Asserts that the value is close to the expected value with a given precision.
-   *
-   * @param expected the expected value
-   * @param precision the number of decimal places to consider
-   */
-  toBeCloseTo(expected: number, precision?: number): void;
-
-  /**
    * Asserts that the value is not `undefined`.
    */
   toBeDefined(): void;
@@ -247,26 +239,6 @@ export function createExpectation(
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
       return createExpectation(received, config, message, !isNegated);
-    },
-
-    toBeCloseTo(expected: number, precision: number = 2): void {
-      const expectedDiff = Math.pow(10, -precision) / 2;
-      const receivedDiff = Math.abs(expected - (received as number));
-
-      createMatcher(
-        "toBeCloseTo",
-        () => receivedDiff < expectedDiff,
-        expected,
-        received,
-        {
-          ...matcherConfig,
-          matcherSpecific: {
-            precision,
-            difference: receivedDiff,
-            expectedDifference: expectedDiff,
-          },
-        },
-      );
     },
 
     toBeDefined(): void {
