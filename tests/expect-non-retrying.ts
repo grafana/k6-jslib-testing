@@ -511,7 +511,7 @@ const TO_BE_UNDEFINED_TESTS: TestSuite = {
     }, {
       name: "fail",
       expectedError: dedent`
-           Error: expect(received).toBeUndefined()
+           Error: expect(received).not.toBeUndefined()
               At: ...
 
         Received: undefined

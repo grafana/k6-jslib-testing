@@ -65,11 +65,6 @@ export interface NonRetryingExpectation {
   toBeNull(): void;
 
   /**
-   * Ensures that value is `undefined`.
-   */
-  toBeUndefined(): void;
-
-  /**
    * Asserts that the value is equal to the expected value.
    *
    * @param expected the expected value
@@ -291,16 +286,6 @@ export function createExpectation(
         "toBeNull",
         () => received === null,
         "null",
-        JSON.stringify(received),
-        matcherConfig,
-      );
-    },
-
-    toBeUndefined(): void {
-      createMatcher(
-        "toBeUndefined",
-        () => received === undefined,
-        "undefined",
         JSON.stringify(received),
         matcherConfig,
       );
