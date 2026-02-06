@@ -19,11 +19,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Asserts that the value is not `undefined`.
-   */
-  toBeDefined(): void;
-
-  /**
    * Asserts that the value is truthy.
    */
   toBeFalsy(): void;
@@ -239,16 +234,6 @@ export function createExpectation(
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
       return createExpectation(received, config, message, !isNegated);
-    },
-
-    toBeDefined(): void {
-      createMatcher(
-        "toBeDefined",
-        () => received !== undefined,
-        "defined",
-        JSON.stringify(received),
-        matcherConfig,
-      );
     },
 
     toBeFalsy(): void {

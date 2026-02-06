@@ -223,7 +223,7 @@ const TO_BE_DEFINED_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-               Error: expect(received).toBeDefined()
+               Error: expect(received).not.toBeDefined()
                   At: ...
 
             Received: 10

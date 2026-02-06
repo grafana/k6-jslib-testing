@@ -1,2 +1,3 @@
 import "./toBe.ts";
 import "./toBeCloseTo.ts";
+import "./toBeDefined.ts";

@@ -175,39 +175,18 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeDefined", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation("defined value", config).toBeDefined();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for defined values");
+    createMatchers("defined value").toBeDefined();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(undefined, config).toBeDefined();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for undefined");
+    createMatchers(undefined).toBeDefined();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeFalsy", () => {
