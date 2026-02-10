@@ -1,4 +1,3 @@
-// @ts-types="../dist/index.d.ts"
 import "./expectations/toHaveAttribute.ts";
 
 import {
@@ -578,6 +577,9 @@ const standardTestCases: TestCase[] = [
 
           Expected: Wrong Title
           Received: K6 Browser Test Page
+          Call log: 
+            - expect.toHaveTitle
+            - waiting for page
 
           Filename: expect-retrying.ts
               Line: ...
@@ -603,6 +605,9 @@ const standardTestCases: TestCase[] = [
 
           Expected: /Wrong Title/i
           Received: K6 Browser Test Page
+          Call log: 
+            - expect.toHaveTitle
+            - waiting for page
 
           Filename: expect-retrying.ts
               Line: ...
@@ -1091,12 +1096,15 @@ const negationTestCases: TestCase[] = [
   },
   {
     name: "not.toHaveTitle (fail)",
-    expectedError: dedent`
+    expectedError: dedent` 
          Error: expect(received).not.toHaveTitle(expected)
             At: ...
 
       Expected: K6 Browser Test Page
       Received: K6 Browser Test Page
+      Call log: 
+        - expect.toHaveTitle
+        - waiting for page
 
       Filename: expect-retrying.ts
           Line: ...
