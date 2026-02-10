@@ -14,7 +14,7 @@ import {
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 import { parseStackTrace } from "./stacktrace.ts";
-import type { Locator, Page } from "k6/browser";
+import type { Locator } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
 import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
 import type { ExpectationFailed } from "./expectations/result.ts";
@@ -31,16 +31,6 @@ interface ToHaveTextOptions extends RetryConfig {
    */
   useInnerText?: boolean;
 }
-
-/**
- * RetryingExpectation is a union type that supports both locator-based and page-based expectations.
- *
- * Retrying expectations are used to assert that a condition is met within a given timeout.
- * The provided assertion function is called repeatedly until the condition is met or the timeout is reached.
- */
-export type RetryingExpectation<
-  T extends Locator | Page,
-> = T extends Locator ? LocatorExpectation : PageExpectation;
 
 /**
  * LocatorExpectation defines methods for asserting on Locator objects (DOM elements).
@@ -139,7 +129,6 @@ export interface PageExpectation {
    * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
    */
   not: PageExpectation;
-
 }
 
 /**
@@ -601,59 +590,6 @@ export function createLocatorExpectation(
   };
 
   return expectation;
-}
-
-/**
- * createPageExpectation is a factory function that creates an expectation object for Page values.
- *
- * @param page the Page to create an expectation for
- * @param config the configuration for the expectation
- * @param message the optional custom message for the expectation
- * @param isNegated whether the expectation is negated
- * @returns an expectation object over the page exposing page-specific methods
- */
-export function createPageExpectation(
-  page: Page,
-  config: ExpectConfig,
-  message?: string,
-  isNegated: boolean = false,
-): PageExpectation {
-  // Configure the renderer with the colorize option.
-  MatcherErrorRendererRegistry.configure({
-    colorize: config.colorize,
-    display: config.display,
-  });
-
-  const expectation: PageExpectation = {
-    get not(): PageExpectation {
-      return createPageExpectation(page, config, message, !isNegated);
-    },
-  };
-
-  return expectation;
-}
-
-/**
- * createExpectation is a factory function that creates an expectation object for a given value.
- *
- * This function routes to the appropriate specialized factory based on the input type.
- *
- * @param target the value to create an expectation for (Locator or Page)
- * @param config the configuration for the expectation
- * @param message the optional custom message for the expectation
- * @param isNegated whether the expectation is negated
- * @returns an expectation object exposing the appropriate methods
- */
-export function createExpectation<T extends Locator | Page>(
-  target: T,
-  config: ExpectConfig,
-  message?: string,
-  isNegated: boolean = false,
-): RetryingExpectation<T> {
-  return {
-    ...createPageExpectation(target as Page, config, message, isNegated),
-    ...createLocatorExpectation(target as Locator, config, message, isNegated),
-  } as unknown as RetryingExpectation<T>;
 }
 
 // Helper function to create common matcher info
