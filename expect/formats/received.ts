@@ -1,4 +1,4 @@
-import { green, red, registerFormatter } from "../formatting/index.ts";
+import { red, registerFormatter } from "../formatting/index.ts";
 import { printJsValue } from "./utils.ts";
 
 declare module "../errors.ts" {
