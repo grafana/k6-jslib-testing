@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { colorize } from "../colors.ts";
 import type { ExpectConfig } from "../config.ts";
 import {
@@ -14,7 +15,6 @@ type KeepAsync<Fn extends MatcherFn, Value> = ReturnType<Fn> extends
   Promise<infer _> ? Promise<Value> : Value;
 
 // We need to use `any` here for proper type inference of matcher functions.
-// deno-lint-ignore no-explicit-any
 type MatcherFn = (...args: any[]) => Promise<void> | void;
 
 /**
@@ -55,9 +55,11 @@ export interface Matchers<Received> {
 /**
  * Utility interface for extracting only function properties from the `Matchers` interface.
  */
-type ValidMatchers<Received = unknown> = {
-  [K in keyof Matchers<Received>]: Matchers<Received>[K] extends MatcherFn
-    ? Matchers<Received>[K]
+type ValidMatchers<Received = any> = {
+  [
+    K in keyof Matchers<Received> as Matchers<Received>[K] extends never ? never
+      : K
+  ]: Matchers<Received>[K] extends MatcherFn ? Matchers<Received>[K]
     : never;
 };
 

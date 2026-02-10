@@ -354,7 +354,33 @@ const TO_BE_GREATER_THAN_TESTS: TestSuite = {
     assertion: ({ expect }) => {
       expect(1).toBeGreaterThan(2);
     },
-  }, { suite: "negated", children: [] }],
+  }, {
+    suite: "negated",
+    children: [
+      {
+        name: "pass",
+        assertion: ({ expect }) => {
+          expect(1).not.toBeGreaterThan(2);
+        },
+      },
+      {
+        name: "fail",
+        expectedError: dedent`
+             Error: expect(received).not.toBeGreaterThan(expected)
+                At: ...
+
+          Expected: > 1
+          Received: 2
+
+          Filename: expect-non-retrying.ts
+              Line: ...
+        `,
+        assertion: ({ expect }) => {
+          expect(2).not.toBeGreaterThan(1);
+        },
+      },
+    ],
+  }],
 };
 
 const TO_BE_GREATER_THAN_OR_EQUAL_TESTS: TestSuite = {

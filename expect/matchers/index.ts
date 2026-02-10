@@ -1,5 +1,6 @@
 import "./toBe.ts";
 import "./toBeCloseTo.ts";
+import "./toBeGreaterThan.ts";
 import "./toBeDefined.ts";
 import "./toBeFalsy.ts";
 import "./toBeNaN.ts";

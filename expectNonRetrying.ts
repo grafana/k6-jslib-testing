@@ -19,13 +19,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Asserts that the value is greater than the expected value.
-   *
-   * @param expected the expected value
-   */
-  toBeGreaterThan(expected: number): void;
-
-  /**
    * Asserts that the value is greater than or equal to the expected value.
    *
    * @param expected
@@ -147,10 +140,6 @@ export function createExpectation(
     new ToBeFalsyErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register(
-    "toBeGreaterThan",
-    new ToBeGreaterThanErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
     "toBeGreaterThanOrEqual",
     new ToBeGreaterThanOrEqualErrorRenderer(),
   );
@@ -208,16 +197,6 @@ export function createExpectation(
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
       return createExpectation(received, config, message, !isNegated);
-    },
-
-    toBeGreaterThan(expected: number | bigint): void {
-      createMatcher(
-        "toBeGreaterThan",
-        () => (received as number) > expected,
-        expected,
-        received,
-        matcherConfig,
-      );
     },
 
     toBeGreaterThanOrEqual(expected: number | bigint): void {
@@ -533,34 +512,6 @@ export class ToBeDefinedErrorRenderer extends ReceivedOnlyMatcherRenderer {
 export class ToBeFalsyErrorRenderer extends ReceivedOnlyMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeFalsy";
-  }
-}
-
-/**
- * A matcher error renderer for the `toBeGreaterThan` matcher.
- */
-export class ToBeGreaterThanErrorRenderer
-  extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toBeGreaterThan";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected",
-        value: "> " + maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
   }
 }
 
