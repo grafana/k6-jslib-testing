@@ -1,3 +1,4 @@
+// @ts-types="../dist/index.d.ts"
 import { colorize, expect as globalExpect } from "../dist/index.js";
 
 export const expect = globalExpect.configure({

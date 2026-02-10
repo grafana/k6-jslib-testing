@@ -19,24 +19,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Asserts that the value is close to the expected value with a given precision.
-   *
-   * @param expected the expected value
-   * @param precision the number of decimal places to consider
-   */
-  toBeCloseTo(expected: number, precision?: number): void;
-
-  /**
-   * Asserts that the value is not `undefined`.
-   */
-  toBeDefined(): void;
-
-  /**
-   * Asserts that the value is truthy.
-   */
-  toBeFalsy(): void;
-
-  /**
    * Asserts that the value is greater than the expected value.
    *
    * @param expected the expected value
@@ -71,27 +53,6 @@ export interface NonRetryingExpectation {
    * @param expected The value to compare to.
    */
   toBeLessThanOrEqual(expected: number | bigint): void;
-
-  /**
-   * Ensures that value is NaN.
-   */
-  toBeNaN(): void;
-
-  /**
-   * Ensures that value is null.
-   */
-  toBeNull(): void;
-
-  /**
-   * Ensures that value is true in a boolean context, anything but false, 0, '', null, undefined or NaN.
-   * Use this method when you don't care about the specific value.
-   */
-  toBeTruthy(): void;
-
-  /**
-   * Ensures that value is `undefined`.
-   */
-  toBeUndefined(): void;
 
   /**
    * Asserts that the value is equal to the expected value.
@@ -249,46 +210,6 @@ export function createExpectation(
       return createExpectation(received, config, message, !isNegated);
     },
 
-    toBeCloseTo(expected: number, precision: number = 2): void {
-      const expectedDiff = Math.pow(10, -precision) / 2;
-      const receivedDiff = Math.abs(expected - (received as number));
-
-      createMatcher(
-        "toBeCloseTo",
-        () => receivedDiff < expectedDiff,
-        expected,
-        received,
-        {
-          ...matcherConfig,
-          matcherSpecific: {
-            precision,
-            difference: receivedDiff,
-            expectedDifference: expectedDiff,
-          },
-        },
-      );
-    },
-
-    toBeDefined(): void {
-      createMatcher(
-        "toBeDefined",
-        () => received !== undefined,
-        "defined",
-        JSON.stringify(received),
-        matcherConfig,
-      );
-    },
-
-    toBeFalsy(): void {
-      createMatcher(
-        "toBeFalsy",
-        () => !received,
-        "falsy",
-        JSON.stringify(received),
-        matcherConfig,
-      );
-    },
-
     toBeGreaterThan(expected: number | bigint): void {
       createMatcher(
         "toBeGreaterThan",
@@ -336,46 +257,6 @@ export function createExpectation(
         () => (received as number) <= expected,
         expected,
         received,
-        matcherConfig,
-      );
-    },
-
-    toBeNaN(): void {
-      createMatcher(
-        "toBeNaN",
-        () => isNaN(received as number),
-        "NaN",
-        JSON.stringify(received),
-        matcherConfig,
-      );
-    },
-
-    toBeNull(): void {
-      createMatcher(
-        "toBeNull",
-        () => received === null,
-        "null",
-        JSON.stringify(received),
-        matcherConfig,
-      );
-    },
-
-    toBeTruthy(): void {
-      createMatcher(
-        "toBeTruthy",
-        () => !!received,
-        "truthy",
-        JSON.stringify(received),
-        matcherConfig,
-      );
-    },
-
-    toBeUndefined(): void {
-      createMatcher(
-        "toBeUndefined",
-        () => received === undefined,
-        "undefined",
-        JSON.stringify(received),
         matcherConfig,
       );
     },

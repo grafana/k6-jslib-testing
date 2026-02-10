@@ -168,7 +168,7 @@ const TO_BE_CLOSE_TO_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-                          Error: expect(received).toBeCloseTo(expected, precision)
+                          Error: expect(received).not.toBeCloseTo(expected, precision)
                              At: ...
 
              Expected precision: 0.1
@@ -223,7 +223,7 @@ const TO_BE_DEFINED_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-               Error: expect(received).toBeDefined()
+               Error: expect(received).not.toBeDefined()
                   At: ...
 
             Received: 10
@@ -271,7 +271,7 @@ const TO_BE_FALSY_TESTS: TestSuite = {
     }, {
       name: "fail",
       expectedError: dedent`
-           Error: expect(received).toBeFalsy()
+           Error: expect(received).not.toBeFalsy()
               At: ...
 
         Received: false
@@ -317,7 +317,7 @@ const TO_BE_TRUTHY_TESTS: TestSuite = {
     }, {
       name: "fail",
       expectedError: dedent`
-           Error: expect(received).toBeTruthy()
+           Error: expect(received).not.toBeTruthy()
               At: ...
 
         Received: true
@@ -453,7 +453,29 @@ const TO_BE_NAN_TESTS: TestSuite = {
     assertion: ({ expect }) => {
       expect(10).toBeNaN();
     },
-  }, { suite: "negated", children: [] }],
+  }, {
+    suite: "negated",
+    children: [{
+      name: "pass",
+      assertion: ({ expect }) => {
+        expect(10).not.toBeNaN();
+      },
+    }, {
+      name: "fail",
+      expectedError: dedent`
+         Error: expect(received).not.toBeNaN()
+            At: ...
+
+      Received: NaN
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+      assertion: ({ expect }) => {
+        expect(NaN).not.toBeNaN();
+      },
+    }],
+  }],
 };
 
 const TO_BE_NULL_TESTS: TestSuite = {
@@ -477,7 +499,29 @@ const TO_BE_NULL_TESTS: TestSuite = {
     assertion: ({ expect }) => {
       expect(1).toBeNull();
     },
-  }, { suite: "negated", children: [] }],
+  }, {
+    suite: "negated",
+    children: [{
+      name: "pass",
+      assertion: ({ expect }) => {
+        expect(1).not.toBeNull();
+      },
+    }, {
+      name: "fail",
+      expectedError: dedent`
+         Error: expect(received).not.toBeNull()
+            At: ...
+
+      Received: null
+
+      Filename: expect-non-retrying.ts
+          Line: ...
+    `,
+      assertion: ({ expect }) => {
+        expect(null).not.toBeNull();
+      },
+    }],
+  }],
 };
 
 const TO_BE_UNDEFINED_TESTS: TestSuite = {
@@ -511,7 +555,7 @@ const TO_BE_UNDEFINED_TESTS: TestSuite = {
     }, {
       name: "fail",
       expectedError: dedent`
-           Error: expect(received).toBeUndefined()
+           Error: expect(received).not.toBeUndefined()
               At: ...
 
         Received: undefined

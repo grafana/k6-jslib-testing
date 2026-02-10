@@ -53,6 +53,7 @@ function parseArgs(
   }
 
   return source.slice(startIndex, endIndex - 1).split(",")
+    .map((arg) => arg.split("=")[0] ?? arg)
     .map((arg) => arg.trim())
     .slice(1); // Skip `received` argument
 }

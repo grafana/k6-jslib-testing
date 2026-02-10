@@ -193,7 +193,7 @@ export function extend<Name extends keyof ValidMatchers>(
   type CurrentMatcherFn = ValidMatchers[Name];
   type CurrentNegatedResult = NegatedResult<CurrentMatcherFn>;
 
-  registry[name] = (context: ExpectContext) => {
+  registry[name] = (context: ExpectContext): MatcherFn => {
     // This is the function that will be called by the user, e.g. `expect(value).toBe(...)`.
     // It handles all the boilerplate around calling the matcher implementation, including
     // capturing the execution context, handling negation, formatting errors, etc.

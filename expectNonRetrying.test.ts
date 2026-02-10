@@ -132,234 +132,89 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeCloseTo", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with default precision
-    createExpectation(1.234, config).toBeCloseTo(1.235);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for close numbers with default precision",
-    );
+    createMatchers(1.234).toBeCloseTo(1.235);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test passing case with custom precision
-    createExpectation(1.234, config).toBeCloseTo(1.2, 1);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for close numbers with custom precision",
-    );
+    createMatchers(1.234).toBeCloseTo(1.2, 1);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(1.23, config).toBeCloseTo(1.3);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for numbers that are not close",
-    );
+    createMatchers(1.23).toBeCloseTo(1.3);
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeCloseTo edge cases", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-    let debugInfo = {};
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-
-      // Extract debug info from the message
-      if (typeof message === "string" && message.includes("matcherSpecific")) {
-        try {
-          const match = message.match(/matcherSpecific: ({[^}]+})/);
-          if (match && match[1]) {
-            debugInfo = JSON.parse(match[1].replace(/'/g, '"'));
-          }
-        } catch (e) {
-          // Ignore parsing errors
-        }
-      }
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test with numbers that should be close enough
-    createExpectation(1.2345, config).toBeCloseTo(1.234, 3);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for numbers close with specified precision",
-    );
-
+    createMatchers(1.2345).toBeCloseTo(1.234, 3);
+    assert(!spy.called, "Assert should not have been called");
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-    debugInfo = {};
+    spy.reset();
 
     // Test with custom precision
-    createExpectation(1.1, config).toBeCloseTo(1.0, 0);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for numbers close with custom precision",
-    );
+    createMatchers(1.1).toBeCloseTo(1.0, 0);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-    debugInfo = {};
+    spy.reset();
 
     // Test with zero precision
-    createExpectation(1.5, config).toBeCloseTo(2, 0);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false when rounding to integers",
-    );
+    createMatchers(1.5).toBeCloseTo(2, 0);
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeDefined", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation("defined value", config).toBeDefined();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for defined values");
+    createMatchers("defined value").toBeDefined();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(undefined, config).toBeDefined();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for undefined");
+    createMatchers(undefined).toBeDefined();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeFalsy", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation(false, config).toBeFalsy();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for falsy values");
+    createMatchers(false).toBeFalsy();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(true, config).toBeFalsy();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for truthy values");
+    createMatchers(true).toBeFalsy();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeFalsy with falsy values", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test all falsy values
     const falsyValues = [false, 0, "", null, undefined, NaN];
 
     for (const value of falsyValues) {
-      assertCalled = false;
-      assertCondition = false;
+      spy.reset();
 
-      createExpectation(value, config).toBeFalsy();
-      assert(assertCalled, `Assert should have been called for ${value}`);
-      assert(
-        assertCondition,
-        `Condition should be true for falsy value: ${value}`,
-      );
+      createMatchers(value).toBeFalsy();
+      assert(!spy.called, `Assert should not have been called for ${value}`);
     }
   });
 
@@ -574,184 +429,77 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeNaN", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation(NaN, config).toBeNaN();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for NaN");
+    createMatchers(NaN).toBeNaN();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(5, config).toBeNaN();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for non-NaN values");
+    createMatchers(5).toBeNaN();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeNull", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation(null, config).toBeNull();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for null");
+    createMatchers(null).toBeNull();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(5, config).toBeNull();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for non-null values");
+    createMatchers(5).toBeNull();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeTruthy", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation(true, config).toBeTruthy();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for truthy values");
+    createMatchers(true).toBeTruthy();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(false, config).toBeTruthy();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for falsy values");
+    createMatchers(false).toBeTruthy();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toBeTruthy with truthy values", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test various truthy values
     const truthyValues = [true, 1, "hello", {}, [], () => {}, new Date()];
 
     for (const value of truthyValues) {
-      assertCalled = false;
-      assertCondition = false;
+      spy.reset();
 
-      createExpectation(value, config).toBeTruthy();
-      assert(assertCalled, "Assert should have been called");
-      assert(
-        assertCondition,
-        `Condition should be true for truthy value: ${String(value)}`,
-      );
+      createMatchers(value).toBeTruthy();
+      assert(!spy.called, "Assert should not have been called");
     }
   });
 
   await t.step("toBeUndefined", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation(undefined, config).toBeUndefined();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for undefined");
+    createMatchers(undefined).toBeUndefined();
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(5, config).toBeUndefined();
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for defined values");
+    createMatchers(5).toBeUndefined();
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toEqual", () => {
