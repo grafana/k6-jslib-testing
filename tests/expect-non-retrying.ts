@@ -405,7 +405,33 @@ const TO_BE_GREATER_THAN_OR_EQUAL_TESTS: TestSuite = {
     assertion: ({ expect }) => {
       expect(1).toBeGreaterThanOrEqual(2);
     },
-  }, { suite: "negated", children: [] }],
+  }, {
+    suite: "negated",
+    children: [
+      {
+        name: "pass",
+        assertion: ({ expect }) => {
+          expect(1).not.toBeGreaterThanOrEqual(2);
+        },
+      },
+      {
+        name: "fail",
+        expectedError: dedent`
+             Error: expect(received).not.toBeGreaterThanOrEqual(expected)
+                At: ...
+
+          Expected: >= 1
+          Received: 2
+
+          Filename: expect-non-retrying.ts
+              Line: ...
+        `,
+        assertion: ({ expect }) => {
+          expect(2).not.toBeGreaterThanOrEqual(1);
+        },
+      },
+    ],
+  }],
 };
 
 const TO_BE_LESS_THAN_TESTS: TestSuite = {
@@ -430,7 +456,33 @@ const TO_BE_LESS_THAN_TESTS: TestSuite = {
     assertion: ({ expect }) => {
       expect(2).toBeLessThan(1);
     },
-  }, { suite: "negated", children: [] }],
+  }, {
+    suite: "negated",
+    children: [
+      {
+        name: "pass",
+        assertion: ({ expect }) => {
+          expect(2).not.toBeLessThan(1);
+        },
+      },
+      {
+        name: "fail",
+        expectedError: dedent`
+             Error: expect(received).not.toBeLessThan(expected)
+                At: ...
+
+          Expected: < 2
+          Received: 1
+
+          Filename: expect-non-retrying.ts
+              Line: ...
+        `,
+        assertion: ({ expect }) => {
+          expect(1).not.toBeLessThan(2);
+        },
+      },
+    ],
+  }],
 };
 
 const TO_BE_LESS_THAN_OR_EQUAL_TESTS: TestSuite = {
@@ -455,7 +507,33 @@ const TO_BE_LESS_THAN_OR_EQUAL_TESTS: TestSuite = {
     assertion: ({ expect }) => {
       expect(2).toBeLessThanOrEqual(1);
     },
-  }, { suite: "negated", children: [] }],
+  }, {
+    suite: "negated",
+    children: [
+      {
+        name: "pass",
+        assertion: ({ expect }) => {
+          expect(3).not.toBeLessThanOrEqual(2);
+        },
+      },
+      {
+        name: "fail",
+        expectedError: dedent`
+             Error: expect(received).not.toBeLessThanOrEqual(expected)
+                At: ...
+
+          Expected: <= 2
+          Received: 1
+
+          Filename: expect-non-retrying.ts
+              Line: ...
+        `,
+        assertion: ({ expect }) => {
+          expect(1).not.toBeLessThanOrEqual(2);
+        },
+      },
+    ],
+  }],
 };
 
 const TO_BE_NAN_TESTS: TestSuite = {
