@@ -299,42 +299,17 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeLessThan", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation(3, config).toBeLessThan(5);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true when value < expected");
+    createMatchers(3).toBeLessThan(5);
+    assert(!spy.called, "fail() should not have been called");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(5, config).toBeLessThan(3);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false when value >= expected",
-    );
+    createMatchers(5).toBeLessThan(3);
+    assert(spy.called, "fail() should have been called");
   });
 
   await t.step("toBeLessThanOrEqual", () => {

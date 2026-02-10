@@ -27,13 +27,6 @@ export interface NonRetryingExpectation {
   toBeInstanceOf(expected: Function): void;
 
   /**
-   * Asserts that the value is less than the expected value.
-   *
-   * @param expected the expected value
-   */
-  toBeLessThan(expected: number): void;
-
-  /**
    * Ensures that value <= expected for number or big integer values.
    *
    * @param expected The value to compare to.
@@ -137,10 +130,6 @@ export function createExpectation(
     new ToBeInstanceOfErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register(
-    "toBeLessThan",
-    new ToBeLessThanErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
     "toBeLessThanOrEqual",
     new ToBeLessThanOrEqualErrorRenderer(),
   );
@@ -195,16 +184,6 @@ export function createExpectation(
         () => received instanceof expected,
         expected.name,
         (received as { constructor: { name: string } }).constructor.name,
-        matcherConfig,
-      );
-    },
-
-    toBeLessThan(expected: number | bigint): void {
-      createMatcher(
-        "toBeLessThan",
-        () => (received as number) < expected,
-        expected,
-        received,
         matcherConfig,
       );
     },
@@ -515,33 +494,6 @@ export class ToBeInstanceOfErrorRenderer
       },
       {
         label: "Received constructor",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
-  }
-}
-
-/**
- * A matcher error renderer for the `toBeLessThan` matcher.
- */
-export class ToBeLessThanErrorRenderer extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toBeLessThan";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected",
-        value: "< " + maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received",
         value: maybeColorize(info.received, "red"),
         group: 3,
       },
