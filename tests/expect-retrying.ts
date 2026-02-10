@@ -1,3 +1,4 @@
+// @ts-types="../dist/index.d.ts"
 import "./expectations/toHaveAttribute.ts";
 
 import {
@@ -6,9 +7,8 @@ import {
   type Locator,
   type Page,
 } from "k6/browser";
-import { expect } from "./helpers.ts";
+import { expect, type ExpectFunction } from "./helpers.ts";
 import { dedent, trimEmptyLines } from "./utils.ts";
-import type { ExpectFunction } from "../expect.ts";
 import execution from "k6/execution";
 import { colorize } from "../colors.ts";
 
@@ -573,14 +573,11 @@ const standardTestCases: TestCase[] = [
         name: "string (fail)",
 
         expectedError: dedent`
-             Error: expect(received).pageExpectedReceived(expected)
+             Error: expect(received).toHaveTitle(expected)
                 At: ...
 
           Expected: Wrong Title
-          Received: unknown
-          Call log: 
-            - expect.toHaveTitle
-            - waiting for page
+          Received: K6 Browser Test Page
 
           Filename: expect-retrying.ts
               Line: ...
@@ -601,14 +598,11 @@ const standardTestCases: TestCase[] = [
         name: "regexp (fail)",
 
         expectedError: dedent`
-             Error: expect(received).pageExpectedReceived(expected)
+             Error: expect(received).toHaveTitle(expected)
                 At: ...
 
           Expected: /Wrong Title/i
-          Received: unknown
-          Call log: 
-            - expect.toHaveTitle
-            - waiting for page
+          Received: K6 Browser Test Page
 
           Filename: expect-retrying.ts
               Line: ...
@@ -1098,14 +1092,11 @@ const negationTestCases: TestCase[] = [
   {
     name: "not.toHaveTitle (fail)",
     expectedError: dedent`
-         Error: expect(received).pageExpectedReceived(expected)
+         Error: expect(received).not.toHaveTitle(expected)
             At: ...
 
       Expected: K6 Browser Test Page
-      Received: unknown
-      Call log: 
-        - expect.toHaveTitle
-        - waiting for page
+      Received: K6 Browser Test Page
 
       Filename: expect-retrying.ts
           Line: ...

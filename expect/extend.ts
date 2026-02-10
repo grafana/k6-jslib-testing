@@ -77,7 +77,9 @@ export type MatchersFor<Received> = {
 type MatcherFactory<Fn extends MatcherFn> = (context: ExpectContext) => Fn;
 
 type MatcherRegistry = {
-  [Name in keyof ValidMatchers]?: MatcherFactory<ValidMatchers[Name]>;
+  [Name in keyof ValidMatchers]?: MatcherFactory<
+    ValidMatchers[Name] extends never ? MatcherFn : ValidMatchers[Name]
+  >;
 };
 
 export type NegationFn<Fn extends MatcherFn> = (
@@ -90,7 +92,7 @@ export type NegationFn<Fn extends MatcherFn> = (
  * by the matcher in case of a successful match. The error provided will be
  * used when the assertion has been called after the `not` property.
  */
-export type NegatedResult<Fn extends MatcherFn> =
+export type NegatedResult<Fn extends MatcherFn = MatcherFn> =
   | { negate: NegationFn<Fn> | AnyError }
   | NegationFn<Fn>;
 
