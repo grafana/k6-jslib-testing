@@ -121,17 +121,6 @@ export interface LocatorExpectation {
 }
 
 /**
- * PageExpectation defines methods for asserting on Page objects (browser pages).
- * These assertions retry automatically until they pass or timeout.
- */
-export interface PageExpectation {
-  /**
-   * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
-   */
-  not: PageExpectation;
-}
-
-/**
  * createLocatorExpectation is a factory function that creates an expectation object for Locator values.
  *
  * Note that although the browser `is` prefixed methods are used, and return boolean values, we
