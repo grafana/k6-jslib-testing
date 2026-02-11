@@ -46,6 +46,9 @@ function aggregateMessages(
 // This format appends a trace to the end of the error message.
 registerFormatter("trace", function ({ inner, trace }) {
   const innerMessage = Array.of(this.format(inner)).flat();
+
+  // To reduce the noise, we group together identical messages sequentitally and
+  // add a count to the end, e.g. 'some error happened (x4)'
   const aggregated = aggregateMessages(trace)
     .map((msg) => {
       if (msg.count === 1) {
