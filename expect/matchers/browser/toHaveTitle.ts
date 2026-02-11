@@ -25,20 +25,20 @@ extend("toHaveTitle", {
     expected: RegExp | string,
     options?: Partial<RetryConfig>,
   ) {
+    if (!isPage(received)) {
+      throw new AssertionFailed({
+        format: "received",
+        received: "unknown",
+      });
+    }
+
     const retryOptions = {
       ...DEFAULT_RETRY_OPTIONS,
       ...this.config,
       ...options,
     };
 
-    return withRetry(retryOptions, async () => {
-      if (!isPage(received)) {
-        throw new AssertionFailed({
-          format: "received",
-          received: "unknown",
-        });
-      }
-
+    return withRetry(this, retryOptions, async () => {
       const actual = await received.title();
       const normalizedActual = normalizeWhiteSpace(actual);
 
@@ -50,6 +50,7 @@ extend("toHaveTitle", {
             format: "text-match",
             expected: expected,
             received: normalizedActual,
+            message: `'${normalizedActual}' did not match pattern ${expected}`,
           });
         }
 
@@ -69,6 +70,8 @@ extend("toHaveTitle", {
           format: "text-match",
           expected: normalizedExpected,
           received: normalizedActual,
+          message:
+            `'${normalizedActual}' did not match '${normalizedExpected}'`,
         });
       }
 

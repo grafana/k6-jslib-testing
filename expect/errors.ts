@@ -44,9 +44,9 @@ export class AssertionFailed<
 > extends Error {
   details: AssertionError;
 
-  constructor(details: AssertionError) {
-    super(details.message);
+  constructor(error: AssertionError) {
+    super(error.message);
 
-    this.details = details;
+    this.details = error;
   }
 }

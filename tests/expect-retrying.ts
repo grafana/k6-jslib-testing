@@ -577,9 +577,10 @@ const standardTestCases: TestCase[] = [
 
           Expected: Wrong Title
           Received: K6 Browser Test Page
+
           Call log: 
-            - expect.toHaveTitle
-            - waiting for page
+            - expect.toHaveTitle with timeout 5000ms
+            - 'K6 Browser Test Page' did not match 'Wrong Title' (x33)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -605,9 +606,10 @@ const standardTestCases: TestCase[] = [
 
           Expected: /Wrong Title/i
           Received: K6 Browser Test Page
+
           Call log: 
-            - expect.toHaveTitle
-            - waiting for page
+            - expect.toHaveTitle with timeout 5000ms
+            - 'K6 Browser Test Page' did not match pattern /Wrong Title/i (x33)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -1102,9 +1104,9 @@ const negationTestCases: TestCase[] = [
 
       Expected: K6 Browser Test Page
       Received: K6 Browser Test Page
+      
       Call log: 
-        - expect.toHaveTitle
-        - waiting for page
+        - expect.toHaveTitle with timeout 5000ms
 
       Filename: expect-retrying.ts
           Line: ...
