@@ -39,7 +39,8 @@ export async function withRetry<Fn extends MatcherFn>(
         },
       };
     } catch (err) {
-      // Errors that are not AssertionFailed are treated as bugs or user input errors.
+      // Errors that are not AssertionFailed or caused by a locator throwing are
+      // treated as bugs or user input errors.
       if (err instanceof AssertionFailed === false && !isLocatorError(err)) {
         throw err;
       }
