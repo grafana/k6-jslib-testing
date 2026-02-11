@@ -1,7 +1,13 @@
 import type { AnyError, ErrorFormats } from "../errors.ts";
 import type { FormattedMessage } from "./values.ts";
 
+/**
+ * Provides context about the current call to the formatter.
+ */
 export interface FormatterContext {
+  /**
+   * Formats an error using its formatter. This can be used to format nested errors.
+   */
   format<AssertionError extends AnyError>(
     error: AssertionError,
   ): FormattedMessage;
