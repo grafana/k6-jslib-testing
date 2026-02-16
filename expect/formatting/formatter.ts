@@ -1,10 +1,25 @@
 import type { AnyError, ErrorFormats } from "../errors.ts";
 import type { FormattedMessage } from "./values.ts";
 
+/**
+ * Provides context about the current call to the formatter.
+ */
+export interface FormatterContext {
+  /**
+   * Formats an error using its formatter. This can be used to format nested errors.
+   */
+  format<AssertionError extends AnyError>(
+    error: AssertionError,
+  ): FormattedMessage;
+}
+
+export type FormatterFn<AssertionError extends AnyError = AnyError> = (
+  this: FormatterContext,
+  error: AssertionError,
+) => FormattedMessage;
+
 const formatters: {
-  [Type in keyof ErrorFormats]?: (
-    error: AnyError,
-  ) => FormattedMessage;
+  [Type in keyof ErrorFormats]?: FormatterFn;
 } = {};
 
 /**
@@ -45,9 +60,9 @@ const formatters: {
  */
 export function registerFormatter<Format extends keyof ErrorFormats>(
   type: Format,
-  formatter: (error: Extract<AnyError, { format: Format }>) => FormattedMessage,
+  formatter: FormatterFn<Extract<AnyError, { format: Format }>>,
 ): void {
-  formatters[type] = formatter as (error: AnyError) => FormattedMessage;
+  formatters[type] = formatter as FormatterFn;
 }
 
 /**
@@ -62,5 +77,5 @@ export function formatError<AssertionError extends AnyError>(
     throw new Error(`No formatter registered for error type: ${error.format}`);
   }
 
-  return formatter(error);
+  return formatter.call({ format: formatError }, error);
 }
