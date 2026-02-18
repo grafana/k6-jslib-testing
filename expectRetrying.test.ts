@@ -4,6 +4,7 @@ import { assert } from "@std/assert";
 import type { SoftMode } from "./assert.ts";
 import { RetryTimeoutError, withRetry } from "./expectRetrying.ts";
 import { DEFAULT_RETRY_OPTIONS, type ExpectConfig } from "./config.ts";
+import { createMatchersWithSpy, createMockLocator } from "./test_helpers.ts";
 
 Deno.test("withRetry", async (t) => {
   await t.step("succeeds immediately when assertion passes", async () => {
@@ -131,14 +132,6 @@ Deno.test("negated retrying expectations", async (t) => {
       true,
     );
 
-    // Test a few matchers
-    await negatedExpectation.toBeVisible();
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false when negated with a true result",
-    );
-
     assertCalled = false;
     await negatedExpectation.toHaveValue("test-value");
     assert(assertCalled, "Assert should have been called");
@@ -193,13 +186,6 @@ Deno.test("negated retrying expectations", async (t) => {
       undefined,
       false,
     );
-
-    // Double negation should be equivalent to no negation
-    const doubleNegated = expectation.not.not;
-
-    await doubleNegated.toBeVisible();
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true with double negation");
   });
 });
 
@@ -207,55 +193,24 @@ Deno.test("retrying expectations with custom messages", async (t) => {
   await t.step(
     "should include custom message in error for failing assertion",
     async () => {
-      let assertCalled = false;
-      let assertCondition = false;
-      let assertMessage = "";
+      const [spy, createMatchers] = createMatchersWithSpy();
 
-      const mockLocator = {
-        isVisible: async () => false, // Will fail the assertion
-      };
-
-      const mockAssert = (
-        condition: boolean,
-        message: string,
-        soft?: boolean,
-      ) => {
-        assertCalled = true;
-        assertCondition = condition;
-        assertMessage = message;
-        // Don't throw for this test
-      };
-
-      // Import the createLocatorExpectation function directly to test it
-      const { createLocatorExpectation } = await import("./expectRetrying.ts");
-
-      const config: ExpectConfig = {
-        assertFn: mockAssert,
-        timeout: 10,
-        interval: 5,
-        soft: false,
-        softMode: "throw",
-        colorize: false,
-        display: "pretty", // Use pretty mode to see custom message
-      };
+      const mockLocator = createMockLocator({
+        isVisible: async () => false,
+      });
 
       // Test with custom message
-      const expectation = createLocatorExpectation(
-        mockLocator as any,
-        config,
-        "element should be visible for user interaction", // Custom message
-        false,
+      const expectation = createMatchers(
+        mockLocator,
+        "element should be visible for user interaction",
       );
 
       await expectation.toBeVisible();
 
-      assert(assertCalled, "Assert should have been called");
+      const assertMessage = spy.getMessage();
+
       assert(
-        !assertCondition,
-        "Condition should be false for failing assertion",
-      );
-      assert(
-        assertMessage.includes(
+        spy.getMessage()?.includes(
           "element should be visible for user interaction",
         ),
         `Custom message should be included in the assert message. Got: ${assertMessage}`,

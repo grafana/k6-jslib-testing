@@ -4,49 +4,7 @@ import { assert } from "@std/assert";
 import { createExpectation } from "./expectNonRetrying.ts";
 import type { ExpectConfig } from "./config.ts";
 import { createMatchers } from "./expect/index.ts";
-
-// Helper function to create a test config with correct defaults
-function createTestConfig(config: Partial<ExpectConfig> = {}): ExpectConfig {
-  return {
-    assertFn: config.assertFn !== undefined ? config.assertFn : undefined,
-    soft: config.soft !== undefined ? config.soft : false,
-    softMode: config.softMode !== undefined ? config.softMode : "throw",
-    colorize: config.colorize !== undefined ? config.colorize : false,
-    display: config.display !== undefined ? config.display : "inline",
-  };
-}
-
-function createMatchersWithSpy() {
-  let receivedMessage: string | null = null;
-
-  const spy = {
-    called: false,
-    getMessage() {
-      return receivedMessage;
-    },
-
-    reset() {
-      this.called = false;
-
-      receivedMessage = null;
-    },
-  };
-
-  return [
-    spy,
-    <Received>(received: Received, customMessage?: string) =>
-      createMatchers<Received>({
-        received,
-        config: createTestConfig(),
-        negated: false,
-        message: customMessage,
-        fail(message) {
-          spy.called = true;
-          receivedMessage = message;
-        },
-      }),
-  ] as const;
-}
+import { createMatchersWithSpy } from "./test_helpers.ts";
 
 Deno.test("NonRetryingExpectation", async (t) => {
   await t.step("toBe", () => {
