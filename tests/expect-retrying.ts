@@ -68,14 +68,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeChecked (fail)",
     selector: "#notToBeCheckedCheckbox",
     expectedError: dedent`
-         Error: expect(locator).toBeChecked()
+         Error: expect(received).toBeChecked(options)
             At: ...
 
       Expected: checked
       Received: unchecked
+
       Call log: 
         - expect.toBeChecked with timeout 1000ms
-        - waiting for locator
+        - assertion toBeChecked failed (x9)
 
       Filename: expect-retrying.ts
           Line: ...

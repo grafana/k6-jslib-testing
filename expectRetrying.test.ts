@@ -140,14 +140,6 @@ Deno.test("negated retrying expectations", async (t) => {
     );
 
     assertCalled = false;
-    await negatedExpectation.toBeChecked();
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false when negated with a true result",
-    );
-
-    assertCalled = false;
     await negatedExpectation.toHaveValue("test-value");
     assert(assertCalled, "Assert should have been called");
     assert(

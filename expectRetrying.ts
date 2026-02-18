@@ -43,11 +43,6 @@ export interface LocatorExpectation {
   not: LocatorExpectation;
 
   /**
-   * Ensures the Locator points to a checked input.
-   */
-  toBeChecked(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
    * Ensures the Locator points to a disabled element.
    * Element is disabled if it has "disabled" attribute or is disabled via 'aria-disabled'.
    *
@@ -158,10 +153,6 @@ export function createLocatorExpectation(
   });
 
   // Register renderers specific to each matchers at initialization time.
-  MatcherErrorRendererRegistry.register(
-    "toBeChecked",
-    new ToBeCheckedErrorRenderer(),
-  );
   MatcherErrorRendererRegistry.register(
     "toBeDisabled",
     new ToBeDisabledErrorRenderer(),
@@ -322,18 +313,6 @@ export function createLocatorExpectation(
   const expectation: LocatorExpectation = {
     get not(): LocatorExpectation {
       return createLocatorExpectation(locator, config, message, !isNegated);
-    },
-
-    async toBeChecked(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeChecked",
-        async () => await locator.isChecked(),
-        "checked",
-        "unchecked",
-        { ...matcherConfig, options },
-      );
     },
 
     async toBeDisabled(
@@ -716,11 +695,6 @@ export abstract class BooleanStateErrorRenderer
       },
     ];
   }
-}
-
-export class ToBeCheckedErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "checked";
-  protected oppositeState = "unchecked";
 }
 
 /**
