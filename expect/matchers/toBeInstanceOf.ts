@@ -1,6 +1,7 @@
 import { extend } from "../extend.ts";
 import { AssertionFailed } from "../errors.ts";
 import { green, red } from "../formatting/index.ts";
+import type { AnyError } from "../index.ts";
 
 function getConstructorName(value: unknown): string {
   if (value === null) {
@@ -14,13 +15,16 @@ function getConstructorName(value: unknown): string {
   return value.constructor?.name ?? "Object";
 }
 
-function createInstanceOfMessage(
+function createInstanceOfError(
   expectedName: string,
   receivedName: string,
-) {
+): AnyError {
   return {
-    "Expected constructor": green(expectedName),
-    "Received constructor": red(receivedName),
+    format: "custom",
+    content: {
+      "Expected constructor": green(expectedName),
+      "Received constructor": red(receivedName),
+    },
   };
 }
 
@@ -43,16 +47,14 @@ extend("toBeInstanceOf", {
     const expectedName = expected.name;
 
     if (!(received instanceof expected)) {
-      throw new AssertionFailed({
-        format: "custom",
-        content: createInstanceOfMessage(expectedName, receivedName),
-      });
+      throw new AssertionFailed(
+        createInstanceOfError(expectedName, receivedName),
+      );
     }
 
     return {
-      negate: {
-        format: "custom",
-        content: createInstanceOfMessage(expectedName, receivedName),
+      negate: () => {
+        return createInstanceOfError(expectedName, receivedName);
       },
     };
   },
