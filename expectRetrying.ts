@@ -1,4 +1,4 @@
-import { assert, type SoftMode } from "./assert.ts";
+import { assert } from "./assert.ts";
 import type { ANSI_COLORS } from "./colors.ts";
 import {
   DEFAULT_RETRY_OPTIONS,
@@ -11,7 +11,6 @@ import {
   type LineGroup,
   type MatcherErrorInfo,
   MatcherErrorRendererRegistry,
-  ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 import { parseStackTrace } from "./stacktrace.ts";
 import type { Locator } from "k6/browser";
@@ -121,16 +120,6 @@ export function createLocatorExpectation(
     "toHaveValue",
     new ToHaveValueErrorRenderer(),
   );
-
-  const matcherConfig = {
-    locator,
-    retryConfig,
-    usedAssert,
-    isSoft,
-    isNegated,
-    message,
-    softMode: config.softMode,
-  };
 
   const matchText = async (
     matcherName: string,
@@ -393,143 +382,6 @@ export function createLocatorExpectation(
   };
 
   return expectation;
-}
-
-// Helper function to create common matcher info
-function createMatcherInfo(
-  matcherName: string,
-  expected: string,
-  received: string,
-  additionalInfo = {},
-  customMessage?: string,
-): MatcherErrorInfo {
-  const stacktrace = parseStackTrace(new Error().stack);
-  const executionContext = captureExecutionContext(stacktrace);
-
-  if (!executionContext) {
-    throw new Error("k6 failed to capture execution context");
-  }
-
-  return {
-    executionContext,
-    matcherName,
-    expected,
-    received,
-    customMessage,
-    ...additionalInfo,
-  };
-}
-
-// Helper function to handle common matcher logic
-async function createMatcher(
-  matcherName: string,
-  checkFn: () => Promise<boolean>,
-  expected: string,
-  received: string,
-  {
-    locator,
-    retryConfig,
-    usedAssert,
-    isSoft,
-    isNegated = false,
-    options = {},
-    message,
-    softMode,
-  }: {
-    locator: Locator;
-    retryConfig: RetryConfig;
-    usedAssert: typeof assert;
-    isSoft: boolean;
-    isNegated?: boolean;
-    options?: Partial<RetryConfig>;
-    message?: string;
-    softMode?: SoftMode;
-  },
-): Promise<void> {
-  const info = createMatcherInfo(matcherName, expected, received, {
-    matcherSpecific: {
-      locator,
-      timeout: options.timeout,
-      isNegated,
-    },
-  }, message);
-
-  try {
-    await withRetry(async () => {
-      const result = await checkFn();
-      // If isNegated is true, we want to invert the result
-      const finalResult = isNegated ? !result : result;
-
-      if (!finalResult) {
-        throw new Error("matcher failed");
-      }
-
-      usedAssert(
-        finalResult,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        softMode,
-      );
-    }, { ...retryConfig, ...options });
-  } catch (_) {
-    usedAssert(
-      false,
-      MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-        info,
-        MatcherErrorRendererRegistry.getConfig(),
-      ),
-      isSoft,
-      softMode,
-    );
-  }
-}
-
-/**
- * Base class for boolean state matchers (checked, disabled, etc.)
- */
-export abstract class BooleanStateErrorRenderer
-  extends ReceivedOnlyMatcherRenderer {
-  protected abstract state: string;
-  protected abstract oppositeState: string;
-
-  protected getMatcherName(): string {
-    return `toBe${this.state[0].toUpperCase()}${this.state.slice(1)}`;
-  }
-
-  protected override getReceivedPlaceholder(): string {
-    return "locator";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      { label: "Expected", value: this.state, group: 3 },
-      { label: "Received", value: this.oppositeState, group: 3 },
-      { label: "Call log", value: "", group: 3 },
-      {
-        label: "",
-        value: maybeColorize(
-          `  - expect.toBe${this.state[0].toUpperCase()}${
-            this.state.slice(1)
-          } with timeout ${info.matcherSpecific?.timeout}ms`,
-          "darkGrey",
-        ),
-        group: 3,
-        raw: true,
-      },
-      {
-        label: "",
-        value: maybeColorize(`  - waiting for locator`, "darkGrey"),
-        group: 3,
-        raw: true,
-      },
-    ];
-  }
 }
 
 export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
