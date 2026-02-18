@@ -11,4 +11,5 @@ import "./toBeNaN.ts";
 import "./toBeNull.ts";
 import "./toBeTruthy.ts";
 import "./toBeUndefined.ts";
+import "./toEqual.ts";
 import "./toHaveProperty.ts";

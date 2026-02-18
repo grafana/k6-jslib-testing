@@ -706,7 +706,7 @@ const TO_EQUAL_TESTS: TestSuite = {
     }, {
       name: "fail",
       expectedError: dedent`
-           Error: expect(received).toEqual(expected)
+           Error: expect(received).not.toEqual(expected)
               At: ...
 
         Expected: {"a":1}

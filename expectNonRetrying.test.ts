@@ -407,105 +407,49 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toEqual", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with primitives
-    createExpectation(5, config).toEqual(5);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for equal primitives");
+    createMatchers(5).toEqual(5);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test passing case with objects
-    createExpectation({ a: 1, b: 2 }, config).toEqual({ a: 1, b: 2 });
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for equal objects");
+    createMatchers({ a: 1, b: 2 }).toEqual({ a: 1, b: 2 });
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation({ a: 1 }, config).toEqual({ a: 2 });
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for unequal objects");
+    createMatchers({ a: 1 }).toEqual({ a: 2 });
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toEqual deep equality", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test nested objects
-    createExpectation(
+    createMatchers(
       { a: 1, b: { c: 2, d: [3, 4] } },
-      config,
     ).toEqual({ a: 1, b: { c: 2, d: [3, 4] } });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for deeply equal objects",
-    );
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test arrays with same values but different references
-    createExpectation([1, 2, { a: 3 }], config).toEqual([1, 2, { a: 3 }]);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for equal arrays with objects",
-    );
+    createMatchers([1, 2, { a: 3 }]).toEqual([1, 2, { a: 3 }]);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with different object structures
-    createExpectation({ a: 1, b: 2 }, config).toEqual({ b: 2, a: 1 });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for objects with same properties in different order",
-    );
+    createMatchers({ a: 1, b: 2 }).toEqual({ b: 2, a: 1 });
+    assert(!spy.called, "Assert should not have been called");
   });
 
   await t.step("toHaveLength", () => {
@@ -845,60 +789,6 @@ Deno.test("NonRetryingExpectation", async (t) => {
         "Error message should mention supported types",
       );
     }
-  });
-
-  await t.step("negation with .not", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
-
-    // Test negated passing case
-    createExpectation(1, config).not.toEqual(2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for negated non-matching values",
-    );
-
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-
-    // Test negated failing case
-    createExpectation(1, config).not.toEqual(1);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for negated matching values",
-    );
-
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-
-    // Test double negation
-    createExpectation(1, config).not.not.toEqual(1);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for double negated matching values",
-    );
   });
 
   await t.step("toContainEqual with array", () => {

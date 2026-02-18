@@ -28,13 +28,6 @@ export interface NonRetryingExpectation {
   toBeInstanceOf(expected: Function): void;
 
   /**
-   * Asserts that the value is equal to the expected value.
-   *
-   * @param expected the expected value
-   */
-  toEqual(expected: unknown): void;
-
-  /**
    * Ensures that value has a `.length` property equal to expected.
    * Useful for arrays and strings.
    *
@@ -126,7 +119,6 @@ export function createExpectation(
     "toBeUndefined",
     new ToBeUndefinedErrorRenderer(),
   );
-  MatcherErrorRendererRegistry.register("toEqual", new ToEqualErrorRenderer());
   MatcherErrorRendererRegistry.register(
     "toHaveLength",
     new ToHaveLengthErrorRenderer(),
@@ -160,16 +152,6 @@ export function createExpectation(
         () => received instanceof expected,
         expected.name,
         (received as { constructor: { name: string } }).constructor.name,
-        matcherConfig,
-      );
-    },
-
-    toEqual(expected: unknown): void {
-      createMatcher(
-        "toEqual",
-        () => isDeepEqual(received, expected),
-        JSON.stringify(expected),
-        JSON.stringify(received),
         matcherConfig,
       );
     },
@@ -466,33 +448,6 @@ export class ToBeTruthyErrorRenderer extends ReceivedOnlyMatcherRenderer {
 export class ToBeUndefinedErrorRenderer extends ReceivedOnlyMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeUndefined";
-  }
-}
-
-/**
- * A matcher error renderer for the `toEqual` matcher.
- */
-export class ToEqualErrorRenderer extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toEqual";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected",
-        value: maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
   }
 }
 
