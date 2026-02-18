@@ -14,7 +14,7 @@ type PrimitiveTypes =
 declare module "../errors.ts" {
   interface ErrorFormats {
     "type-mismatch": {
-      expected: PrimitiveTypes;
+      expected: PrimitiveTypes[] | PrimitiveTypes;
       received: PrimitiveTypes;
     };
   }
@@ -22,7 +22,7 @@ declare module "../errors.ts" {
 
 registerFormatter("type-mismatch", ({ expected, received }) => {
   return {
-    Expected: green(expected),
+    Expected: green(Array.isArray(expected) ? expected.join(" | ") : expected),
     Received: red(received),
   };
 });

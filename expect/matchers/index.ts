@@ -1,6 +1,10 @@
 import "./browser/index.ts";
 import "./toBe.ts";
 import "./toBeCloseTo.ts";
+import "./toBeGreaterThan.ts";
+import "./toBeGreaterThanOrEqual.ts";
+import "./toBeLessThan.ts";
+import "./toBeLessThanOrEqual.ts";
 import "./toBeDefined.ts";
 import "./toBeFalsy.ts";
 import "./toBeNaN.ts";

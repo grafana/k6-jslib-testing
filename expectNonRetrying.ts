@@ -19,40 +19,12 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Asserts that the value is greater than the expected value.
-   *
-   * @param expected the expected value
-   */
-  toBeGreaterThan(expected: number): void;
-
-  /**
-   * Asserts that the value is greater than or equal to the expected value.
-   *
-   * @param expected
-   */
-  toBeGreaterThanOrEqual(expected: number): void;
-
-  /**
    * Ensures that value is an instance of a class. Uses instanceof operator.
    *
    * @param expected The class or constructor function.
    */
   // deno-lint-ignore ban-types
   toBeInstanceOf(expected: Function): void;
-
-  /**
-   * Asserts that the value is less than the expected value.
-   *
-   * @param expected the expected value
-   */
-  toBeLessThan(expected: number): void;
-
-  /**
-   * Ensures that value <= expected for number or big integer values.
-   *
-   * @param expected The value to compare to.
-   */
-  toBeLessThanOrEqual(expected: number | bigint): void;
 
   /**
    * Asserts that the value is equal to the expected value.
@@ -147,24 +119,8 @@ export function createExpectation(
     new ToBeFalsyErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register(
-    "toBeGreaterThan",
-    new ToBeGreaterThanErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeGreaterThanOrEqual",
-    new ToBeGreaterThanOrEqualErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
     "toBeInstanceOf",
     new ToBeInstanceOfErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeLessThan",
-    new ToBeLessThanErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeLessThanOrEqual",
-    new ToBeLessThanOrEqualErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register("toBeNaN", new ToBeNaNErrorRenderer());
   MatcherErrorRendererRegistry.register(
@@ -210,26 +166,6 @@ export function createExpectation(
       return createExpectation(received, config, message, !isNegated);
     },
 
-    toBeGreaterThan(expected: number | bigint): void {
-      createMatcher(
-        "toBeGreaterThan",
-        () => (received as number) > expected,
-        expected,
-        received,
-        matcherConfig,
-      );
-    },
-
-    toBeGreaterThanOrEqual(expected: number | bigint): void {
-      createMatcher(
-        "toBeGreaterThanOrEqual",
-        () => (received as number) >= expected,
-        expected,
-        received,
-        matcherConfig,
-      );
-    },
-
     // deno-lint-ignore ban-types
     toBeInstanceOf(expected: Function): void {
       createMatcher(
@@ -237,26 +173,6 @@ export function createExpectation(
         () => received instanceof expected,
         expected.name,
         (received as { constructor: { name: string } }).constructor.name,
-        matcherConfig,
-      );
-    },
-
-    toBeLessThan(expected: number | bigint): void {
-      createMatcher(
-        "toBeLessThan",
-        () => (received as number) < expected,
-        expected,
-        received,
-        matcherConfig,
-      );
-    },
-
-    toBeLessThanOrEqual(expected: number | bigint): void {
-      createMatcher(
-        "toBeLessThanOrEqual",
-        () => (received as number) <= expected,
-        expected,
-        received,
         matcherConfig,
       );
     },
@@ -537,62 +453,6 @@ export class ToBeFalsyErrorRenderer extends ReceivedOnlyMatcherRenderer {
 }
 
 /**
- * A matcher error renderer for the `toBeGreaterThan` matcher.
- */
-export class ToBeGreaterThanErrorRenderer
-  extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toBeGreaterThan";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected",
-        value: "> " + maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
-  }
-}
-
-/**
- * A matcher error renderer for the `toBeGreaterThanOrEqual` matcher.
- */
-export class ToBeGreaterThanOrEqualErrorRenderer
-  extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toBeGreaterThanOrEqual";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected",
-        value: ">= " + maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
-  }
-}
-
-/**
  * A matcher error renderer for the `toBeInstanceOf` matcher.
  */
 export class ToBeInstanceOfErrorRenderer
@@ -613,61 +473,6 @@ export class ToBeInstanceOfErrorRenderer
       },
       {
         label: "Received constructor",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
-  }
-}
-
-/**
- * A matcher error renderer for the `toBeLessThan` matcher.
- */
-export class ToBeLessThanErrorRenderer extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toBeLessThan";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected",
-        value: "< " + maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
-  }
-}
-
-/**
- * A matcher error renderer for the `toBeLessThanOrEqual` matcher.
- */
-export class ToBeLessThanOrEqualErrorRenderer
-  extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toBeLessThanOrEqual";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected",
-        value: "<= " + maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received",
         value: maybeColorize(info.received, "red"),
         group: 3,
       },

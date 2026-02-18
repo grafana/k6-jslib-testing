@@ -55,9 +55,11 @@ export interface Matchers<Received> {
 /**
  * Utility interface for extracting only function properties from the `Matchers` interface.
  */
-type ValidMatchers<Received = unknown> = {
-  [K in keyof Matchers<Received>]: Matchers<Received>[K] extends MatcherFn
-    ? Matchers<Received>[K]
+type ValidMatchers<Received = any> = {
+  [
+    K in keyof Matchers<Received> as Matchers<Received>[K] extends never ? never
+      : K
+  ]: Matchers<Received>[K] extends MatcherFn ? Matchers<Received>[K]
     : never;
 };
 
@@ -77,9 +79,7 @@ export type MatchersFor<Received> = {
 type MatcherFactory<Fn extends MatcherFn> = (context: ExpectContext) => Fn;
 
 type MatcherRegistry = {
-  [Name in keyof ValidMatchers]?: MatcherFactory<
-    ValidMatchers[Name] extends never ? MatcherFn : ValidMatchers[Name]
-  >;
+  [Name in keyof ValidMatchers]?: MatcherFactory<MatcherFn>;
 };
 
 export type NegationFn<Fn extends MatcherFn> = (
