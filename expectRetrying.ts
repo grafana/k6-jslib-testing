@@ -64,11 +64,6 @@ export interface LocatorExpectation {
   toBeEmpty(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
-   * Ensures the Locator points to an enabled element.
-   */
-  toBeEnabled(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
    * Ensures that Locator either does not resolve to any DOM node, or resolves to a non-visible one.
    */
   toBeHidden(options?: Partial<RetryConfig>): Promise<void>;
@@ -164,10 +159,6 @@ export function createLocatorExpectation(
   MatcherErrorRendererRegistry.register(
     "toBeEmpty",
     new ToBeEmptyErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeEnabled",
-    new ToBeEnabledErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register(
     "toBeHidden",
@@ -380,18 +371,6 @@ export function createLocatorExpectation(
         },
         "empty",
         "not empty",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeEnabled(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeEnabled",
-        async () => await locator.isEnabled(),
-        "enabled",
-        "disabled",
         { ...matcherConfig, options },
       );
     },
@@ -713,11 +692,6 @@ export class ToBeEditableErrorRenderer extends BooleanStateErrorRenderer {
 export class ToBeEmptyErrorRenderer extends BooleanStateErrorRenderer {
   protected state = "empty";
   protected oppositeState = "not empty";
-}
-
-export class ToBeEnabledErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "enabled";
-  protected oppositeState = "disabled";
 }
 
 export class ToBeHiddenErrorRenderer extends BooleanStateErrorRenderer {

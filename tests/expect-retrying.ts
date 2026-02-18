@@ -211,14 +211,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeEnabled (fail)",
     selector: "#toBeDisabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeEnabled()
+         Error: expect(received).toBeEnabled()
             At: ...
 
       Expected: enabled
       Received: disabled
+
       Call log: 
         - expect.toBeEnabled with timeout 5000ms
-        - waiting for locator
+        - assertion toBeEnabled failed (x47)
 
       Filename: expect-retrying.ts
           Line: ...
