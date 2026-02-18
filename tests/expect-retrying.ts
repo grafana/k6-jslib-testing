@@ -124,14 +124,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeEditable (fail)",
     selector: "#toBeDisabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeEditable()
+         Error: expect(received).toBeEditable()
             At: ...
 
       Expected: editable
       Received: uneditable
+
       Call log: 
         - expect.toBeEditable with timeout 5000ms
-        - waiting for locator
+        - assertion toBeEditable failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -912,14 +913,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeEditable (fail)",
     selector: "#toBeEditableInput",
     expectedError: dedent`
-         Error: expect(locator).toBeEditable()
+         Error: expect(received).not.toBeEditable()
             At: ...
 
-      Expected: editable
-      Received: uneditable
+      Expected: uneditable
+      Received: editable
+
       Call log: 
         - expect.toBeEditable with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...

@@ -43,11 +43,6 @@ export interface LocatorExpectation {
   not: LocatorExpectation;
 
   /**
-   * Ensures the Locator points to an editable element.
-   */
-  toBeEditable(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
    * Ensures the Locator points to an empty element. If the element is an input,
    * it will be empty if it has no value. If the element is not an input, it will
    * be empty if it has no text content.
@@ -129,10 +124,6 @@ export function createLocatorExpectation(
   });
 
   // Register renderers specific to each matchers at initialization time.
-  MatcherErrorRendererRegistry.register(
-    "toBeEditable",
-    new ToBeEditableErrorRenderer(),
-  );
   MatcherErrorRendererRegistry.register(
     "toBeEmpty",
     new ToBeEmptyErrorRenderer(),
@@ -273,18 +264,6 @@ export function createLocatorExpectation(
   const expectation: LocatorExpectation = {
     get not(): LocatorExpectation {
       return createLocatorExpectation(locator, config, message, !isNegated);
-    },
-
-    async toBeEditable(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeEditable",
-        async () => await locator.isEditable(),
-        "editable",
-        "uneditable",
-        { ...matcherConfig, options },
-      );
     },
 
     async toBeEmpty(
@@ -607,11 +586,6 @@ export abstract class BooleanStateErrorRenderer
       },
     ];
   }
-}
-
-export class ToBeEditableErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "editable";
-  protected oppositeState = "uneditable";
 }
 
 export class ToBeEmptyErrorRenderer extends BooleanStateErrorRenderer {
