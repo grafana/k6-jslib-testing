@@ -156,14 +156,15 @@ const standardTestCases: TestCase[] = [
         selector: "#notToBeEmptyInput",
 
         expectedError: dedent`
-             Error: expect(locator).toBeEmpty()
+             Error: expect(received).toBeEmpty()
                 At: ...
 
           Expected: empty
           Received: not empty
+
           Call log: 
             - expect.toBeEmpty with timeout 5000ms
-            - waiting for locator
+            - assertion toBeEmpty failed (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -184,14 +185,15 @@ const standardTestCases: TestCase[] = [
         selector: "#notToBeEmptyText",
 
         expectedError: dedent`
-             Error: expect(locator).toBeEmpty()
+             Error: expect(received).toBeEmpty()
                 At: ...
 
           Expected: empty
           Received: not empty
+
           Call log: 
             - expect.toBeEmpty with timeout 5000ms
-            - waiting for locator
+            - assertion toBeEmpty failed (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -944,14 +946,14 @@ const negationTestCases: TestCase[] = [
         selector: "#toBeEmptyInput",
 
         expectedError: dedent`
-             Error: expect(locator).toBeEmpty()
+             Error: expect(received).not.toBeEmpty()
                 At: ...
 
-          Expected: empty
-          Received: not empty
+          Expected: not empty
+          Received: empty
+
           Call log: 
             - expect.toBeEmpty with timeout 5000ms
-            - waiting for locator
 
           Filename: expect-retrying.ts
               Line: ...
@@ -971,14 +973,14 @@ const negationTestCases: TestCase[] = [
         name: "non-input element (fail)",
         selector: "#toBeEmptyText",
         expectedError: dedent`
-             Error: expect(locator).toBeEmpty()
+             Error: expect(received).not.toBeEmpty()
                 At: ...
 
-          Expected: empty
-          Received: not empty
+          Expected: not empty
+          Received: empty
+
           Call log: 
             - expect.toBeEmpty with timeout 5000ms
-            - waiting for locator
 
           Filename: expect-retrying.ts
               Line: ...

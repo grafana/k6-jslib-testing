@@ -43,13 +43,6 @@ export interface LocatorExpectation {
   not: LocatorExpectation;
 
   /**
-   * Ensures the Locator points to an empty element. If the element is an input,
-   * it will be empty if it has no value. If the element is not an input, it will
-   * be empty if it has no text content.
-   */
-  toBeEmpty(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
    * Ensures that the Locator points to an element with the given text.
    *
    * If the type of `expected` is a string, both the expected and actual text will have any zero-width
@@ -124,10 +117,6 @@ export function createLocatorExpectation(
   });
 
   // Register renderers specific to each matchers at initialization time.
-  MatcherErrorRendererRegistry.register(
-    "toBeEmpty",
-    new ToBeEmptyErrorRenderer(),
-  );
   MatcherErrorRendererRegistry.register(
     "toHaveValue",
     new ToHaveValueErrorRenderer(),
@@ -264,51 +253,6 @@ export function createLocatorExpectation(
   const expectation: LocatorExpectation = {
     get not(): LocatorExpectation {
       return createLocatorExpectation(locator, config, message, !isNegated);
-    },
-
-    async toBeEmpty(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeEmpty",
-        async () => {
-          try {
-            // First check if the element is an input, textarea or select.
-            return await locator.inputValue().then((text) => text.length === 0);
-          } catch (error) {
-            let msg = "";
-            if (error instanceof Error) {
-              msg = error.toString();
-            } else {
-              // Errors from k6 are not instances of Error at the moment.
-              msg = String(error);
-            }
-
-            // FIXME: This is brittle since it relies on the error message.
-            //        We should consider moving the logic to the browser module
-            //        in k6 itself.
-            //        See https://github.com/grafana/k6-jslib-testing/issues/43
-            //        for more details.
-            if (
-              !msg.includes(
-                "Node is not an <input>, <textarea> or <select> element",
-              )
-            ) {
-              throw error;
-            }
-
-            return await locator.textContent().then((text) => {
-              if (text === null || text === undefined) {
-                return true;
-              }
-              return text.trim().length === 0;
-            });
-          }
-        },
-        "empty",
-        "not empty",
-        { ...matcherConfig, options },
-      );
     },
 
     toHaveText(
@@ -586,11 +530,6 @@ export abstract class BooleanStateErrorRenderer
       },
     ];
   }
-}
-
-export class ToBeEmptyErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "empty";
-  protected oppositeState = "not empty";
 }
 
 export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
