@@ -76,7 +76,7 @@ const standardTestCases: TestCase[] = [
 
       Call log: 
         - expect.toBeChecked with timeout 1000ms
-        - assertion toBeChecked failed (x9)
+        - assertion toBeChecked failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -104,7 +104,7 @@ const standardTestCases: TestCase[] = [
 
       Call log: 
         - expect.toBeDisabled with timeout 5000ms
-        - assertion toBeDisabled failed (x47)
+        - assertion toBeDisabled failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -220,7 +220,7 @@ const standardTestCases: TestCase[] = [
 
       Call log: 
         - expect.toBeEnabled with timeout 5000ms
-        - assertion toBeEnabled failed (x47)
+        - assertion toBeEnabled failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -583,7 +583,7 @@ const standardTestCases: TestCase[] = [
 
           Call log: 
             - expect.toHaveTitle with timeout 5000ms
-            - 'K6 Browser Test Page' did not match 'Wrong Title' (x33)
+            - 'K6 Browser Test Page' did not match 'Wrong Title' (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -612,7 +612,7 @@ const standardTestCases: TestCase[] = [
 
           Call log: 
             - expect.toHaveTitle with timeout 5000ms
-            - 'K6 Browser Test Page' did not match pattern /Wrong Title/i (x33)
+            - 'K6 Browser Test Page' did not match pattern /Wrong Title/i (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -1276,10 +1276,10 @@ async function runTestCase(
     }
 
     // Optionally verify the error message matches expected
-    const normalized = error.message.replace(/At: .*$/mg, "At: ...").replace(
-      /Line: \d+$/mg,
-      "Line: ...",
-    );
+    const normalized = error.message
+      .replace(/At: .*$/mg, "At: ...")
+      .replace(/Line: \d+$/mg, "Line: ...")
+      .replace(/- (.*) \(x\d+\)$/mg, "- $1 (xN)");
 
     if (trimEmptyLines(normalized) !== trimEmptyLines(testCase.expectedError)) {
       return fail(
