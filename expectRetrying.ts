@@ -55,11 +55,6 @@ export interface LocatorExpectation {
   toBeEmpty(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
-   * Ensures that Locator either does not resolve to any DOM node, or resolves to a non-visible one.
-   */
-  toBeHidden(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
    * Ensures that Locator points to an attached and visible DOM node.
    */
   toBeVisible(options?: Partial<RetryConfig>): Promise<void>;
@@ -146,10 +141,6 @@ export function createLocatorExpectation(
   MatcherErrorRendererRegistry.register(
     "toBeEmpty",
     new ToBeEmptyErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeHidden",
-    new ToBeHiddenErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register(
     "toBeVisible",
@@ -346,18 +337,6 @@ export function createLocatorExpectation(
         },
         "empty",
         "not empty",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeHidden(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeHidden",
-        async () => await locator.isHidden(),
-        "hidden",
-        "visible",
         { ...matcherConfig, options },
       );
     },
@@ -659,11 +638,6 @@ export class ToBeEditableErrorRenderer extends BooleanStateErrorRenderer {
 export class ToBeEmptyErrorRenderer extends BooleanStateErrorRenderer {
   protected state = "empty";
   protected oppositeState = "not empty";
-}
-
-export class ToBeHiddenErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "hidden";
-  protected oppositeState = "visible";
 }
 
 export class ToBeVisibleErrorRenderer extends BooleanStateErrorRenderer {
