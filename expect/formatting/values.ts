@@ -19,6 +19,20 @@ export type Value =
   | string;
 
 /**
+ * Represents a bulleted list of values, indented on a new line after
+ * the property of the group it's assigned to.
+ *
+ * ```
+ * Expected:
+ *   - One
+ *   - Two
+ * ```
+ */
+export type List = {
+  items: Value[];
+};
+
+/**
  * A group is a key-value mapping that will be rendered close together:
  *
  * ```
@@ -26,7 +40,7 @@ export type Value =
  *   Received: 43
  * ```
  */
-export type Group = Record<string, Value | 0 | false | null | undefined>;
+export type Group = Record<string, List | Value | 0 | false | null | undefined>;
 
 /**
  * A formatted message is a collection of groups that will be separated by
@@ -112,6 +126,12 @@ export function join(values: Value[], separator: Value): Value {
   });
 }
 
+export function list(items: Value[]) {
+  return {
+    items,
+  };
+}
+
 /**
  * This function flattens a `Value` instance and applies nested colors to
  * all string parts. The result is a flat array of strings, colored and non-colored,
@@ -154,4 +174,8 @@ export function printValue(
 
     return colorize(part);
   }).join("");
+}
+
+export function isList(target: Value | List) {
+  return typeof target === "object" && "items" in target;
 }

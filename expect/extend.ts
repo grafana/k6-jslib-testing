@@ -15,7 +15,7 @@ type KeepAsync<Fn extends MatcherFn, Value> = ReturnType<Fn> extends
   Promise<infer _> ? Promise<Value> : Value;
 
 // We need to use `any` here for proper type inference of matcher functions.
-type MatcherFn = (...args: any[]) => Promise<void> | void;
+export type MatcherFn = (...args: any[]) => Promise<void> | void;
 
 /**
  * The `Matchers` interface is the extension point for adding new matchers.
@@ -79,7 +79,7 @@ export type MatchersFor<Received> = {
 type MatcherFactory<Fn extends MatcherFn> = (context: ExpectContext) => Fn;
 
 type MatcherRegistry = {
-  [Name in keyof ValidMatchers]?: MatcherFactory<ValidMatchers[Name]>;
+  [Name in keyof ValidMatchers]?: MatcherFactory<MatcherFn>;
 };
 
 export type NegationFn<Fn extends MatcherFn> = (
@@ -92,7 +92,7 @@ export type NegationFn<Fn extends MatcherFn> = (
  * by the matcher in case of a successful match. The error provided will be
  * used when the assertion has been called after the `not` property.
  */
-export type NegatedResult<Fn extends MatcherFn> =
+export type NegatedResult<Fn extends MatcherFn = MatcherFn> =
   | { negate: NegationFn<Fn> | AnyError }
   | NegationFn<Fn>;
 
@@ -109,11 +109,18 @@ interface ExpectContext {
   fail(message: string): void;
 }
 
+export interface MatcherCall {
+  name: string;
+  args: unknown[];
+  fn: (...args: any[]) => Promise<NegatedResult> | NegatedResult;
+}
+
 /**
  * The context object that is available inside matcher implementations. It
  * contains additional information about the current expectation.
  */
 export interface MatcherContext {
+  matcher: MatcherCall;
   received: unknown;
 
   config: ExpectConfig;
@@ -286,6 +293,11 @@ export function extend<Name extends keyof ValidMatchers>(
       }
 
       const matcherContext: MatcherContext = {
+        matcher: {
+          name,
+          args,
+          fn: matcher.match,
+        },
         received: context.received,
         config: context.config,
         executionContext,

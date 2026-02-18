@@ -1,3 +1,4 @@
+import "./browser/index.ts";
 import "./toBe.ts";
 import "./toBeCloseTo.ts";
 import "./toBeGreaterThan.ts";

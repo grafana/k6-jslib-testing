@@ -1,5 +1,9 @@
 // @ts-types="../dist/index.d.ts"
-import { colorize, expect as globalExpect } from "../dist/index.js";
+import {
+  colorize,
+  expect as globalExpect,
+  type ExpectFunction,
+} from "../dist/index.js";
 
 export const expect = globalExpect.configure({
   soft: true,
@@ -47,3 +51,5 @@ export function createMockAssertFn() {
 
   return mockFn;
 }
+
+export type { ExpectFunction };

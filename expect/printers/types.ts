@@ -1,6 +1,7 @@
 import type {
   ColoredValue,
   FormattedMessage,
+  List,
   Value,
 } from "../formatting/values.ts";
 
@@ -12,11 +13,13 @@ import type {
  */
 export type PrinterType = "pretty" | "logfmt";
 
-export type NormalizedGroup = Record<string, Value>;
+export type NormalizedGroup = Record<string, List | Value>;
 export type NormalizedMessage = NormalizedGroup[];
+
+export type Colorizer = (value: ColoredValue<string>) => string;
 
 export interface PrinterOptions {
   printer: PrinterType;
   error: FormattedMessage;
-  colorize: (value: ColoredValue<string>) => string;
+  colorize: Colorizer;
 }
