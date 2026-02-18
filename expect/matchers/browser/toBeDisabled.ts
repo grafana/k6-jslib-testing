@@ -1,8 +1,5 @@
 import type { Locator } from "k6/browser";
-import {
-  DEFAULT_RETRY_OPTIONS,
-  type RetryConfig,
-} from "../../../config.ts";
+import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { type AnyError, AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { green, red } from "../../formatting/index.ts";

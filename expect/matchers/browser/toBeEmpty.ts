@@ -1,8 +1,5 @@
 import type { Locator } from "k6/browser";
-import {
-  DEFAULT_RETRY_OPTIONS,
-  type RetryConfig,
-} from "../../../config.ts";
+import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { type AnyError, AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { green, red } from "../../formatting/index.ts";
@@ -36,9 +33,7 @@ async function isEmpty(locator: Locator): Promise<boolean> {
   try {
     return await locator.inputValue().then((text) => text.length === 0);
   } catch (error) {
-    const msg = error instanceof Error
-      ? error.toString()
-      : String(error);
+    const msg = error instanceof Error ? error.toString() : String(error);
 
     // FIXME: This is brittle since it relies on the error message.
     //        We should consider moving the logic to the browser module
