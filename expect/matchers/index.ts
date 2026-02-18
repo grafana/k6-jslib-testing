@@ -7,6 +7,7 @@ import "./toBeLessThan.ts";
 import "./toBeLessThanOrEqual.ts";
 import "./toBeDefined.ts";
 import "./toBeFalsy.ts";
+import "./toBeInstanceOf.ts";
 import "./toBeNaN.ts";
 import "./toBeNull.ts";
 import "./toBeTruthy.ts";

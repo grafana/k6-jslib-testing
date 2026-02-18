@@ -257,45 +257,20 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeInstanceOf", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     class TestClass {}
     class OtherClass {}
 
     // Test passing case
-    createExpectation(new TestClass(), config).toBeInstanceOf(TestClass);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for correct instance");
+    createMatchers(new TestClass()).toBeInstanceOf(TestClass);
+    assert(!spy.called, "fail() should not have been called");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(new TestClass(), config).toBeInstanceOf(OtherClass);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for incorrect instance",
-    );
+    createMatchers(new TestClass()).toBeInstanceOf(OtherClass);
+    assert(spy.called, "fail() should have been called");
   });
 
   await t.step("toBeLessThan", () => {

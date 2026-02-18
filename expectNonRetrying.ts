@@ -20,14 +20,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Ensures that value is an instance of a class. Uses instanceof operator.
-   *
-   * @param expected The class or constructor function.
-   */
-  // deno-lint-ignore ban-types
-  toBeInstanceOf(expected: Function): void;
-
-  /**
    * Ensures that value has a `.length` property equal to expected.
    * Useful for arrays and strings.
    *
@@ -102,10 +94,6 @@ export function createExpectation(
     "toBeFalsy",
     new ToBeFalsyErrorRenderer(),
   );
-  MatcherErrorRendererRegistry.register(
-    "toBeInstanceOf",
-    new ToBeInstanceOfErrorRenderer(),
-  );
   MatcherErrorRendererRegistry.register("toBeNaN", new ToBeNaNErrorRenderer());
   MatcherErrorRendererRegistry.register(
     "toBeNull",
@@ -143,17 +131,6 @@ export function createExpectation(
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
       return createExpectation(received, config, message, !isNegated);
-    },
-
-    // deno-lint-ignore ban-types
-    toBeInstanceOf(expected: Function): void {
-      createMatcher(
-        "toBeInstanceOf",
-        () => received instanceof expected,
-        expected.name,
-        (received as { constructor: { name: string } }).constructor.name,
-        matcherConfig,
-      );
     },
 
     toHaveLength(expected: number): void {
@@ -384,34 +361,6 @@ export class ToBeDefinedErrorRenderer extends ReceivedOnlyMatcherRenderer {
 export class ToBeFalsyErrorRenderer extends ReceivedOnlyMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeFalsy";
-  }
-}
-
-/**
- * A matcher error renderer for the `toBeInstanceOf` matcher.
- */
-export class ToBeInstanceOfErrorRenderer
-  extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toBeInstanceOf";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected constructor",
-        value: maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received constructor",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
   }
 }
 
