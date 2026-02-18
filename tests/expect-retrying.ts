@@ -268,14 +268,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeVisible (fail)",
     selector: "#toBeHiddenText",
     expectedError: dedent`
-         Error: expect(locator).toBeVisible()
+         Error: expect(received).toBeVisible()
             At: ...
 
       Expected: visible
       Received: hidden
+
       Call log: 
         - expect.toBeVisible with timeout 5000ms
-        - waiting for locator
+        - assertion toBeVisible failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -1052,14 +1053,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeVisible (fail)",
     selector: "#toBeVisibleText",
     expectedError: dedent`
-         Error: expect(locator).toBeVisible()
+         Error: expect(received).not.toBeVisible()
             At: ...
 
-      Expected: visible
-      Received: hidden
+      Expected: hidden
+      Received: visible
+
       Call log: 
         - expect.toBeVisible with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...

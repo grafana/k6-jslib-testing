@@ -55,11 +55,6 @@ export interface LocatorExpectation {
   toBeEmpty(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
-   * Ensures that Locator points to an attached and visible DOM node.
-   */
-  toBeVisible(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
    * Ensures that the Locator points to an element with the given text.
    *
    * If the type of `expected` is a string, both the expected and actual text will have any zero-width
@@ -141,10 +136,6 @@ export function createLocatorExpectation(
   MatcherErrorRendererRegistry.register(
     "toBeEmpty",
     new ToBeEmptyErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeVisible",
-    new ToBeVisibleErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register(
     "toHaveValue",
@@ -337,18 +328,6 @@ export function createLocatorExpectation(
         },
         "empty",
         "not empty",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeVisible(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeVisible",
-        async () => await locator.isVisible(),
-        "visible",
-        "hidden",
         { ...matcherConfig, options },
       );
     },
@@ -638,11 +617,6 @@ export class ToBeEditableErrorRenderer extends BooleanStateErrorRenderer {
 export class ToBeEmptyErrorRenderer extends BooleanStateErrorRenderer {
   protected state = "empty";
   protected oppositeState = "not empty";
-}
-
-export class ToBeVisibleErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "visible";
-  protected oppositeState = "hidden";
 }
 
 export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
