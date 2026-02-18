@@ -43,15 +43,6 @@ export interface LocatorExpectation {
   not: LocatorExpectation;
 
   /**
-   * Ensures the Locator points to a disabled element.
-   * Element is disabled if it has "disabled" attribute or is disabled via 'aria-disabled'.
-   *
-   * Note that only native control elements such as HTML button, input, select, textarea, option, optgroup can be disabled by setting "disabled" attribute.
-   * "disabled" attribute on other elements is ignored by the browser.
-   */
-  toBeDisabled(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
    * Ensures the Locator points to an editable element.
    */
   toBeEditable(options?: Partial<RetryConfig>): Promise<void>;
@@ -148,10 +139,6 @@ export function createLocatorExpectation(
   });
 
   // Register renderers specific to each matchers at initialization time.
-  MatcherErrorRendererRegistry.register(
-    "toBeDisabled",
-    new ToBeDisabledErrorRenderer(),
-  );
   MatcherErrorRendererRegistry.register(
     "toBeEditable",
     new ToBeEditableErrorRenderer(),
@@ -304,18 +291,6 @@ export function createLocatorExpectation(
   const expectation: LocatorExpectation = {
     get not(): LocatorExpectation {
       return createLocatorExpectation(locator, config, message, !isNegated);
-    },
-
-    async toBeDisabled(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeDisabled",
-        async () => await locator.isDisabled(),
-        "disabled",
-        "enabled",
-        { ...matcherConfig, options },
-      );
     },
 
     async toBeEditable(
@@ -674,14 +649,6 @@ export abstract class BooleanStateErrorRenderer
       },
     ];
   }
-}
-
-/**
- * A matcher error renderer for the `toBeDisabled` matcher.
- */
-export class ToBeDisabledErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "disabled";
-  protected oppositeState = "enabled";
 }
 
 export class ToBeEditableErrorRenderer extends BooleanStateErrorRenderer {

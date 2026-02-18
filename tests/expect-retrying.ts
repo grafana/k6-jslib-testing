@@ -96,14 +96,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeDisabled (fail)",
     selector: "#toBeEnabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeDisabled()
+         Error: expect(received).toBeDisabled()
             At: ...
 
       Expected: disabled
       Received: enabled
+
       Call log: 
         - expect.toBeDisabled with timeout 5000ms
-        - waiting for locator
+        - assertion toBeDisabled failed (x47)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -855,14 +856,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeChecked (fail)",
     selector: "#toBeCheckedCheckbox",
     expectedError: dedent`
-         Error: expect(locator).toBeChecked()
+         Error: expect(received).not.toBeChecked(options)
             At: ...
 
-      Expected: checked
-      Received: unchecked
+      Expected: unchecked
+      Received: checked
+
       Call log: 
         - expect.toBeChecked with timeout 1000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
@@ -882,14 +883,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeDisabled (fail)",
     selector: "#toBeDisabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeDisabled()
+         Error: expect(received).not.toBeDisabled()
             At: ...
 
-      Expected: disabled
-      Received: enabled
+      Expected: enabled
+      Received: disabled
+
       Call log: 
         - expect.toBeDisabled with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
@@ -996,14 +997,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeEnabled (fail)",
     selector: "#toBeEnabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeEnabled()
+         Error: expect(received).not.toBeEnabled()
             At: ...
 
-      Expected: enabled
-      Received: disabled
+      Expected: disabled
+      Received: enabled
+
       Call log: 
         - expect.toBeEnabled with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
