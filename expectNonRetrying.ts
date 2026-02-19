@@ -20,14 +20,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Ensures that value has a `.length` property equal to expected.
-   * Useful for arrays and strings.
-   *
-   * @param expected
-   */
-  toHaveLength(expected: number): void;
-
-  /**
    * Ensures that a string contains an expected substring using a case-sensitive comparison,
    * or that an Array or Set contains an expected item.
    *
@@ -108,10 +100,6 @@ export function createExpectation(
     new ToBeUndefinedErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register(
-    "toHaveLength",
-    new ToHaveLengthErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
     "toContain",
     new ToContainErrorRenderer(),
   );
@@ -131,16 +119,6 @@ export function createExpectation(
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
       return createExpectation(received, config, message, !isNegated);
-    },
-
-    toHaveLength(expected: number): void {
-      createMatcher(
-        "toHaveLength",
-        () => (received as Array<unknown>).length === expected,
-        expected.toString(),
-        (received as Array<unknown>).length.toString(),
-        matcherConfig,
-      );
     },
 
     toContain(expected: unknown): void {
@@ -397,41 +375,6 @@ export class ToBeTruthyErrorRenderer extends ReceivedOnlyMatcherRenderer {
 export class ToBeUndefinedErrorRenderer extends ReceivedOnlyMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeUndefined";
-  }
-}
-
-/**
- * A matcher error renderer for the `toHaveLength` matcher.
- */
-export class ToHaveLengthErrorRenderer extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toHaveLength";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      {
-        label: "Expected length",
-        value: maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received length",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-      {
-        label: "Received array",
-        value: maybeColorize(
-          info.matcherSpecific?.receivedArray as string,
-          "red",
-        ),
-        group: 3,
-      },
-    ];
   }
 }
 

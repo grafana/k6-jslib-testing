@@ -386,124 +386,56 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toHaveLength", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with array
-    createExpectation([1, 2, 3], config).toHaveLength(3);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for correct length");
+    createMatchers([1, 2, 3]).toHaveLength(3);
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test passing case with string
-    createExpectation("abc", config).toHaveLength(3);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for correct string length",
-    );
+    createMatchers("abc").toHaveLength(3);
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation([1, 2], config).toHaveLength(3);
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for incorrect length");
+    createMatchers([1, 2]).toHaveLength(3);
+    assert(spy.called, "Assert should have been called on fail");
   });
 
   await t.step("toHaveLength with different types", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test with array
-    createExpectation([1, 2, 3], config).toHaveLength(3);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for array with correct length",
-    );
+    createMatchers([1, 2, 3]).toHaveLength(3);
+    assert(!spy.called, "Array with correct length should pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with string
-    createExpectation("hello", config).toHaveLength(5);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for string with correct length",
-    );
+    createMatchers("hello").toHaveLength(5);
+    assert(!spy.called, "String with correct length should pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with array-like object
     const arrayLike = { length: 3, 0: "a", 1: "b", 2: "c" };
-    createExpectation(arrayLike, config).toHaveLength(3);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for array-like object with correct length",
-    );
+    createMatchers(arrayLike).toHaveLength(3);
+    assert(!spy.called, "Array-like with correct length should pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with empty array
-    createExpectation([], config).toHaveLength(0);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for empty array");
+    createMatchers([]).toHaveLength(0);
+    assert(!spy.called, "Empty array should pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with empty string
-    createExpectation("", config).toHaveLength(0);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for empty string");
+    createMatchers("").toHaveLength(0);
+    assert(!spy.called, "Empty string should pass");
   });
 
   await t.step("toContain with string", () => {

@@ -724,28 +724,114 @@ const TO_EQUAL_TESTS: TestSuite = {
 
 const TO_HAVE_LENGTH_TESTS: TestSuite = {
   suite: "toHaveLength",
-  children: [{
-    name: "pass",
-    assertion: ({ expect }) => {
-      expect([1, 2, 3]).toHaveLength(3);
+  children: [
+    // Array: pass
+    {
+      name: "pass (array)",
+      assertion: ({ expect }) => {
+        expect([1, 2, 3]).toHaveLength(3);
+      },
     },
-  }, {
-    name: "fail",
-    expectedError: dedent`
+    // Array: fail
+    {
+      name: "fail (array)",
+      expectedError: dedent`
                 Error: expect(received).toHaveLength(expected)
                    At: ...
 
       Expected length: 5
       Received length: 3
-       Received array: undefined
+       Received value: [1,2,3]
 
              Filename: expect-non-retrying.ts
                  Line: ...
     `,
-    assertion: ({ expect }) => {
-      expect([1, 2, 3]).toHaveLength(5);
+      assertion: ({ expect }) => {
+        expect([1, 2, 3]).toHaveLength(5);
+      },
     },
-  }, { suite: "negated", children: [] }],
+    // String: pass
+    {
+      name: "pass (string)",
+      assertion: ({ expect }) => {
+        expect("abc").toHaveLength(3);
+      },
+    },
+    // String: fail
+    {
+      name: "fail (string)",
+      expectedError: dedent`
+                  Error: expect(received).toHaveLength(expected)
+                     At: ...
+
+        Expected length: 4
+        Received length: 3
+         Received value: "abc"
+
+               Filename: expect-non-retrying.ts
+                   Line: ...
+      `,
+      assertion: ({ expect }) => {
+        expect("abc").toHaveLength(4);
+      },
+    },
+    // Negated cases
+    {
+      suite: "negated",
+      children: [
+        // Array: pass (should not be length 2)
+        {
+          name: "pass (array)",
+          assertion: ({ expect }) => {
+            expect([1, 2, 3]).not.toHaveLength(2);
+          },
+        },
+        // Array: fail (should not be length 3)
+        {
+          name: "fail (array)",
+          expectedError: dedent`
+                      Error: expect(received).not.toHaveLength(expected)
+                         At: ...
+
+            Expected length: 3
+            Received length: 3
+             Received value: [1,2,3]
+
+                   Filename: expect-non-retrying.ts
+                       Line: ...
+          `,
+          assertion: ({ expect }) => {
+            expect([1, 2, 3]).not.toHaveLength(3);
+          },
+        },
+        // String: pass (should not be length 4)
+        {
+          name: "pass (string)",
+          assertion: ({ expect }) => {
+            expect("abc").not.toHaveLength(4);
+          },
+        },
+        // String: fail (should not be length 3)
+        {
+          name: "fail (string)",
+          expectedError: dedent`
+                      Error: expect(received).not.toHaveLength(expected)
+                         At: ...
+
+            Expected length: 3
+            Received length: 3
+             Received value: "abc"
+
+                   Filename: expect-non-retrying.ts
+                       Line: ...
+          `,
+          assertion: ({ expect }) => {
+            expect("abc").not.toHaveLength(3);
+          },
+        },
+      ],
+    },
+  ],
 };
 
 const TO_CONTAIN_TESTS: TestSuite = {
