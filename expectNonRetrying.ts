@@ -20,14 +20,6 @@ export interface NonRetryingExpectation {
   not: NonRetryingExpectation;
 
   /**
-   * Ensures that a string contains an expected substring using a case-sensitive comparison,
-   * or that an Array or Set contains an expected item.
-   *
-   * @param expected The substring or item to check for
-   */
-  toContain(expected: unknown): void;
-
-  /**
    * Ensures that value is an Array or Set and contains an item equal to the expected.
    *
    * For objects, this method recursively checks equality of all fields, rather than comparing objects by reference.
@@ -100,10 +92,6 @@ export function createExpectation(
     new ToBeUndefinedErrorRenderer(),
   );
   MatcherErrorRendererRegistry.register(
-    "toContain",
-    new ToContainErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
     "toContainEqual",
     new ToContainEqualErrorRenderer(),
   );
@@ -119,45 +107,6 @@ export function createExpectation(
   const expectation: NonRetryingExpectation = {
     get not(): NonRetryingExpectation {
       return createExpectation(received, config, message, !isNegated);
-    },
-
-    toContain(expected: unknown): void {
-      let receivedType = "";
-      if (typeof received === "string") {
-        receivedType = "string";
-      } else if (Array.isArray(received)) {
-        receivedType = "array";
-      } else if (received instanceof Set) {
-        receivedType = "set";
-      } else {
-        throw new Error(
-          "toContain is only supported for strings, arrays, and sets",
-        );
-      }
-      createMatcher(
-        "toContain",
-        () => {
-          if (typeof received === "string") {
-            return received.includes(expected as string);
-          } else if (Array.isArray(received)) {
-            return received.includes(expected);
-          } else if (received instanceof Set) {
-            return Array.from(received).includes(expected);
-          } else {
-            throw new Error(
-              "toContain is only supported for strings, arrays, and sets",
-            );
-          }
-        },
-        expected,
-        received,
-        {
-          ...matcherConfig,
-          matcherSpecific: {
-            receivedType,
-          },
-        },
-      );
     },
 
     toContainEqual(expected: unknown): void {
@@ -375,40 +324,6 @@ export class ToBeTruthyErrorRenderer extends ReceivedOnlyMatcherRenderer {
 export class ToBeUndefinedErrorRenderer extends ReceivedOnlyMatcherRenderer {
   protected getMatcherName(): string {
     return "toBeUndefined";
-  }
-}
-
-/**
- * A matcher error renderer for the `toContain` matcher.
- */
-export class ToContainErrorRenderer extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toContain";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    const isNegated = info.matcherSpecific?.isNegated as boolean;
-    const receivedType = typeof info.matcherSpecific?.receivedType === "string"
-      ? info.matcherSpecific?.receivedType as string
-      : Array.isArray(JSON.parse(info.received))
-      ? "array"
-      : "string";
-
-    return [
-      {
-        label: isNegated ? "Expected not to contain" : "Expected to contain",
-        value: maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: `Received ${receivedType}`,
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
   }
 }
 

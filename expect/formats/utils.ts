@@ -29,6 +29,20 @@ export function printJsValue(value: unknown): string {
     return value.toString();
   }
 
+  if (value instanceof Set) {
+    // Format it like an array, but without the square brackets.
+    const values = JSON.stringify(Array.from(value))
+      .slice(1, -1);
+
+    return `{${values}}`;
+  }
+
+  if (value instanceof Map) {
+    const entries = Object.fromEntries(value.entries());
+
+    return `Map ${JSON.stringify(entries)}`;
+  }
+
   if (
     value instanceof Object &&
     value.constructor !== Object &&

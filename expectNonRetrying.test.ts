@@ -439,221 +439,91 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toContain with string", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with string
-    createExpectation("hello world", config).toContain("world");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for string containing substring",
-    );
+    createMatchers("hello world").toContain("world");
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case with string
-    createExpectation("hello world", config).toContain("universe");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for string not containing substring",
-    );
+    createMatchers("hello world").toContain("universe");
+    assert(spy.called, "Assert should have been called on fail");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test case sensitivity
-    createExpectation("hello World", config).toContain("world");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for case-sensitive mismatch",
-    );
+    createMatchers("hello World").toContain("world");
+    assert(spy.called, "Condition should be false for case-sensitive mismatch");
   });
 
   await t.step("toContain with array", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with array of primitives
-    createExpectation([1, 2, 3], config).toContain(2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for array containing item",
-    );
+    createMatchers([1, 2, 3]).toContain(2);
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case with array
-    createExpectation([1, 2, 3], config).toContain(4);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for array not containing item",
-    );
+    createMatchers([1, 2, 3]).toContain(4);
+    assert(spy.called, "Assert should have been called on fail");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with array of objects (reference equality)
     const obj = { id: 1 };
     const array = [{ id: 2 }, obj, { id: 3 }];
 
-    createExpectation(array, config).toContain(obj);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for array containing object reference",
-    );
+    createMatchers(array).toContain(obj);
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with array of objects (different reference but same content)
-    createExpectation(array, config).toContain({ id: 1 });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for array not containing object with same content but different reference",
-    );
+    createMatchers(array).toContain({ id: 1 });
+    assert(spy.called, "Condition should be false for different reference");
   });
 
   await t.step("toContain with Set", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with Set
     const set = new Set([1, 2, 3]);
-    createExpectation(set, config).toContain(2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for Set containing item",
-    );
+    createMatchers(set).toContain(2);
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case with Set
-    createExpectation(set, config).toContain(4);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for Set not containing item",
-    );
+    createMatchers(set).toContain(4);
+    assert(spy.called, "Assert should have been called on fail");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with Set of objects (reference equality)
     const obj = { id: 1 };
     const objSet = new Set([{ id: 2 }, obj, { id: 3 }]);
 
-    createExpectation(objSet, config).toContain(obj);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for Set containing object reference",
-    );
+    createMatchers(objSet).toContain(obj);
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with Set of objects (different reference but same content)
-    createExpectation(objSet, config).toContain({ id: 1 });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for Set not containing object with same content but different reference",
-    );
+    createMatchers(objSet).toContain({ id: 1 });
+    assert(spy.called, "Condition should be false for different reference");
   });
 
   await t.step("toContain with unsupported type", () => {
-    const config: ExpectConfig = {
-      assertFn: () => {},
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
-    // Test with unsupported type
-    try {
-      createExpectation(123, config).toContain(2);
-      assert(false, "Should have thrown an error for unsupported type");
-    } catch (error) {
-      assert(
-        error instanceof Error,
-        "Should have thrown an Error for unsupported type",
-      );
-      assert(
-        error.message.includes("only supported for strings, arrays, and sets"),
-        "Error message should mention supported types",
-      );
-    }
+    // Test with unsupported type - matcher throws AssertionFailed, extend calls fail()
+    // @ts-expect-error - expected type mismatch
+    createMatchers(123).toContain(2);
+    assert(spy.called, "Assert should have been called for unsupported type");
   });
 
   await t.step("toContainEqual with array", () => {

@@ -852,8 +852,8 @@ const TO_CONTAIN_TESTS: TestSuite = {
                         Error: expect(received).toContain(expected)
                            At: ...
 
-          Expected to contain: universe
-              Received string: hello world
+          Expected to contain: "universe"
+              Received string: "hello world"
 
                      Filename: expect-non-retrying.ts
                          Line: ...
@@ -872,11 +872,11 @@ const TO_CONTAIN_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                Error: expect(received).toContain(expected)
+                                Error: expect(received).not.toContain(expected)
                                    At: ...
 
-              Expected not to contain: world
-                      Received string: hello world
+              Expected not to contain: "world"
+                      Received string: "hello world"
 
                              Filename: expect-non-retrying.ts
                                  Line: ...
@@ -923,7 +923,7 @@ const TO_CONTAIN_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                Error: expect(received).toContain(expected)
+                                Error: expect(received).not.toContain(expected)
                                    At: ...
 
               Expected not to contain: 2
@@ -955,7 +955,7 @@ const TO_CONTAIN_TESTS: TestSuite = {
                              At: ...
 
             Expected to contain: 4
-                   Received set: {}
+                   Received set: {1,2,3}
 
                        Filename: expect-non-retrying.ts
                            Line: ...
@@ -974,11 +974,11 @@ const TO_CONTAIN_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                Error: expect(received).toContain(expected)
+                                Error: expect(received).not.toContain(expected)
                                    At: ...
 
               Expected not to contain: 2
-                         Received set: {}
+                         Received set: {1,2,3}
 
                              Filename: expect-non-retrying.ts
                                  Line: ...
@@ -992,10 +992,19 @@ const TO_CONTAIN_TESTS: TestSuite = {
     },
     {
       name: "with unsupported type",
-      expectedError: new Error(
-        "toContain is only supported for strings, arrays, and sets",
-      ),
+      expectedError: dedent`
+                 Error: expect(received).toContain(expected)
+                    At: ...
+
+         Expected type: Set | Array | string
+         Received type: number
+        Received value: 123
+
+              Filename: expect-non-retrying.ts
+                  Line: ...
+      `,
       assertion: ({ expect }) => {
+        // @ts-expect-error - expected type mismatch
         expect(123).toContain(2);
       },
     },
