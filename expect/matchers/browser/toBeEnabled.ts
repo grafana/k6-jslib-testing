@@ -36,7 +36,6 @@ extend("toBeEnabled", {
       });
     }
 
-    const locator = received as Locator;
     const retryOptions: Required<RetryConfig> = {
       ...DEFAULT_RETRY_OPTIONS,
       ...this.config,
@@ -44,7 +43,7 @@ extend("toBeEnabled", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const enabled = await locator.isEnabled();
+      const enabled = await received.isEnabled();
 
       if (!enabled) {
         throw new AssertionFailed(

@@ -36,7 +36,6 @@ extend("toBeChecked", {
       });
     }
 
-    const locator = received as Locator;
     const retryOptions: Required<RetryConfig> = {
       ...DEFAULT_RETRY_OPTIONS,
       ...this.config,
@@ -44,7 +43,7 @@ extend("toBeChecked", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const checked = await locator.isChecked();
+      const checked = await received.isChecked();
 
       if (!checked) {
         throw new AssertionFailed(

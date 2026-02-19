@@ -36,7 +36,6 @@ extend("toBeHidden", {
       });
     }
 
-    const locator = received as Locator;
     const retryOptions: Required<RetryConfig> = {
       ...DEFAULT_RETRY_OPTIONS,
       ...this.config,
@@ -44,7 +43,7 @@ extend("toBeHidden", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const hidden = await locator.isHidden();
+      const hidden = await received.isHidden();
 
       if (!hidden) {
         throw new AssertionFailed(

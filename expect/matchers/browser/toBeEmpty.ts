@@ -65,7 +65,6 @@ extend("toBeEmpty", {
       });
     }
 
-    const locator = received as Locator;
     const retryOptions: Required<RetryConfig> = {
       ...DEFAULT_RETRY_OPTIONS,
       ...this.config,
@@ -73,7 +72,7 @@ extend("toBeEmpty", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const empty = await isEmpty(locator);
+      const empty = await isEmpty(received);
 
       if (!empty) {
         throw new AssertionFailed(

@@ -36,7 +36,6 @@ extend("toBeVisible", {
       });
     }
 
-    const locator = received as Locator;
     const retryOptions: Required<RetryConfig> = {
       ...DEFAULT_RETRY_OPTIONS,
       ...this.config,
@@ -44,7 +43,7 @@ extend("toBeVisible", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const visible = await locator.isVisible();
+      const visible = await received.isVisible();
 
       if (!visible) {
         throw new AssertionFailed(

@@ -36,7 +36,6 @@ extend("toBeEditable", {
       });
     }
 
-    const locator = received as Locator;
     const retryOptions: Required<RetryConfig> = {
       ...DEFAULT_RETRY_OPTIONS,
       ...this.config,
@@ -44,7 +43,7 @@ extend("toBeEditable", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const editable = await locator.isEditable();
+      const editable = await received.isEditable();
 
       if (!editable) {
         throw new AssertionFailed(
