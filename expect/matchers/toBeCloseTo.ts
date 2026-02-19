@@ -35,8 +35,8 @@ extend("toBeCloseTo", {
     if (typeof received !== "number") {
       throw new AssertionFailed({
         format: "type-mismatch",
-        expected: "number",
-        received: typeof received,
+        expected: ["number"],
+        received: received,
       });
     }
 

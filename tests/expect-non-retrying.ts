@@ -1248,14 +1248,15 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
     {
       name: "toHaveProperty with unsupported type",
       expectedError: dedent`
-           Error: expect(received).toHaveProperty(keyPath)
-              At: ...
+                 Error: expect(received).toHaveProperty(keyPath)
+                    At: ...
 
-        Expected: object
-        Received: string
+         Expected type: object
+         Received type: string
+        Received value: "string"
 
-        Filename: expect-non-retrying.ts
-            Line: ...
+              Filename: expect-non-retrying.ts
+                  Line: ...
       `,
       assertion: ({ expect }) => {
         expect("string").toHaveProperty("length");

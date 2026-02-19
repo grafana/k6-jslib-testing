@@ -50,8 +50,8 @@ extend("toHaveProperty", {
     if (typeof received !== "object" || received === null) {
       throw new AssertionFailed({
         format: "type-mismatch",
-        expected: "object",
-        received: received === null ? "null" : typeof received,
+        expected: ["object"],
+        received: received,
       });
     }
 
