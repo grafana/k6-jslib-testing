@@ -35,8 +35,8 @@ export function printJsValue(value: unknown): string {
     value.constructor !== Array &&
     value.constructor.name
   ) {
-    return `${value.constructor.name} ${JSON.stringify(value, null, 2)}`;
+    return `${value.constructor.name} ${JSON.stringify(value)}`;
   }
 
-  return JSON.stringify(value, null, 2);
+  return JSON.stringify(value);
 }
