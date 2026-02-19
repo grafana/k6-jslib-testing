@@ -68,14 +68,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeChecked (fail)",
     selector: "#notToBeCheckedCheckbox",
     expectedError: dedent`
-         Error: expect(locator).toBeChecked()
+         Error: expect(received).toBeChecked(options)
             At: ...
 
       Expected: checked
       Received: unchecked
+
       Call log: 
         - expect.toBeChecked with timeout 1000ms
-        - waiting for locator
+        - assertion toBeChecked failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -95,14 +96,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeDisabled (fail)",
     selector: "#toBeEnabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeDisabled()
+         Error: expect(received).toBeDisabled()
             At: ...
 
       Expected: disabled
       Received: enabled
+
       Call log: 
         - expect.toBeDisabled with timeout 5000ms
-        - waiting for locator
+        - assertion toBeDisabled failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -122,14 +124,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeEditable (fail)",
     selector: "#toBeDisabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeEditable()
+         Error: expect(received).toBeEditable()
             At: ...
 
       Expected: editable
       Received: uneditable
+
       Call log: 
         - expect.toBeEditable with timeout 5000ms
-        - waiting for locator
+        - assertion toBeEditable failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -153,14 +156,15 @@ const standardTestCases: TestCase[] = [
         selector: "#notToBeEmptyInput",
 
         expectedError: dedent`
-             Error: expect(locator).toBeEmpty()
+             Error: expect(received).toBeEmpty()
                 At: ...
 
           Expected: empty
           Received: not empty
+
           Call log: 
             - expect.toBeEmpty with timeout 5000ms
-            - waiting for locator
+            - assertion toBeEmpty failed (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -181,14 +185,15 @@ const standardTestCases: TestCase[] = [
         selector: "#notToBeEmptyText",
 
         expectedError: dedent`
-             Error: expect(locator).toBeEmpty()
+             Error: expect(received).toBeEmpty()
                 At: ...
 
           Expected: empty
           Received: not empty
+
           Call log: 
             - expect.toBeEmpty with timeout 5000ms
-            - waiting for locator
+            - assertion toBeEmpty failed (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -210,14 +215,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeEnabled (fail)",
     selector: "#toBeDisabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeEnabled()
+         Error: expect(received).toBeEnabled()
             At: ...
 
       Expected: enabled
       Received: disabled
+
       Call log: 
         - expect.toBeEnabled with timeout 5000ms
-        - waiting for locator
+        - assertion toBeEnabled failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -237,14 +243,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeHidden (fail)",
     selector: "#toBeVisibleText",
     expectedError: dedent`
-         Error: expect(locator).toBeHidden()
+         Error: expect(received).toBeHidden()
             At: ...
 
       Expected: hidden
       Received: visible
+
       Call log: 
         - expect.toBeHidden with timeout 5000ms
-        - waiting for locator
+        - assertion toBeHidden failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -264,14 +271,15 @@ const standardTestCases: TestCase[] = [
     name: "toBeVisible (fail)",
     selector: "#toBeHiddenText",
     expectedError: dedent`
-         Error: expect(locator).toBeVisible()
+         Error: expect(received).toBeVisible()
             At: ...
 
       Expected: visible
       Received: hidden
+
       Call log: 
         - expect.toBeVisible with timeout 5000ms
-        - waiting for locator
+        - assertion toBeVisible failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -580,7 +588,7 @@ const standardTestCases: TestCase[] = [
 
           Call log: 
             - expect.toHaveTitle with timeout 5000ms
-            - 'K6 Browser Test Page' did not match 'Wrong Title' (x33)
+            - 'K6 Browser Test Page' did not match 'Wrong Title' (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -609,7 +617,7 @@ const standardTestCases: TestCase[] = [
 
           Call log: 
             - expect.toHaveTitle with timeout 5000ms
-            - 'K6 Browser Test Page' did not match pattern /Wrong Title/i (x33)
+            - 'K6 Browser Test Page' did not match pattern /Wrong Title/i (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -853,14 +861,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeChecked (fail)",
     selector: "#toBeCheckedCheckbox",
     expectedError: dedent`
-         Error: expect(locator).toBeChecked()
+         Error: expect(received).not.toBeChecked(options)
             At: ...
 
-      Expected: checked
-      Received: unchecked
+      Expected: unchecked
+      Received: checked
+
       Call log: 
         - expect.toBeChecked with timeout 1000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
@@ -880,14 +888,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeDisabled (fail)",
     selector: "#toBeDisabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeDisabled()
+         Error: expect(received).not.toBeDisabled()
             At: ...
 
-      Expected: disabled
-      Received: enabled
+      Expected: enabled
+      Received: disabled
+
       Call log: 
         - expect.toBeDisabled with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
@@ -907,14 +915,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeEditable (fail)",
     selector: "#toBeEditableInput",
     expectedError: dedent`
-         Error: expect(locator).toBeEditable()
+         Error: expect(received).not.toBeEditable()
             At: ...
 
-      Expected: editable
-      Received: uneditable
+      Expected: uneditable
+      Received: editable
+
       Call log: 
         - expect.toBeEditable with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
@@ -938,14 +946,14 @@ const negationTestCases: TestCase[] = [
         selector: "#toBeEmptyInput",
 
         expectedError: dedent`
-             Error: expect(locator).toBeEmpty()
+             Error: expect(received).not.toBeEmpty()
                 At: ...
 
-          Expected: empty
-          Received: not empty
+          Expected: not empty
+          Received: empty
+
           Call log: 
             - expect.toBeEmpty with timeout 5000ms
-            - waiting for locator
 
           Filename: expect-retrying.ts
               Line: ...
@@ -965,14 +973,14 @@ const negationTestCases: TestCase[] = [
         name: "non-input element (fail)",
         selector: "#toBeEmptyText",
         expectedError: dedent`
-             Error: expect(locator).toBeEmpty()
+             Error: expect(received).not.toBeEmpty()
                 At: ...
 
-          Expected: empty
-          Received: not empty
+          Expected: not empty
+          Received: empty
+
           Call log: 
             - expect.toBeEmpty with timeout 5000ms
-            - waiting for locator
 
           Filename: expect-retrying.ts
               Line: ...
@@ -994,14 +1002,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeEnabled (fail)",
     selector: "#toBeEnabledInput",
     expectedError: dedent`
-         Error: expect(locator).toBeEnabled()
+         Error: expect(received).not.toBeEnabled()
             At: ...
 
-      Expected: enabled
-      Received: disabled
+      Expected: disabled
+      Received: enabled
+
       Call log: 
         - expect.toBeEnabled with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
@@ -1021,14 +1029,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeHidden (fail)",
     selector: "#toBeHiddenText",
     expectedError: dedent`
-         Error: expect(locator).toBeHidden()
+         Error: expect(received).not.toBeHidden()
             At: ...
 
-      Expected: hidden
-      Received: visible
+      Expected: visible
+      Received: hidden
+
       Call log: 
         - expect.toBeHidden with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
@@ -1048,14 +1056,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toBeVisible (fail)",
     selector: "#toBeVisibleText",
     expectedError: dedent`
-         Error: expect(locator).toBeVisible()
+         Error: expect(received).not.toBeVisible()
             At: ...
 
-      Expected: visible
-      Received: hidden
+      Expected: hidden
+      Received: visible
+
       Call log: 
         - expect.toBeVisible with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...
@@ -1273,10 +1281,10 @@ async function runTestCase(
     }
 
     // Optionally verify the error message matches expected
-    const normalized = error.message.replace(/At: .*$/mg, "At: ...").replace(
-      /Line: \d+$/mg,
-      "Line: ...",
-    );
+    const normalized = error.message
+      .replace(/At: .*$/mg, "At: ...")
+      .replace(/Line: \d+$/mg, "Line: ...")
+      .replace(/- (.*) \(x\d+\)$/mg, "- $1 (xN)");
 
     if (trimEmptyLines(normalized) !== trimEmptyLines(testCase.expectedError)) {
       return fail(

@@ -24,7 +24,7 @@ extend("toBeGreaterThan", {
       });
     }
 
-    if (!((received as number | bigint) > (expected as number | bigint))) {
+    if (!(received > expected)) {
       throw new AssertionFailed({
         format: "relational-comparison",
         expected,

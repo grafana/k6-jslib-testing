@@ -1,4 +1,4 @@
-import { assert, type SoftMode } from "./assert.ts";
+import { assert } from "./assert.ts";
 import type { ANSI_COLORS } from "./colors.ts";
 import {
   DEFAULT_RETRY_OPTIONS,
@@ -11,7 +11,6 @@ import {
   type LineGroup,
   type MatcherErrorInfo,
   MatcherErrorRendererRegistry,
-  ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
 import { parseStackTrace } from "./stacktrace.ts";
 import type { Locator } from "k6/browser";
@@ -41,47 +40,6 @@ export interface LocatorExpectation {
    * Negates the expectation, causing the assertion to pass when it would normally fail, and vice versa.
    */
   not: LocatorExpectation;
-
-  /**
-   * Ensures the Locator points to a checked input.
-   */
-  toBeChecked(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
-   * Ensures the Locator points to a disabled element.
-   * Element is disabled if it has "disabled" attribute or is disabled via 'aria-disabled'.
-   *
-   * Note that only native control elements such as HTML button, input, select, textarea, option, optgroup can be disabled by setting "disabled" attribute.
-   * "disabled" attribute on other elements is ignored by the browser.
-   */
-  toBeDisabled(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
-   * Ensures the Locator points to an editable element.
-   */
-  toBeEditable(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
-   * Ensures the Locator points to an empty element. If the element is an input,
-   * it will be empty if it has no value. If the element is not an input, it will
-   * be empty if it has no text content.
-   */
-  toBeEmpty(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
-   * Ensures the Locator points to an enabled element.
-   */
-  toBeEnabled(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
-   * Ensures that Locator either does not resolve to any DOM node, or resolves to a non-visible one.
-   */
-  toBeHidden(options?: Partial<RetryConfig>): Promise<void>;
-
-  /**
-   * Ensures that Locator points to an attached and visible DOM node.
-   */
-  toBeVisible(options?: Partial<RetryConfig>): Promise<void>;
 
   /**
    * Ensures that the Locator points to an element with the given text.
@@ -159,47 +117,9 @@ export function createLocatorExpectation(
 
   // Register renderers specific to each matchers at initialization time.
   MatcherErrorRendererRegistry.register(
-    "toBeChecked",
-    new ToBeCheckedErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeDisabled",
-    new ToBeDisabledErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeEditable",
-    new ToBeEditableErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeEmpty",
-    new ToBeEmptyErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeEnabled",
-    new ToBeEnabledErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeHidden",
-    new ToBeHiddenErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
-    "toBeVisible",
-    new ToBeVisibleErrorRenderer(),
-  );
-  MatcherErrorRendererRegistry.register(
     "toHaveValue",
     new ToHaveValueErrorRenderer(),
   );
-
-  const matcherConfig = {
-    locator,
-    retryConfig,
-    usedAssert,
-    isSoft,
-    isNegated,
-    message,
-    softMode: config.softMode,
-  };
 
   const matchText = async (
     matcherName: string,
@@ -322,123 +242,6 @@ export function createLocatorExpectation(
   const expectation: LocatorExpectation = {
     get not(): LocatorExpectation {
       return createLocatorExpectation(locator, config, message, !isNegated);
-    },
-
-    async toBeChecked(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeChecked",
-        async () => await locator.isChecked(),
-        "checked",
-        "unchecked",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeDisabled(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeDisabled",
-        async () => await locator.isDisabled(),
-        "disabled",
-        "enabled",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeEditable(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeEditable",
-        async () => await locator.isEditable(),
-        "editable",
-        "uneditable",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeEmpty(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeEmpty",
-        async () => {
-          try {
-            // First check if the element is an input, textarea or select.
-            return await locator.inputValue().then((text) => text.length === 0);
-          } catch (error) {
-            let msg = "";
-            if (error instanceof Error) {
-              msg = error.toString();
-            } else {
-              // Errors from k6 are not instances of Error at the moment.
-              msg = String(error);
-            }
-
-            // FIXME: This is brittle since it relies on the error message.
-            //        We should consider moving the logic to the browser module
-            //        in k6 itself.
-            //        See https://github.com/grafana/k6-jslib-testing/issues/43
-            //        for more details.
-            if (
-              !msg.includes(
-                "Node is not an <input>, <textarea> or <select> element",
-              )
-            ) {
-              throw error;
-            }
-
-            return await locator.textContent().then((text) => {
-              if (text === null || text === undefined) {
-                return true;
-              }
-              return text.trim().length === 0;
-            });
-          }
-        },
-        "empty",
-        "not empty",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeEnabled(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeEnabled",
-        async () => await locator.isEnabled(),
-        "enabled",
-        "disabled",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeHidden(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeHidden",
-        async () => await locator.isHidden(),
-        "hidden",
-        "visible",
-        { ...matcherConfig, options },
-      );
-    },
-
-    async toBeVisible(
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      await createMatcher(
-        "toBeVisible",
-        async () => await locator.isVisible(),
-        "visible",
-        "hidden",
-        { ...matcherConfig, options },
-      );
     },
 
     toHaveText(
@@ -579,181 +382,6 @@ export function createLocatorExpectation(
   };
 
   return expectation;
-}
-
-// Helper function to create common matcher info
-function createMatcherInfo(
-  matcherName: string,
-  expected: string,
-  received: string,
-  additionalInfo = {},
-  customMessage?: string,
-): MatcherErrorInfo {
-  const stacktrace = parseStackTrace(new Error().stack);
-  const executionContext = captureExecutionContext(stacktrace);
-
-  if (!executionContext) {
-    throw new Error("k6 failed to capture execution context");
-  }
-
-  return {
-    executionContext,
-    matcherName,
-    expected,
-    received,
-    customMessage,
-    ...additionalInfo,
-  };
-}
-
-// Helper function to handle common matcher logic
-async function createMatcher(
-  matcherName: string,
-  checkFn: () => Promise<boolean>,
-  expected: string,
-  received: string,
-  {
-    locator,
-    retryConfig,
-    usedAssert,
-    isSoft,
-    isNegated = false,
-    options = {},
-    message,
-    softMode,
-  }: {
-    locator: Locator;
-    retryConfig: RetryConfig;
-    usedAssert: typeof assert;
-    isSoft: boolean;
-    isNegated?: boolean;
-    options?: Partial<RetryConfig>;
-    message?: string;
-    softMode?: SoftMode;
-  },
-): Promise<void> {
-  const info = createMatcherInfo(matcherName, expected, received, {
-    matcherSpecific: {
-      locator,
-      timeout: options.timeout,
-      isNegated,
-    },
-  }, message);
-
-  try {
-    await withRetry(async () => {
-      const result = await checkFn();
-      // If isNegated is true, we want to invert the result
-      const finalResult = isNegated ? !result : result;
-
-      if (!finalResult) {
-        throw new Error("matcher failed");
-      }
-
-      usedAssert(
-        finalResult,
-        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-          info,
-          MatcherErrorRendererRegistry.getConfig(),
-        ),
-        isSoft,
-        softMode,
-      );
-    }, { ...retryConfig, ...options });
-  } catch (_) {
-    usedAssert(
-      false,
-      MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-        info,
-        MatcherErrorRendererRegistry.getConfig(),
-      ),
-      isSoft,
-      softMode,
-    );
-  }
-}
-
-/**
- * Base class for boolean state matchers (checked, disabled, etc.)
- */
-export abstract class BooleanStateErrorRenderer
-  extends ReceivedOnlyMatcherRenderer {
-  protected abstract state: string;
-  protected abstract oppositeState: string;
-
-  protected getMatcherName(): string {
-    return `toBe${this.state[0].toUpperCase()}${this.state.slice(1)}`;
-  }
-
-  protected override getReceivedPlaceholder(): string {
-    return "locator";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      { label: "Expected", value: this.state, group: 3 },
-      { label: "Received", value: this.oppositeState, group: 3 },
-      { label: "Call log", value: "", group: 3 },
-      {
-        label: "",
-        value: maybeColorize(
-          `  - expect.toBe${this.state[0].toUpperCase()}${
-            this.state.slice(1)
-          } with timeout ${info.matcherSpecific?.timeout}ms`,
-          "darkGrey",
-        ),
-        group: 3,
-        raw: true,
-      },
-      {
-        label: "",
-        value: maybeColorize(`  - waiting for locator`, "darkGrey"),
-        group: 3,
-        raw: true,
-      },
-    ];
-  }
-}
-
-export class ToBeCheckedErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "checked";
-  protected oppositeState = "unchecked";
-}
-
-/**
- * A matcher error renderer for the `toBeDisabled` matcher.
- */
-export class ToBeDisabledErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "disabled";
-  protected oppositeState = "enabled";
-}
-
-export class ToBeEditableErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "editable";
-  protected oppositeState = "uneditable";
-}
-
-export class ToBeEmptyErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "empty";
-  protected oppositeState = "not empty";
-}
-
-export class ToBeEnabledErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "enabled";
-  protected oppositeState = "disabled";
-}
-
-export class ToBeHiddenErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "hidden";
-  protected oppositeState = "visible";
-}
-
-export class ToBeVisibleErrorRenderer extends BooleanStateErrorRenderer {
-  protected state = "visible";
-  protected oppositeState = "hidden";
 }
 
 export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
