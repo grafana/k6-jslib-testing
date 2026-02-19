@@ -706,7 +706,7 @@ const TO_EQUAL_TESTS: TestSuite = {
     }, {
       name: "fail",
       expectedError: dedent`
-           Error: expect(received).toEqual(expected)
+           Error: expect(received).not.toEqual(expected)
               At: ...
 
         Expected: {"a":1}
@@ -1052,7 +1052,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                           Error: expect(received).toHaveProperty(keyPath)
                               At: ...
 
                    Property path: b
@@ -1080,7 +1080,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                           Error: expect(received).toHaveProperty(keyPath)
                               At: ...
 
                    Property path: a.c
@@ -1108,7 +1108,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                           Error: expect(received).toHaveProperty(keyPath)
                               At: ...
 
                    Property path: a[5]
@@ -1136,7 +1136,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                           Error: expect(received).toHaveProperty(keyPath, expected)
                               At: ...
 
                    Property path: a
@@ -1164,7 +1164,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                           Error: expect(received).toHaveProperty(keyPath, expected)
                               At: ...
 
                    Property path: a.b
@@ -1192,7 +1192,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
         {
           name: "fail",
           expectedError: dedent`
-                           Error: expect(received).toHaveProperty(keyPath, expected?)
+                           Error: expect(received).toHaveProperty(keyPath, expected)
                               At: ...
 
                    Property path: a[1]
@@ -1247,7 +1247,16 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
     },
     {
       name: "toHaveProperty with unsupported type",
-      expectedError: new Error("toHaveProperty is only supported for objects"),
+      expectedError: dedent`
+           Error: expect(received).toHaveProperty(keyPath)
+              At: ...
+
+        Expected: object
+        Received: string
+
+        Filename: expect-non-retrying.ts
+            Line: ...
+      `,
       assertion: ({ expect }) => {
         expect("string").toHaveProperty("length");
       },
@@ -1265,7 +1274,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                       Error: expect(received).toHaveProperty(keyPath, expected?)
+                                       Error: expect(received).not.toHaveProperty(keyPath)
                                           At: ...
 
                                Property path: a
@@ -1290,7 +1299,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                       Error: expect(received).toHaveProperty(keyPath, expected?)
+                                       Error: expect(received).not.toHaveProperty(keyPath, expected)
                                           At: ...
 
                                Property path: a
@@ -1315,7 +1324,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                       Error: expect(received).toHaveProperty(keyPath, expected?)
+                                       Error: expect(received).not.toHaveProperty(keyPath)
                                           At: ...
 
                                Property path: a.b
@@ -1342,7 +1351,7 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
             {
               name: "fail",
               expectedError: dedent`
-                                         Error: expect(received).toHaveProperty(keyPath, expected?)
+                                         Error: expect(received).not.toHaveProperty(keyPath)
                                             At: ...
 
                                  Property path: a[1]

@@ -9,7 +9,8 @@ type PrimitiveTypes =
   | "symbol"
   | "undefined"
   | "object"
-  | "function";
+  | "function"
+  | "null";
 
 declare module "../errors.ts" {
   interface ErrorFormats {

@@ -14,7 +14,6 @@ it("should fail when the object is not an instance of the expected class", async
 
   await expect(spy.result.passed).toBe(false);
   await expect(spy.result.message).toEqual(dedent`
-
                    Error: expect(received).toBeInstanceOf(expected)
                       At: ...
 
@@ -23,7 +22,6 @@ it("should fail when the object is not an instance of the expected class", async
 
                 Filename: toBeInstanceOf.ts
                     Line: ...
-
   `);
 });
 
@@ -39,8 +37,7 @@ describe("not", () => {
 
     await expect(spy.result.passed).toBe(false);
     await expect(spy.result.message).toEqual(dedent`
-
-                     Error: expect(received).toBeInstanceOf(expected)
+                     Error: expect(received).not.toBeInstanceOf(expected)
                         At: ...
 
       Expected constructor: TestClass
@@ -48,7 +45,6 @@ describe("not", () => {
 
                   Filename: toBeInstanceOf.ts
                       Line: ...
-
     `);
   });
 });

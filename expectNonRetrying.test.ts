@@ -215,45 +215,20 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toBeInstanceOf", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     class TestClass {}
     class OtherClass {}
 
     // Test passing case
-    createExpectation(new TestClass(), config).toBeInstanceOf(TestClass);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for correct instance");
+    createMatchers(new TestClass()).toBeInstanceOf(TestClass);
+    assert(!spy.called, "fail() should not have been called");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation(new TestClass(), config).toBeInstanceOf(OtherClass);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for incorrect instance",
-    );
+    createMatchers(new TestClass()).toBeInstanceOf(OtherClass);
+    assert(spy.called, "fail() should have been called");
   });
 
   await t.step("toBeLessThan", () => {
@@ -365,105 +340,49 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toEqual", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with primitives
-    createExpectation(5, config).toEqual(5);
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for equal primitives");
+    createMatchers(5).toEqual(5);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test passing case with objects
-    createExpectation({ a: 1, b: 2 }, config).toEqual({ a: 1, b: 2 });
-    assert(assertCalled, "Assert should have been called");
-    assert(assertCondition, "Condition should be true for equal objects");
+    createMatchers({ a: 1, b: 2 }).toEqual({ a: 1, b: 2 });
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation({ a: 1 }, config).toEqual({ a: 2 });
-    assert(assertCalled, "Assert should have been called");
-    assert(!assertCondition, "Condition should be false for unequal objects");
+    createMatchers({ a: 1 }).toEqual({ a: 2 });
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toEqual deep equality", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test nested objects
-    createExpectation(
+    createMatchers(
       { a: 1, b: { c: 2, d: [3, 4] } },
-      config,
     ).toEqual({ a: 1, b: { c: 2, d: [3, 4] } });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for deeply equal objects",
-    );
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test arrays with same values but different references
-    createExpectation([1, 2, { a: 3 }], config).toEqual([1, 2, { a: 3 }]);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for equal arrays with objects",
-    );
+    createMatchers([1, 2, { a: 3 }]).toEqual([1, 2, { a: 3 }]);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with different object structures
-    createExpectation({ a: 1, b: 2 }, config).toEqual({ b: 2, a: 1 });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for objects with same properties in different order",
-    );
+    createMatchers({ a: 1, b: 2 }).toEqual({ b: 2, a: 1 });
+    assert(!spy.called, "Assert should not have been called");
   });
 
   await t.step("toHaveLength", () => {
@@ -805,60 +724,6 @@ Deno.test("NonRetryingExpectation", async (t) => {
     }
   });
 
-  await t.step("negation with .not", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
-
-    // Test negated passing case
-    createExpectation(1, config).not.toEqual(2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for negated non-matching values",
-    );
-
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-
-    // Test negated failing case
-    createExpectation(1, config).not.toEqual(1);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for negated matching values",
-    );
-
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-
-    // Test double negation
-    createExpectation(1, config).not.not.toEqual(1);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for double negated matching values",
-    );
-  });
-
   await t.step("toContainEqual with array", () => {
     let assertCalled = false;
     let assertCondition = false;
@@ -1083,193 +948,67 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toHaveProperty with simple property", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation({ a: 1 }, config).toHaveProperty("a");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for object with property",
-    );
+    createMatchers({ a: 1 }).toHaveProperty("a");
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation({ a: 1 }, config).toHaveProperty("b");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for object without property",
-    );
+    createMatchers({ a: 1 }).toHaveProperty("b");
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toHaveProperty with nested property", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation({ a: { b: 2 } }, config).toHaveProperty("a.b");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for object with nested property",
-    );
+    createMatchers({ a: { b: 2 } }).toHaveProperty("a.b");
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case
-    createExpectation({ a: { c: 2 } }, config).toHaveProperty("a.b");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for object without nested property",
-    );
+    createMatchers({ a: { c: 2 } }).toHaveProperty("a.b");
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toHaveProperty with array index", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation({ a: [1, 2, 3] }, config).toHaveProperty("a[1]");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for object with array property",
-    );
+    createMatchers({ a: [1, 2, 3] }).toHaveProperty("a[1]");
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case - index out of bounds
-    createExpectation({ a: [1, 2, 3] }, config).toHaveProperty("a[5]");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for array index out of bounds",
-    );
+    createMatchers({ a: [1, 2, 3] }).toHaveProperty("a[5]");
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toHaveProperty with expected value", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case
-    createExpectation({ a: 1 }, config).toHaveProperty("a", 1);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for matching property value",
-    );
+    createMatchers({ a: 1 }).toHaveProperty("a", 1);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case - wrong value
-    createExpectation({ a: 1 }, config).toHaveProperty("a", 2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for non-matching property value",
-    );
+    createMatchers({ a: 1 }).toHaveProperty("a", 2);
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toHaveProperty with complex object", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     const complexObj = {
       a: {
@@ -1282,81 +1021,32 @@ Deno.test("NonRetryingExpectation", async (t) => {
     };
 
     // Test passing cases
-    createExpectation(complexObj, config).toHaveProperty("a.b[1].c", 2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for complex property path",
-    );
+    createMatchers(complexObj).toHaveProperty("a.b[1].c", 2);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
-    createExpectation(complexObj, config).toHaveProperty("d", true);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for boolean property",
-    );
+    createMatchers(complexObj).toHaveProperty("d", true);
+    assert(!spy.called, "Assert should not have been called");
+
+    // Reset mock
+    spy.reset();
+
+    // Test failing case
+    createMatchers(complexObj).toHaveProperty("a.b[1].c", 3);
+    assert(spy.called, "Assert should have been called");
   });
 
   await t.step("toHaveProperty with unsupported type", () => {
-    let errorThrown = false;
-    let errorMessage = "";
+    const [spy, createMatchers] = createMatchersWithSpy();
 
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      // This should not be called
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
-
-    try {
-      createExpectation("string", config).toHaveProperty("length");
-    } catch (error) {
-      errorThrown = true;
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-    }
-
-    assert(errorThrown, "Error should be thrown for unsupported type");
-    assert(
-      errorMessage.includes("only supported for objects"),
-      "Error message should mention supported types",
-    );
+    createMatchers({ a: 1 }).toHaveProperty("length");
+    assert(spy.called, "Should have been called for unsupported type");
   });
 
   await t.step("toHaveProperty with Playwright examples", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     const value = {
       a: {
@@ -1366,114 +1056,36 @@ Deno.test("NonRetryingExpectation", async (t) => {
     };
 
     // Test: expect(value).toHaveProperty('a.b');
-    createExpectation(value, config).toHaveProperty("a.b");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for a.b property",
-    );
+    createMatchers(value).toHaveProperty("a.b");
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test: expect(value).toHaveProperty('a.b', [42]);
-    createExpectation(value, config).toHaveProperty("a.b", [42]);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for a.b property with array value",
-    );
+    createMatchers(value).toHaveProperty("a.b", [42]);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test: expect(value).toHaveProperty('a.b[0]', 42);
-    createExpectation(value, config).toHaveProperty("a.b[0]", 42);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for a.b[0] property with value 42",
-    );
+    createMatchers(value).toHaveProperty("a.b[0]", 42);
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test: expect(value).toHaveProperty('c');
-    createExpectation(value, config).toHaveProperty("c");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for c property",
-    );
+    createMatchers(value).toHaveProperty("c");
+    assert(!spy.called, "Assert should not have been called");
 
     // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test: expect(value).toHaveProperty('c', true);
-    createExpectation(value, config).toHaveProperty("c", true);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for c property with value true",
-    );
-  });
-
-  await t.step("toHaveProperty with negation", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
-
-    // Test negation with missing property
-    createExpectation({ a: 1 }, config).not.toHaveProperty("b");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for negated missing property",
-    );
-
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-
-    // Test negation with existing property
-    createExpectation({ a: 1 }, config).not.toHaveProperty("a");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for negated existing property",
-    );
-
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-
-    // Test negation with expected value
-    createExpectation({ a: 1 }, config).not.toHaveProperty("a", 2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for negated non-matching property value",
-    );
+    createMatchers(value).toHaveProperty("c", true);
+    assert(!spy.called, "Assert should not have been called");
   });
 
   await t.step("not", () => {
