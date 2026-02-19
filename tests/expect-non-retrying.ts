@@ -1049,7 +1049,7 @@ const TO_CONTAIN_EQUAL_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                      Error: expect(received).toContainEqual(expected)
+                                      Error: expect(received).not.toContainEqual(expected)
                                          At: ...
 
               Expected not to contain equal: {"id":1}
@@ -1081,7 +1081,7 @@ const TO_CONTAIN_EQUAL_TESTS: TestSuite = {
                                    At: ...
 
             Expected to contain equal: {"id":5}
-                         Received set: {}
+                         Received set: {{"id":1},{"id":2}}
 
                              Filename: expect-non-retrying.ts
                                  Line: ...
@@ -1102,11 +1102,11 @@ const TO_CONTAIN_EQUAL_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                      Error: expect(received).toContainEqual(expected)
+                                      Error: expect(received).not.toContainEqual(expected)
                                          At: ...
 
               Expected not to contain equal: {"id":1}
-                               Received set: {}
+                               Received set: {{"id":1},{"id":2}}
 
                                    Filename: expect-non-retrying.ts
                                        Line: ...
@@ -1122,10 +1122,19 @@ const TO_CONTAIN_EQUAL_TESTS: TestSuite = {
     },
     {
       name: "with unsupported type",
-      expectedError: new Error(
-        "toContainEqual is only supported for arrays and sets",
-      ),
+      expectedError: dedent`
+                 Error: expect(received).toContainEqual(expected)
+                    At: ...
+
+         Expected type: Array | Set
+         Received type: string
+        Received value: "string"
+
+              Filename: expect-non-retrying.ts
+                  Line: ...
+      `,
       assertion: ({ expect }) => {
+        // @ts-expect-error - expected type mismatch
         expect("string").toContainEqual("s");
       },
     },

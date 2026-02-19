@@ -527,226 +527,98 @@ Deno.test("NonRetryingExpectation", async (t) => {
   });
 
   await t.step("toContainEqual with array", () => {
-    let assertCalled = false;
-    let assertCondition = false;
-
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     // Test passing case with array of primitives
-    createExpectation([1, 2, 3], config).toContainEqual(2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for array containing primitive item",
-    );
+    createMatchers([1, 2, 3]).toContainEqual(2);
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test failing case with array
-    createExpectation([1, 2, 3], config).toContainEqual(4);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for array not containing item",
-    );
+    createMatchers([1, 2, 3]).toContainEqual(4);
+    assert(spy.called, "Assert should have been called on fail");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with array of objects (deep equality)
     const array = [{ id: 2 }, { id: 1 }, { id: 3 }];
+    createMatchers(array).toContainEqual({ id: 1 });
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    createExpectation(array, config).toContainEqual({ id: 1 });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for array containing object with same content",
-    );
-
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
     // Test with nested objects
     const nestedArray = [
       { user: { name: "Alice", age: 30 } },
       { user: { name: "Bob", age: 25 } },
     ];
-
-    createExpectation(nestedArray, config).toContainEqual({
+    createMatchers(nestedArray).toContainEqual({
       user: { name: "Bob", age: 25 },
     });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for array containing nested object with same content",
-    );
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
-    createExpectation(nestedArray, config).toContainEqual({
+    createMatchers(nestedArray).toContainEqual({
       user: { name: "Bob", age: 26 },
     });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for array not containing nested object with different content",
-    );
+    assert(spy.called, "Assert should have been called on fail");
   });
 
   await t.step("toContainEqual with Set", () => {
-    let assertCalled = false;
-    let assertCondition = false;
+    const [spy, createMatchers] = createMatchersWithSpy();
 
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
-
-    // Test passing case with Set of primitives
     const set = new Set([1, 2, 3]);
-    createExpectation(set, config).toContainEqual(2);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for Set containing primitive item",
-    );
+    createMatchers(set).toContainEqual(2);
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
-    // Test failing case with Set
-    createExpectation(set, config).toContainEqual(4);
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for Set not containing item",
-    );
+    createMatchers(set).toContainEqual(4);
+    assert(spy.called, "Assert should have been called on fail");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
-    // Test with Set of objects (deep equality)
     const objSet = new Set([{ id: 2 }, { id: 1 }, { id: 3 }]);
+    createMatchers(objSet).toContainEqual({ id: 1 });
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    createExpectation(objSet, config).toContainEqual({ id: 1 });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for Set containing object with same content",
-    );
+    spy.reset();
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
-
-    // Test with nested objects
     const nestedSet = new Set([
       { user: { name: "Alice", age: 30 } },
       { user: { name: "Bob", age: 25 } },
     ]);
-
-    createExpectation(nestedSet, config).toContainEqual({
+    createMatchers(nestedSet).toContainEqual({
       user: { name: "Bob", age: 25 },
     });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for Set containing nested object with same content",
-    );
+    assert(!spy.called, "Assert should not have been called on pass");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
-    createExpectation(nestedSet, config).toContainEqual({
+    createMatchers(nestedSet).toContainEqual({
       user: { name: "Bob", age: 26 },
     });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for Set not containing nested object with different content",
-    );
+    assert(spy.called, "Assert should have been called on fail");
   });
 
   await t.step("toContainEqual with negation", () => {
-    let assertCalled = false;
-    let assertCondition = false;
+    const [spy, createMatchers] = createMatchersWithSpy();
 
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-    };
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
-
-    // Test negated passing case
-    createExpectation([{ id: 1 }, { id: 2 }], config).not.toContainEqual({
+    // .not.toContainEqual when value is not in collection -> pass
+    createMatchers([{ id: 1 }, { id: 2 }], undefined, true).toContainEqual({
       id: 3,
     });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      assertCondition,
-      "Condition should be true for negated non-matching values",
-    );
+    assert(!spy.called, "Negated pass should not call fail");
 
-    // Reset mock
-    assertCalled = false;
-    assertCondition = false;
+    spy.reset();
 
-    // Test negated failing case
-    createExpectation([{ id: 1 }, { id: 2 }], config).not.toContainEqual({
+    // .not.toContainEqual when value is in collection -> fail
+    createMatchers([{ id: 1 }, { id: 2 }], undefined, true).toContainEqual({
       id: 1,
     });
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false for negated matching values",
-    );
+    assert(spy.called, "Negated fail should call fail");
   });
 
   await t.step("toHaveProperty with simple property", () => {

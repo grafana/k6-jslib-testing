@@ -11,7 +11,6 @@ import {
   MatcherErrorRendererRegistry,
   ReceivedOnlyMatcherRenderer,
 } from "./render.ts";
-import { isDeepEqual } from "./expect/matchers/utils.ts";
 
 export interface NonRetryingExpectation {
   /**
@@ -19,15 +18,6 @@ export interface NonRetryingExpectation {
    */
   not: NonRetryingExpectation;
 
-  /**
-   * Ensures that value is an Array or Set and contains an item equal to the expected.
-   *
-   * For objects, this method recursively checks equality of all fields, rather than comparing objects by reference.
-   * For primitive values, this method is equivalent to expect(value).toContain().
-   *
-   * @param expected The item to check for deep equality within the collection
-   */
-  toContainEqual(expected: unknown): void;
 }
 
 /**
@@ -91,10 +81,6 @@ export function createExpectation(
     "toBeUndefined",
     new ToBeUndefinedErrorRenderer(),
   );
-  MatcherErrorRendererRegistry.register(
-    "toContainEqual",
-    new ToContainEqualErrorRenderer(),
-  );
 
   const matcherConfig = {
     usedAssert,
@@ -109,43 +95,6 @@ export function createExpectation(
       return createExpectation(received, config, message, !isNegated);
     },
 
-    toContainEqual(expected: unknown): void {
-      let receivedType = "";
-      if (Array.isArray(received)) {
-        receivedType = "array";
-      } else if (received instanceof Set) {
-        receivedType = "set";
-      } else {
-        throw new Error(
-          "toContainEqual is only supported for arrays and sets",
-        );
-      }
-
-      createMatcher(
-        "toContainEqual",
-        () => {
-          if (Array.isArray(received)) {
-            return received.some((item) => isDeepEqual(item, expected));
-          } else if (received instanceof Set) {
-            return Array.from(received).some((item) =>
-              isDeepEqual(item, expected)
-            );
-          } else {
-            throw new Error(
-              "toContainEqual is only supported for arrays and sets",
-            );
-          }
-        },
-        expected,
-        received,
-        {
-          ...matcherConfig,
-          matcherSpecific: {
-            receivedType,
-          },
-        },
-      );
-    },
   };
 
   return expectation;
@@ -327,35 +276,3 @@ export class ToBeUndefinedErrorRenderer extends ReceivedOnlyMatcherRenderer {
   }
 }
 
-/**
- * A matcher error renderer for the `toContainEqual` matcher.
- */
-export class ToContainEqualErrorRenderer
-  extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toContainEqual";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    const isNegated = info.matcherSpecific?.isNegated as boolean;
-    const receivedType = info.matcherSpecific?.receivedType as string;
-
-    return [
-      {
-        label: isNegated
-          ? "Expected not to contain equal"
-          : "Expected to contain equal",
-        value: maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: `Received ${receivedType}`,
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-    ];
-  }
-}

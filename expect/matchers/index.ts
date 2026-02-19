@@ -14,5 +14,6 @@ import "./toBeTruthy.ts";
 import "./toBeUndefined.ts";
 import "./toEqual.ts";
 import "./toContain.ts";
+import "./toContainEqual.ts";
 import "./toHaveLength.ts";
 import "./toHaveProperty.ts";
