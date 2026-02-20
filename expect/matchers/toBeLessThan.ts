@@ -20,7 +20,7 @@ extend("toBeLessThan", {
       throw new AssertionFailed({
         format: "type-mismatch",
         expected: ["number", "bigint"],
-        received: typeof received,
+        received: received,
       });
     }
 

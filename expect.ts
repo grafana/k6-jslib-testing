@@ -1,10 +1,6 @@
 import type { Locator } from "k6/browser";
 import { ConfigLoader, type ExpectConfig } from "./config.ts";
 import {
-  createExpectation as createNonRetryingExpectation,
-  type NonRetryingExpectation,
-} from "./expectNonRetrying.ts";
-import {
   createLocatorExpectation,
   type LocatorExpectation,
 } from "./expectRetrying.ts";
@@ -58,7 +54,6 @@ export interface ExpectFunction {
 
 type Expectations<T> =
   & MatchersFor<T>
-  & NonRetryingExpectation
   & LocatorExpectation
   & { not: Expectations<T> };
 
@@ -69,7 +64,6 @@ function createExpectations<T>(
   isNegated: boolean,
 ): Expectations<T> {
   return {
-    ...createNonRetryingExpectation(received, config, message, isNegated),
     ...createLocatorExpectation(
       received as Locator,
       config,

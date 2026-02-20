@@ -27,8 +27,9 @@ extend("toHaveTitle", {
   ) {
     if (!isPage(received)) {
       throw new AssertionFailed({
-        format: "received",
-        received: "unknown",
+        format: "type-mismatch",
+        expected: [{ name: "Page" }],
+        received: received,
       });
     }
 

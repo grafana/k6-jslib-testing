@@ -724,28 +724,114 @@ const TO_EQUAL_TESTS: TestSuite = {
 
 const TO_HAVE_LENGTH_TESTS: TestSuite = {
   suite: "toHaveLength",
-  children: [{
-    name: "pass",
-    assertion: ({ expect }) => {
-      expect([1, 2, 3]).toHaveLength(3);
+  children: [
+    // Array: pass
+    {
+      name: "pass (array)",
+      assertion: ({ expect }) => {
+        expect([1, 2, 3]).toHaveLength(3);
+      },
     },
-  }, {
-    name: "fail",
-    expectedError: dedent`
+    // Array: fail
+    {
+      name: "fail (array)",
+      expectedError: dedent`
                 Error: expect(received).toHaveLength(expected)
                    At: ...
 
       Expected length: 5
       Received length: 3
-       Received array: undefined
+       Received value: [1,2,3]
 
              Filename: expect-non-retrying.ts
                  Line: ...
     `,
-    assertion: ({ expect }) => {
-      expect([1, 2, 3]).toHaveLength(5);
+      assertion: ({ expect }) => {
+        expect([1, 2, 3]).toHaveLength(5);
+      },
     },
-  }, { suite: "negated", children: [] }],
+    // String: pass
+    {
+      name: "pass (string)",
+      assertion: ({ expect }) => {
+        expect("abc").toHaveLength(3);
+      },
+    },
+    // String: fail
+    {
+      name: "fail (string)",
+      expectedError: dedent`
+                  Error: expect(received).toHaveLength(expected)
+                     At: ...
+
+        Expected length: 4
+        Received length: 3
+         Received value: "abc"
+
+               Filename: expect-non-retrying.ts
+                   Line: ...
+      `,
+      assertion: ({ expect }) => {
+        expect("abc").toHaveLength(4);
+      },
+    },
+    // Negated cases
+    {
+      suite: "negated",
+      children: [
+        // Array: pass (should not be length 2)
+        {
+          name: "pass (array)",
+          assertion: ({ expect }) => {
+            expect([1, 2, 3]).not.toHaveLength(2);
+          },
+        },
+        // Array: fail (should not be length 3)
+        {
+          name: "fail (array)",
+          expectedError: dedent`
+                      Error: expect(received).not.toHaveLength(expected)
+                         At: ...
+
+            Expected length: 3
+            Received length: 3
+             Received value: [1,2,3]
+
+                   Filename: expect-non-retrying.ts
+                       Line: ...
+          `,
+          assertion: ({ expect }) => {
+            expect([1, 2, 3]).not.toHaveLength(3);
+          },
+        },
+        // String: pass (should not be length 4)
+        {
+          name: "pass (string)",
+          assertion: ({ expect }) => {
+            expect("abc").not.toHaveLength(4);
+          },
+        },
+        // String: fail (should not be length 3)
+        {
+          name: "fail (string)",
+          expectedError: dedent`
+                      Error: expect(received).not.toHaveLength(expected)
+                         At: ...
+
+            Expected length: 3
+            Received length: 3
+             Received value: "abc"
+
+                   Filename: expect-non-retrying.ts
+                       Line: ...
+          `,
+          assertion: ({ expect }) => {
+            expect("abc").not.toHaveLength(3);
+          },
+        },
+      ],
+    },
+  ],
 };
 
 const TO_CONTAIN_TESTS: TestSuite = {
@@ -766,8 +852,8 @@ const TO_CONTAIN_TESTS: TestSuite = {
                         Error: expect(received).toContain(expected)
                            At: ...
 
-          Expected to contain: universe
-              Received string: hello world
+          Expected to contain: "universe"
+              Received string: "hello world"
 
                      Filename: expect-non-retrying.ts
                          Line: ...
@@ -786,11 +872,11 @@ const TO_CONTAIN_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                Error: expect(received).toContain(expected)
+                                Error: expect(received).not.toContain(expected)
                                    At: ...
 
-              Expected not to contain: world
-                      Received string: hello world
+              Expected not to contain: "world"
+                      Received string: "hello world"
 
                              Filename: expect-non-retrying.ts
                                  Line: ...
@@ -837,7 +923,7 @@ const TO_CONTAIN_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                Error: expect(received).toContain(expected)
+                                Error: expect(received).not.toContain(expected)
                                    At: ...
 
               Expected not to contain: 2
@@ -869,7 +955,7 @@ const TO_CONTAIN_TESTS: TestSuite = {
                              At: ...
 
             Expected to contain: 4
-                   Received set: {}
+                   Received set: {1,2,3}
 
                        Filename: expect-non-retrying.ts
                            Line: ...
@@ -888,11 +974,11 @@ const TO_CONTAIN_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                Error: expect(received).toContain(expected)
+                                Error: expect(received).not.toContain(expected)
                                    At: ...
 
               Expected not to contain: 2
-                         Received set: {}
+                         Received set: {1,2,3}
 
                              Filename: expect-non-retrying.ts
                                  Line: ...
@@ -906,10 +992,19 @@ const TO_CONTAIN_TESTS: TestSuite = {
     },
     {
       name: "with unsupported type",
-      expectedError: new Error(
-        "toContain is only supported for strings, arrays, and sets",
-      ),
+      expectedError: dedent`
+                 Error: expect(received).toContain(expected)
+                    At: ...
+
+         Expected type: Set | Array | string
+         Received type: number
+        Received value: 123
+
+              Filename: expect-non-retrying.ts
+                  Line: ...
+      `,
       assertion: ({ expect }) => {
+        // @ts-expect-error - expected type mismatch
         expect(123).toContain(2);
       },
     },
@@ -954,7 +1049,7 @@ const TO_CONTAIN_EQUAL_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                      Error: expect(received).toContainEqual(expected)
+                                      Error: expect(received).not.toContainEqual(expected)
                                          At: ...
 
               Expected not to contain equal: {"id":1}
@@ -986,7 +1081,7 @@ const TO_CONTAIN_EQUAL_TESTS: TestSuite = {
                                    At: ...
 
             Expected to contain equal: {"id":5}
-                         Received set: {}
+                         Received set: {{"id":1},{"id":2}}
 
                              Filename: expect-non-retrying.ts
                                  Line: ...
@@ -1007,11 +1102,11 @@ const TO_CONTAIN_EQUAL_TESTS: TestSuite = {
           }, {
             name: "fail",
             expectedError: dedent`
-                                      Error: expect(received).toContainEqual(expected)
+                                      Error: expect(received).not.toContainEqual(expected)
                                          At: ...
 
               Expected not to contain equal: {"id":1}
-                               Received set: {}
+                               Received set: {{"id":1},{"id":2}}
 
                                    Filename: expect-non-retrying.ts
                                        Line: ...
@@ -1027,10 +1122,19 @@ const TO_CONTAIN_EQUAL_TESTS: TestSuite = {
     },
     {
       name: "with unsupported type",
-      expectedError: new Error(
-        "toContainEqual is only supported for arrays and sets",
-      ),
+      expectedError: dedent`
+                 Error: expect(received).toContainEqual(expected)
+                    At: ...
+
+         Expected type: Array | Set
+         Received type: string
+        Received value: "string"
+
+              Filename: expect-non-retrying.ts
+                  Line: ...
+      `,
       assertion: ({ expect }) => {
+        // @ts-expect-error - expected type mismatch
         expect("string").toContainEqual("s");
       },
     },
@@ -1248,14 +1352,15 @@ const TO_HAVE_PROPERTY_TESTS: TestSuite = {
     {
       name: "toHaveProperty with unsupported type",
       expectedError: dedent`
-           Error: expect(received).toHaveProperty(keyPath)
-              At: ...
+                 Error: expect(received).toHaveProperty(keyPath)
+                    At: ...
 
-        Expected: object
-        Received: string
+         Expected type: object
+         Received type: string
+        Received value: "string"
 
-        Filename: expect-non-retrying.ts
-            Line: ...
+              Filename: expect-non-retrying.ts
+                  Line: ...
       `,
       assertion: ({ expect }) => {
         expect("string").toHaveProperty("length");

@@ -31,8 +31,9 @@ extend("toBeEditable", {
   match(received, options?: Partial<RetryConfig>) {
     if (!isLocator(received)) {
       throw new AssertionFailed({
-        format: "received",
-        received: "unknown",
+        format: "type-mismatch",
+        expected: [{ name: "Locator" }],
+        received: received,
       });
     }
 
