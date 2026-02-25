@@ -42,8 +42,15 @@ export default async function testExpectNonRetrying() {
   ];
 
   const allTests = flattenTestSuite(testCases);
+  const testNamePattern = new RegExp(__ENV.K6_TESTING_PATTERN ?? ".*");
 
   for (const testCase of allTests) {
+    if (!testNamePattern.test(testCase.name)) {
+      skip(testCase.name);
+
+      continue;
+    }
+
     const passed = await runTestCase(testCase);
 
     if (!passed) {
@@ -1591,6 +1598,12 @@ function fail(testName: string, message: string) {
 
 function pass(testName: string) {
   console.log(colorize("✓ " + testName, "green"));
+
+  return true;
+}
+
+function skip(testName: string) {
+  console.log(colorize("⚠ " + testName, "yellow"));
 
   return true;
 }

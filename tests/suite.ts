@@ -7,6 +7,8 @@ import "./expectations/toHaveAttribute.ts";
 import "./expectations/toHaveProperty.ts";
 import { colorize } from "../colors.ts";
 import { TestCaseError } from "../suites/types.ts";
+// @ts-types="../dist/index.d.ts"
+import type { AnsiColor, TestCaseResult } from "../dist/index.js";
 
 export const options = {
   scenarios: {
@@ -21,11 +23,34 @@ export const options = {
   },
 };
 
+function getResultStyle(
+  result: TestCaseResult,
+): { color: AnsiColor; icon: string } {
+  if (result.type === "pass") {
+    return {
+      color: "green",
+      icon: "✔",
+    };
+  }
+
+  if (result.type === "skip") {
+    return {
+      color: "yellow",
+      icon: "⚠",
+    };
+  }
+
+  return {
+    color: "red",
+    icon: "✖",
+  };
+}
+
 export default async function () {
   const results = await suite.run({
+    include: __ENV.K6_TESTING_PATTERN,
     reporter: (result) => {
-      const color = result.type === "pass" ? "green" : "red";
-      const icon = result.type === "pass" ? "✔" : "✖";
+      const { color, icon } = getResultStyle(result);
 
       const name = [...result.meta.path, result.meta.name].join(" > ");
 
