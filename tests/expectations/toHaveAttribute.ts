@@ -24,16 +24,18 @@ describe("attribute", () => {
 
     expect(spy.result.passed).toBe(false);
     expect(spy.result.message).toEqual(dedent`
-
-         Error: expect(received).toHaveAttribute(expected)
+         Error: expect(received).toHaveAttribute(attribute)
             At: ...
 
       Expected: Attribute 'data-attr' to be present
       Received: Attribute 'data-attr' was not present
 
+      Call log: 
+        - expect.toHaveAttribute with timeout 5000ms
+        - assertion toHaveAttribute failed (xN)
+
       Filename: toHaveAttribute.ts
           Line: ...
-
     `);
   });
 
@@ -60,16 +62,17 @@ describe("attribute", () => {
 
       expect(spy.result.passed).toBe(false);
       expect(spy.result.message).toEqual(dedent`
-
-           Error: expect(received).toHaveAttribute(expected)
+           Error: expect(received).not.toHaveAttribute(attribute)
               At: ...
 
         Expected: Attribute 'data-attr' to not be present
         Received: Attribute 'data-attr' was present
 
+        Call log: 
+          - expect.toHaveAttribute with timeout 5000ms
+
         Filename: toHaveAttribute.ts
             Line: ...
-
       `);
     });
   });
@@ -98,16 +101,18 @@ describe("expected value", () => {
 
     expect(spy.result.passed).toBe(false);
     expect(spy.result.message).toEqual(dedent`
-
-         Error: expect(received).toHaveAttribute(expected)
+         Error: expect(received).toHaveAttribute(attribute, expectedValue)
             At: ...
 
       Expected: Attribute 'data-attr' to have value 'exact value'
       Received: Attribute 'data-attr' was not present
 
+      Call log: 
+        - expect.toHaveAttribute with timeout 5000ms
+        - assertion toHaveAttribute failed (xN)
+
       Filename: toHaveAttribute.ts
           Line: ...
-
     `);
   });
 
@@ -122,16 +127,18 @@ describe("expected value", () => {
 
     expect(spy.result.passed).toBe(false);
     expect(spy.result.message).toEqual(dedent`
-
-         Error: expect(received).toHaveAttribute(expected)
+         Error: expect(received).toHaveAttribute(attribute, expectedValue)
             At: ...
 
       Expected: Attribute 'data-attr' to have value 'expected value'
       Received: Attribute 'data-attr' had value 'unexpected value'
 
+      Call log: 
+        - expect.toHaveAttribute with timeout 5000ms
+        - assertion toHaveAttribute failed (xN)
+
       Filename: toHaveAttribute.ts
           Line: ...
-
     `);
   });
 
@@ -147,16 +154,17 @@ describe("expected value", () => {
 
       expect(spy.result.passed).toBe(false);
       expect(spy.result.message).toEqual(dedent`
-
-           Error: expect(received).toHaveAttribute(expected)
+           Error: expect(received).not.toHaveAttribute(attribute, expectedValue)
               At: ...
   
         Expected: Attribute 'data-attr' to not have value 'unexpected value'
         Received: Attribute 'data-attr' had value 'unexpected value'
 
+        Call log: 
+          - expect.toHaveAttribute with timeout 5000ms
+
         Filename: toHaveAttribute.ts
             Line: ...
-
       `);
     });
 

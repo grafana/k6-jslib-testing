@@ -15,8 +15,6 @@ import {
 import { parseStackTrace } from "./stacktrace.ts";
 import type { Locator } from "k6/browser";
 import { normalizeWhiteSpace } from "./utils/string.ts";
-import { toHaveAttribute } from "./expectations/toHaveAttribute.ts";
-import type { ExpectationFailed } from "./expectations/result.ts";
 
 interface ToHaveTextOptions extends RetryConfig {
   /**
@@ -64,11 +62,6 @@ export interface LocatorExpectation {
     expected: RegExp | string,
     options?: Partial<ToHaveTextOptions>,
   ): Promise<void>;
-
-  /**
-   * Ensures that the Locator points to an element that has the given attribute and, optionally, the given value.
-   */
-  toHaveAttribute(attribute: string, expectedValue?: string): Promise<void>;
 
   /**
    * Ensures the Locator points to an element with the given input value. You can use regular expressions for the value as well.
@@ -266,69 +259,6 @@ export function createLocatorExpectation(
         options,
         (actual, expected) => actual.includes(expected),
       );
-    },
-
-    async toHaveAttribute(attribute: string, expectedValue?: string) {
-      const matcherName = "toHaveAttribute";
-
-      const stacktrace = parseStackTrace(new Error().stack);
-      const executionContext = captureExecutionContext(stacktrace);
-
-      if (!executionContext) {
-        throw new Error("k6 failed to capture execution context");
-      }
-
-      const renderer = MatcherErrorRendererRegistry.getRenderer(matcherName);
-      const renderConfig = MatcherErrorRendererRegistry.getConfig();
-
-      try {
-        await withRetry(async () => {
-          const result = await toHaveAttribute(
-            locator,
-            attribute,
-            expectedValue,
-          );
-          const finalResult = isNegated ? result.negate() : result;
-
-          if (finalResult.passed) {
-            return;
-          }
-
-          const failedResult = finalResult as ExpectationFailed;
-
-          const info: MatcherErrorInfo = {
-            executionContext,
-            matcherName,
-            expected: failedResult.detail.expected,
-            received: failedResult.detail.received,
-          };
-
-          usedAssert(
-            false,
-            renderer.render(info, renderConfig),
-            isSoft,
-            config.softMode,
-          );
-        }, retryConfig);
-      } catch {
-        const info: MatcherErrorInfo = {
-          executionContext,
-          matcherName,
-          expected: "An element matching the locator.",
-          received:
-            `Timeout waiting for element matching locator (${retryConfig.timeout}ms)`,
-        };
-
-        usedAssert(
-          false,
-          MatcherErrorRendererRegistry.getRenderer(matcherName).render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-          config.softMode,
-        );
-      }
     },
 
     async toHaveValue(

@@ -3,8 +3,7 @@ import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { type AnyError, AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { green, red } from "../../formatting/index.ts";
-import { isLocator } from "../../../expectations/utils.ts";
-import { withRetry } from "./utils.ts";
+import { isLocator, withRetry } from "./utils.ts";
 
 declare module "../../extend.ts" {
   export interface Matchers<Received> {

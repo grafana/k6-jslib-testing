@@ -5,4 +5,5 @@ import "./toBeEmpty.ts";
 import "./toBeEnabled.ts";
 import "./toBeHidden.ts";
 import "./toBeVisible.ts";
+import "./toHaveAttribute.ts";
 import "./toHaveTitle.ts";
