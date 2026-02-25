@@ -1,5 +1,4 @@
 import { assert } from "./assert.ts";
-import type { ANSI_COLORS } from "./colors.ts";
 import {
   DEFAULT_RETRY_OPTIONS,
   type ExpectConfig,
@@ -7,8 +6,6 @@ import {
 } from "./config.ts";
 import { captureExecutionContext } from "./execution.ts";
 import {
-  ExpectedReceivedMatcherRenderer,
-  type LineGroup,
   type MatcherErrorInfo,
   MatcherErrorRendererRegistry,
 } from "./render.ts";
@@ -62,13 +59,6 @@ export interface LocatorExpectation {
     expected: RegExp | string,
     options?: Partial<ToHaveTextOptions>,
   ): Promise<void>;
-
-  /**
-   * Ensures the Locator points to an element with the given input value. You can use regular expressions for the value as well.
-   *
-   * @param value {string} the expected value of the input
-   */
-  toHaveValue(value: string, options?: Partial<RetryConfig>): Promise<void>;
 }
 
 /**
@@ -107,12 +97,6 @@ export function createLocatorExpectation(
     colorize: config.colorize,
     display: config.display,
   });
-
-  // Register renderers specific to each matchers at initialization time.
-  MatcherErrorRendererRegistry.register(
-    "toHaveValue",
-    new ToHaveValueErrorRenderer(),
-  );
 
   const matchText = async (
     matcherName: string,
@@ -261,100 +245,9 @@ export function createLocatorExpectation(
       );
     },
 
-    async toHaveValue(
-      expectedValue: string,
-      options: Partial<RetryConfig> = retryConfig,
-    ): Promise<void> {
-      const stacktrace = parseStackTrace(new Error().stack);
-      const executionContext = captureExecutionContext(stacktrace);
-      if (!executionContext) {
-        throw new Error("k6 failed to capture execution context");
-      }
-
-      const info: MatcherErrorInfo = {
-        executionContext,
-        matcherName: "toHaveValue",
-        expected: expectedValue,
-        received: "unknown",
-        matcherSpecific: { isNegated, timeout: options.timeout },
-        customMessage: message,
-      };
-
-      try {
-        await withRetry(async () => {
-          const actualValue = await locator.inputValue();
-          const result = expectedValue === actualValue;
-          // If isNegated is true, we want to invert the result
-          const finalResult = isNegated ? !result : result;
-
-          usedAssert(
-            finalResult,
-            MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
-              info,
-              MatcherErrorRendererRegistry.getConfig(),
-            ),
-            isSoft,
-            config.softMode,
-          );
-        }, { ...retryConfig, ...options });
-      } catch (_) {
-        usedAssert(
-          false,
-          MatcherErrorRendererRegistry.getRenderer("toHaveValue").render(
-            info,
-            MatcherErrorRendererRegistry.getConfig(),
-          ),
-          isSoft,
-          config.softMode,
-        );
-      }
-    },
   };
 
   return expectation;
-}
-
-export class ToHaveValueErrorRenderer extends ExpectedReceivedMatcherRenderer {
-  protected getMatcherName(): string {
-    return "toHaveValue";
-  }
-
-  protected override getSpecificLines(
-    info: MatcherErrorInfo,
-    maybeColorize: (text: string, color: keyof typeof ANSI_COLORS) => string,
-  ): LineGroup[] {
-    return [
-      // FIXME (@oleiade): When k6/#4210 is fixed, we can use the locator here.
-      // { label: "Locator", value: maybeColorize(`locator('${info.matcherSpecific?.locator}')`, "white"), group: 3 },
-      {
-        label: "Expected",
-        value: maybeColorize(info.expected, "green"),
-        group: 3,
-      },
-      {
-        label: "Received",
-        value: maybeColorize(info.received, "red"),
-        group: 3,
-      },
-      { label: "Call log", value: "", group: 3 },
-      {
-        label: "",
-        value: maybeColorize(
-          `  - expect.toHaveValue with timeout ${info.matcherSpecific?.timeout}ms`,
-          "darkGrey",
-        ),
-        group: 3,
-        raw: true,
-      },
-      // FIXME (@oleiade): When k6/#4210 is fixed, we can use the locator's selector here.
-      {
-        label: "",
-        value: maybeColorize(`  - waiting for locator`, "darkGrey"),
-        group: 3,
-        raw: true,
-      },
-    ];
-  }
 }
 
 /**

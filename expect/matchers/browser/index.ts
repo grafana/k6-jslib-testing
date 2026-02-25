@@ -7,3 +7,4 @@ import "./toBeHidden.ts";
 import "./toBeVisible.ts";
 import "./toHaveAttribute.ts";
 import "./toHaveTitle.ts";
+import "./toHaveValue.ts";

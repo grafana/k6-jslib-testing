@@ -303,10 +303,11 @@ const standardTestCases: TestCase[] = [
             At: ...
 
       Expected: wrong-value
-      Received: unknown
+      Received: test-value
+      
       Call log: 
         - expect.toHaveValue with timeout 5000ms
-        - waiting for locator
+        - assertion toHaveValue failed (xN)
 
       Filename: expect-retrying.ts
           Line: ...
@@ -1160,14 +1161,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toHaveValue (fail)",
     selector: "#toHaveValueInput",
     expectedError: dedent`
-         Error: expect(received).toHaveValue(expected)
+         Error: expect(received).not.toHaveValue(expected)
             At: ...
 
       Expected: test-value
-      Received: unknown
+      Received: test-value
+
       Call log: 
         - expect.toHaveValue with timeout 5000ms
-        - waiting for locator
 
       Filename: expect-retrying.ts
           Line: ...

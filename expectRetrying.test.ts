@@ -91,15 +91,9 @@ Deno.test("negated retrying expectations", async (t) => {
     let assertCalled = false;
     let assertCondition = false;
 
-    const mockLocator = {
-      isVisible: async () => true,
-      isHidden: async () => false,
-      isChecked: async () => true,
-      isDisabled: async () => false,
-      isEnabled: async () => true,
-      isEditable: async () => true,
-      inputValue: async () => "test-value",
-    };
+    const mockLocator = createMockLocator({
+      textContent: async () => "hello",
+    });
 
     const mockAssert = (
       condition: boolean,
@@ -124,7 +118,7 @@ Deno.test("negated retrying expectations", async (t) => {
       display: "inline",
     };
 
-    // Test with isNegated = true
+    // Test with isNegated = true (text matches "hello"; .not.toHaveText("hello") should fail the assertion)
     const negatedExpectation = createLocatorExpectation(
       mockLocator as any,
       config,
@@ -133,7 +127,7 @@ Deno.test("negated retrying expectations", async (t) => {
     );
 
     assertCalled = false;
-    await negatedExpectation.toHaveValue("test-value");
+    await negatedExpectation.toHaveText("hello");
     assert(assertCalled, "Assert should have been called");
     assert(
       !assertCondition,
