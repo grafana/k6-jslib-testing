@@ -2,7 +2,6 @@ import type { Locator } from "k6/browser";
 import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
-import { red } from "../../formatting/index.ts";
 import { isLocator, withRetry } from "./utils.ts";
 
 declare module "../../extend.ts" {

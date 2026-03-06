@@ -6,5 +6,6 @@ import "./toBeEnabled.ts";
 import "./toBeHidden.ts";
 import "./toBeVisible.ts";
 import "./toHaveAttribute.ts";
+import "./toHaveText.ts";
 import "./toHaveTitle.ts";
 import "./toHaveValue.ts";

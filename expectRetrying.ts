@@ -37,18 +37,6 @@ export interface LocatorExpectation {
   not: LocatorExpectation;
 
   /**
-   * Ensures that the Locator points to an element with the given text.
-   *
-   * If the type of `expected` is a string, both the expected and actual text will have any zero-width
-   * characters removed and whitespace characters collapsed to a single space. If the type of `expected`
-   * is a regular expression, the content of the element will be matched against the regular expression as-is.
-   */
-  toHaveText(
-    expected: RegExp | string,
-    options?: Partial<ToHaveTextOptions>,
-  ): Promise<void>;
-
-  /**
    * Ensures that the Locator points to an element that contains the given text.
    *
    * If the type of `expected` is a string, both the expected and actual text will have any zero-width
@@ -206,7 +194,7 @@ export function createLocatorExpectation(
 
       usedAssert(
         false,
-        MatcherErrorRendererRegistry.getRenderer("toHaveText").render(
+        MatcherErrorRendererRegistry.getRenderer(matcherName).render(
           info,
           MatcherErrorRendererRegistry.getConfig(),
         ),
@@ -219,18 +207,6 @@ export function createLocatorExpectation(
   const expectation: LocatorExpectation = {
     get not(): LocatorExpectation {
       return createLocatorExpectation(locator, config, message, !isNegated);
-    },
-
-    toHaveText(
-      expected: RegExp | string,
-      options: Partial<ToHaveTextOptions> = {},
-    ) {
-      return matchText(
-        "toHaveText",
-        expected,
-        options,
-        (actual, expected) => actual === expected,
-      );
     },
 
     toContainText(

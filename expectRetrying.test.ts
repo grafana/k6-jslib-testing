@@ -87,52 +87,19 @@ Deno.test("withRetry", async (t) => {
 
 Deno.test("negated retrying expectations", async (t) => {
   await t.step("should invert the result when using .not", async () => {
-    // Mock the locator and assert function
-    let assertCalled = false;
-    let assertCondition = false;
+    const [spy, createMatchers] = createMatchersWithSpy();
 
     const mockLocator = createMockLocator({
       textContent: async () => "hello",
     });
 
-    const mockAssert = (
-      condition: boolean,
-      message: string,
-      soft?: boolean,
-    ) => {
-      assertCalled = true;
-      assertCondition = condition;
-      // Don't throw for this test
-    };
+    const negatedExpectation = createMatchers(mockLocator, undefined, {
+      negated: true,
+    });
 
-    // Import the createLocatorExpectation function directly to test it
-    const { createLocatorExpectation } = await import("./expectRetrying.ts");
-
-    const config: ExpectConfig = {
-      assertFn: mockAssert,
-      timeout: 10,
-      interval: 5,
-      soft: false,
-      softMode: "throw",
-      colorize: false,
-      display: "inline",
-    };
-
-    // Test with isNegated = true (text matches "hello"; .not.toHaveText("hello") should fail the assertion)
-    const negatedExpectation = createLocatorExpectation(
-      mockLocator as any,
-      config,
-      undefined,
-      true,
-    );
-
-    assertCalled = false;
     await negatedExpectation.toHaveText("hello");
-    assert(assertCalled, "Assert should have been called");
-    assert(
-      !assertCondition,
-      "Condition should be false when negated with a true result",
-    );
+
+    assert(spy.called, "Assert should have been called when negated and result matches");
   });
 
   await t.step("should handle double negation correctly", async () => {

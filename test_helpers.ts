@@ -36,11 +36,15 @@ export function createMatchersWithSpy() {
 
   return [
     spy,
-    <Received>(received: Received, customMessage?: string) =>
+    <Received>(
+      received: Received,
+      customMessage?: string,
+      options?: { negated?: boolean },
+    ) =>
       createMatchers<Received>({
         received,
         config: createTestConfig(),
-        negated: false,
+        negated: options?.negated ?? false,
         message: customMessage,
         fail(message) {
           spy.called = true;

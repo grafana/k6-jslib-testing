@@ -337,7 +337,11 @@ const standardTestCases: TestCase[] = [
                 At: ...
 
           Expected: Wrong text
-          Received: unknown
+          Received: Some text with elements, new lines and whitespaces
+
+          Call log: 
+            - expect.toHaveText with timeout 5000ms
+            - 'Some text with elements, new lines and whitespaces' did not match 'Wrong text' (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -360,11 +364,14 @@ const standardTestCases: TestCase[] = [
         selector: "#toHaveText",
 
         expectedError: dedent`
-             Error: expect(received).toHaveText(expected)
+             Error: expect(received).not.toHaveText(expected)
                 At: ...
 
           Expected: Some text with elements, new lines and whitespaces
-          Received: unknown
+          Received: Some text with elements, new lines and whitespaces
+
+          Call log: 
+            - expect.toHaveText with timeout 5000ms
 
           Filename: expect-retrying.ts
               Line: ...
@@ -380,7 +387,7 @@ const standardTestCases: TestCase[] = [
         selector: "#toHaveText",
         assertion: async ({ expect, locator }) => {
           await expect(locator).toHaveText(
-            /Some(.*)\n\s+new lines and(\s+)whitespaces/i,
+            /Some(.*)\s+new lines and(\s+)whitespaces/i,
           );
         },
       },
@@ -393,7 +400,11 @@ const standardTestCases: TestCase[] = [
                 At: ...
 
           Expected: /does not match/i
-          Received: unknown
+          Received: Some text with elements, new lines and whitespaces
+
+          Call log: 
+            - expect.toHaveText with timeout 5000ms
+            - 'Some text with elements, new lines and whitespaces' did not match pattern /does not match/i (xN)
 
           Filename: expect-retrying.ts
               Line: ...
@@ -420,11 +431,15 @@ const standardTestCases: TestCase[] = [
             selector: "#toHaveText",
 
             expectedError: dedent`
-                 Error: expect(received).toHaveText(expected)
+                 Error: expect(received).toHaveText(expected, options)
                     At: ...
 
               Expected: Wrong text
-              Received: unknown
+              Received: Some text with elements, new lines and whitespaces
+
+              Call log: 
+                - expect.toHaveText with timeout 5000ms
+                - 'Some text with elements, new lines and whitespaces' did not match 'Wrong text' (xN)
 
               Filename: expect-retrying.ts
                   Line: ...
@@ -450,11 +465,15 @@ const standardTestCases: TestCase[] = [
             selector: "#toHaveText",
 
             expectedError: dedent`
-                 Error: expect(received).toHaveText(expected)
+                 Error: expect(received).toHaveText(expected, options)
                     At: ...
 
               Expected: /does not match/i
-              Received: unknown
+              Received: Some text with elements, new lines and whitespaces
+
+              Call log: 
+                - expect.toHaveText with timeout 5000ms
+                - 'Some text with elements, new lines and whitespaces' did not match pattern /does not match/i (xN)
 
               Filename: expect-retrying.ts
                   Line: ...
@@ -485,11 +504,15 @@ const standardTestCases: TestCase[] = [
             selector: "#toHaveText",
 
             expectedError: dedent`
-                 Error: expect(received).toHaveText(expected)
+                 Error: expect(received).toHaveText(expected, options)
                     At: ...
 
               Expected: WRONG TEXT
-              Received: unknown
+              Received: Some text with elements, new lines and whitespaces
+
+              Call log: 
+                - expect.toHaveText with timeout 5000ms
+                - 'Some text with elements, new lines and whitespaces' did not match 'WRONG TEXT' (xN)
 
               Filename: expect-retrying.ts
                   Line: ...
@@ -515,11 +538,14 @@ const standardTestCases: TestCase[] = [
             selector: "#toHaveText",
 
             expectedError: dedent`
-                 Error: expect(received).toHaveText(expected)
+                 Error: expect(received).not.toHaveText(expected, options)
                     At: ...
 
               Expected: /Some(.*)/
-              Received: unknown
+              Received: Some text with elements, new lines and whitespaces
+
+              Call log: 
+                - expect.toHaveText with timeout 5000ms
 
               Filename: expect-retrying.ts
                   Line: ...
@@ -546,11 +572,15 @@ const standardTestCases: TestCase[] = [
             selector: "#toHaveText",
 
             expectedError: dedent`
-                 Error: expect(received).toHaveText(expected)
+                 Error: expect(received).toHaveText(expected, options)
                     At: ...
 
-              Expected: /does not match/
-              Received: unknown
+              Expected: /does not match/i
+              Received: Some text with elements, new lines and whitespaces
+
+              Call log: 
+                - expect.toHaveText with timeout 5000ms
+                - 'Some text with elements, new lines and whitespaces' did not match pattern /does not match/i (xN)
 
               Filename: expect-retrying.ts
                   Line: ...
@@ -1084,11 +1114,14 @@ const negationTestCases: TestCase[] = [
     name: "not.toHaveText (fail)",
     selector: "#toHaveText",
     expectedError: dedent`
-         Error: expect(received).toHaveText(expected)
+         Error: expect(received).not.toHaveText(expected)
             At: ...
 
       Expected: Some text with elements, new lines and whitespaces
-      Received: unknown
+      Received: Some text with elements, new lines and whitespaces
+
+      Call log: 
+        - expect.toHaveText with timeout 5000ms
 
       Filename: expect-retrying.ts
           Line: ...
