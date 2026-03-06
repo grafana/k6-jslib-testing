@@ -1222,7 +1222,15 @@ function pass(testName: string) {
   return true;
 }
 
+function skip(testName: string) {
+  console.log(colorize("⚠ " + testName, "yellow"));
+
+  return true;
+}
+
 export default async function testExpectRetrying() {
+  const testNamePattern = new RegExp(__ENV.K6_TESTING_PATTERN ?? ".*");
+
   const context = await browser.newContext();
 
   const testCases = [...standardTestCases, ...negationTestCases];
@@ -1230,6 +1238,12 @@ export default async function testExpectRetrying() {
   const failed: TestCase[] = [];
 
   for (const testCase of flattenSuites(testCases)) {
+    if (!testNamePattern.test(testCase.name)) {
+      skip(testCase.name);
+
+      continue;
+    }
+
     const passed = await runTestCase(context, testCase);
 
     if (!passed) {

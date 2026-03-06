@@ -12,6 +12,7 @@ type Reporter = (result: TestCaseResult) => void;
 
 interface RunOptions {
   cwd?: string;
+  include?: ((testCase: TestCaseInstance) => boolean) | RegExp | string;
   reporter?: Reporter;
 }
 
@@ -38,6 +39,20 @@ function buildTestCaseInstances(root: TestGroup): TestCaseInstance[] {
       },
     );
   });
+}
+
+function makeIncludePredicate(
+  include: RegExp | string | ((testCase: TestCaseInstance) => boolean),
+) {
+  if (typeof include === "function") {
+    return include;
+  }
+
+  const pattern = new RegExp(include);
+
+  return (testCase: TestCaseInstance) => {
+    return pattern.test(testCase.path.join(" > "));
+  };
 }
 
 export class TestSuite {
@@ -103,8 +118,10 @@ export class TestSuite {
   }
 
   async run(
-    { cwd, reporter }: RunOptions = {},
+    { cwd, include = () => true, reporter }: RunOptions = {},
   ): Promise<TestCaseResult[]> {
+    const shouldInclude = makeIncludePredicate(include);
+
     const instances = Array.from(this.#roots.values()).flatMap((group) => {
       return buildTestCaseInstances({
         ...group,
@@ -123,6 +140,19 @@ export class TestSuite {
     };
 
     for (const instance of instances) {
+      if (!shouldInclude(instance)) {
+        handleTestCaseResult({
+          type: "skip",
+          meta: {
+            path: instance.path,
+            name: instance.test.name,
+            duration: 0,
+          },
+        });
+
+        continue;
+      }
+
       let startTime = Date.now();
 
       const context: TestRunContext = {

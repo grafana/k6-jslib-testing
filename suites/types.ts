@@ -43,6 +43,10 @@ export interface TestCaseFailed extends TestCaseResultBase {
   error: unknown;
 }
 
-export type TestCaseResult = TestCasePassed | TestCaseFailed;
+export interface TestCaseSkipped extends TestCaseResultBase {
+  type: "skip";
+}
+
+export type TestCaseResult = TestCasePassed | TestCaseFailed | TestCaseSkipped;
 
 export type TestItem = TestCase | TestGroup;

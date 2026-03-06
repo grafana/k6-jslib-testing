@@ -1,3 +1,5 @@
+import process from "node:process";
+
 interface ExitCodeTest {
   name: string;
   script: string;
@@ -102,6 +104,10 @@ async function runIntegrationTests() {
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   try {
+    const pattern = process.env.K6_TESTING_PATTERN
+      ? ["--env", process.env.K6_TESTING_PATTERN]
+      : [];
+
     // Run the tests
     const tests = [
       [
@@ -109,6 +115,7 @@ async function runIntegrationTests() {
         "run",
         "--quiet",
         "--summary-mode=disabled",
+        ...pattern,
         "tests/expect-non-retrying.ts",
       ],
       [
@@ -116,6 +123,7 @@ async function runIntegrationTests() {
         "run",
         "--quiet",
         "--summary-mode=disabled",
+        ...pattern,
         "tests/expect-retrying.ts",
       ],
       [
@@ -123,6 +131,7 @@ async function runIntegrationTests() {
         "run",
         "--quiet",
         "--summary-mode=disabled",
+        ...pattern,
         "tests/suite.ts",
       ],
     ];
