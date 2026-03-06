@@ -1,9 +1,4 @@
-import type { Locator } from "k6/browser";
 import { ConfigLoader, type ExpectConfig } from "./config.ts";
-import {
-  createLocatorExpectation,
-  type LocatorExpectation,
-} from "./expectRetrying.ts";
 import { createMatchers, type MatchersFor } from "./expect/index.ts";
 
 /**
@@ -54,7 +49,6 @@ export interface ExpectFunction {
 
 type Expectations<T> =
   & MatchersFor<T>
-  & LocatorExpectation
   & { not: Expectations<T> };
 
 function createExpectations<T>(
@@ -64,13 +58,6 @@ function createExpectations<T>(
   isNegated: boolean,
 ): Expectations<T> {
   return {
-    ...createLocatorExpectation(
-      received as Locator,
-      config,
-      message,
-      isNegated,
-    ),
-
     ...createMatchers<T>({
       received: received,
       config,
