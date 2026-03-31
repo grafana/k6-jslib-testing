@@ -445,15 +445,12 @@ The following commands are used throughout the development process:
 - `deno lint *.ts` - Report linting errors
 - `deno fmt *.ts` - Format the code
 
-The following files are must known when working on the project:
+The following files and directories are must knows when working on the project:
 
 - `mod.ts` - The main entry point for the expect library, defines the public API
 - `expect.ts` - The main entry point for the expect library
-- `expectNonRetrying.ts` - Contains the non-retrying assertions definition and
-  implementation
-- `expectRetrying.ts` - Contains the retrying assertions definition and
-  implementation
-- The `tests/` directory contains the integration tests for the expect library
+- `expect/matchers/` - The folder containing all built-in matchers
+- `tests/` - directory contains the integration tests for the expect library
 
 During development, a typical workflow would consist in the following steps:
 
@@ -466,6 +463,136 @@ During development, a typical workflow would consist in the following steps:
 7. (optional) import `dist/index.js` in a k6 script and run it with
    `k6 run --no-summary --quiet <script>.js` to verify that the library works as
    expected
+
+### Adding Custom Matchers
+
+The library uses an extend API to register matchers. You can add new matchers
+by:
+
+1. **Declaring the matcher** in the `Matchers` interface (using TypeScript
+   declaration merging)
+2. **Implementing the matcher** with `extend()`
+3. **Registering** the matcher by importing it in the appropriate index file
+
+#### Standard matchers (no retry)
+
+Standard matchers run once and fail immediately if the assertion does not hold.
+Add them under `expect/matchers/`.
+
+```typescript
+// expect/matchers/myMatcher.ts
+import { extend } from "../extend.ts";
+import { AssertionFailed } from "../errors.ts";
+
+declare module "../extend.ts" {
+  export interface Matchers<Received> {
+    toBePositive(): void;
+  }
+}
+
+extend("toBePositive", {
+  match(received) {
+    if (typeof received !== "number" || received <= 0) {
+      throw new AssertionFailed({
+        format: "expected-received",
+        expected: "positive number",
+        received,
+      });
+    }
+    return {
+      negate: {
+        format: "expected-received",
+        expected: "positive number",
+        received,
+      },
+    };
+  },
+});
+```
+
+Then add `import "./myMatcher.ts"` to `expect/matchers/index.ts`.
+
+#### Browser matchers (with retry)
+
+Browser matchers retry until the assertion passes or a timeout is reached. They
+work with k6 `Locator` or `Page` objects. Add them under
+`expect/matchers/browser/`.
+
+```typescript
+// expect/matchers/browser/myBrowserMatcher.ts
+import type { Locator } from "k6/browser";
+import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
+import { AssertionFailed } from "../../errors.ts";
+import { extend } from "../../extend.ts";
+import { isLocator, withRetry } from "./utils.ts";
+
+declare module "../../extend.ts" {
+  export interface Matchers<Received> {
+    toHaveCustomProperty: Received extends Locator
+      ? (expected: string, options?: Partial<RetryConfig>) => Promise<void>
+      : never;
+  }
+}
+
+extend("toHaveCustomProperty", {
+  match(received, expected: string, options?: Partial<RetryConfig>) {
+    if (!isLocator(received)) {
+      throw new AssertionFailed({
+        format: "received",
+        received: "unknown",
+      });
+    }
+
+    const retryOptions = {
+      ...DEFAULT_RETRY_OPTIONS,
+      ...this.config,
+      ...options,
+    };
+
+    return withRetry(this, retryOptions, async () => {
+      const value = await (received as Locator).getAttribute("data-custom");
+      if (value !== expected) {
+        throw new AssertionFailed({
+          format: "text-match",
+          expected,
+          received: value ?? "",
+          message: `Element did not have expected attribute value`,
+        });
+      }
+      return {
+        negate: {
+          format: "text-match",
+          expected,
+          received: value ?? "",
+        },
+      };
+    });
+  },
+});
+```
+
+Then add `import "./myBrowserMatcher.ts"` to `expect/matchers/browser/index.ts`.
+
+#### Key concepts
+
+- **Negation**: When a matcher passes, return `{ negate: error }` so that
+  `expect(x).not.myMatcher()` shows a meaningful error when it fails
+- **Error formats**: Use existing formats (`expected-received`, `text-match`,
+  `received`) or register a custom one via `expect/formats/`
+- **Type filtering**: Use `Received extends Locator ? (...) => ... : never` to
+  restrict a matcher to specific types
+- **Reference implementations**: See `expect/matchers/toBe.ts` for a simple
+  standard matcher, and `expect/matchers/browser/toHaveText.ts` for a browser
+  matcher with options and retry logic
+- **Reference implementations**: See `expect/matchers/toBe.ts` for a simple
+  standard matcher, or `expect/matchers/browser/toHaveText.ts` for a full
+  browser matcher with options
+- **Reference implementations**: See `expect/matchers/toBe.ts` for a simple
+  standard matcher, or `expect/matchers/browser/toHaveText.ts` for a browser
+  matcher with options
+
+For reference implementations, see `expect/matchers/toBe.ts` (standard matcher)
+and `expect/matchers/browser/toHaveText.ts` (browser matcher with retry).
 
 ## License
 

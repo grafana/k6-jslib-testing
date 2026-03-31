@@ -1,5 +1,5 @@
 import { browser, type Page } from "k6/browser";
-import { test as baseTest } from "./test.ts";
+import { suite, test as baseTest } from "./test.ts";
 
 /**
  * Extend the base test with helpers for browser testing.
@@ -25,7 +25,7 @@ const { describe, it, test } = baseTest.extend({
   },
 });
 
-export { describe, it, test };
+export { describe, it, suite, test };
 
 /**
  * Render an element into the body of the given page.

@@ -3,8 +3,7 @@ import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { normalizeWhiteSpace } from "../../../utils/string.ts";
-import { isPage } from "../../../expectations/utils.ts";
-import { withRetry } from "./utils.ts";
+import { isPage, withRetry } from "./utils.ts";
 
 declare module "../../extend.ts" {
   export interface Matchers<Received> {

@@ -13,10 +13,10 @@ function makeExpectWithSpy() {
       result.passed = condition;
 
       // Remove file/line info for snapshot consistency
-      result.message = message.replace(/At: .*$/mg, "At: ...").replace(
-        /Line: \d+$/mg,
-        "Line: ...",
-      );
+      result.message = message
+        .replace(/At: .*$/mg, "At: ...")
+        .replace(/Line: \d+$/mg, "Line: ...")
+        .replace(/- (.*) \(x\d+\)$/mg, "- $1 (xN)");
     },
   });
 
