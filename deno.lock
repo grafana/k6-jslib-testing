@@ -15,7 +15,7 @@
     "jsr:@std/net@^1.0.6": "1.0.6",
     "jsr:@std/path@^1.1.3": "1.1.3",
     "jsr:@std/streams@^1.0.14": "1.0.14",
-    "npm:@types/k6@~0.57.1": "0.57.1",
+    "npm:@types/k6@1": "1.7.0",
     "npm:@types/node@*": "18.16.19",
     "npm:create-playwright@*": "1.17.134",
     "npm:dts-bundle-generator@^9.3.1": "9.5.1",
@@ -207,8 +207,8 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
-    "@types/k6@0.57.1": {
-      "integrity": "sha512-S/p2RQAYUBXyYROkR2fgeON/LaxJ0YR+KIlnPQW/TOeLBXD7tX4RfDSWaIecuDTWKblmc6UwANyP0e5QDZPhMw=="
+    "@types/k6@1.7.0": {
+      "integrity": "sha512-oL4mckVcOPIA2HUrCVj3aQXCJgCqsQe35Uc4fRTffmrQuR24v92GJImnagqUaRnC1TQVJFx85o3aHQPP+0bxpg=="
     },
     "@types/node@18.16.19": {
       "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA=="
@@ -496,7 +496,7 @@
     "dependencies": [
       "jsr:@std/assert@^1.0.11",
       "jsr:@std/http@^1.0.21",
-      "npm:@types/k6@~0.57.1",
+      "npm:@types/k6@1",
       "npm:dts-bundle-generator@^9.3.1",
       "npm:esbuild@0.25",
       "npm:k6@^0.0.0"
