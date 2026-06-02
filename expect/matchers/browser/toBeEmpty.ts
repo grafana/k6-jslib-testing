@@ -3,7 +3,7 @@ import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { type AnyError, AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { green, red } from "../../formatting/index.ts";
-import { isLocator, withRetry } from "./utils.ts";
+import { isLocator, toAssertionFailed, withRetry } from "./utils.ts";
 
 declare module "../../extend.ts" {
   export interface Matchers<Received> {
@@ -44,13 +44,15 @@ async function isEmpty(locator: Locator): Promise<boolean> {
         "Node is not an <input>, <textarea> or <select> element",
       )
     ) {
-      throw error;
+      toAssertionFailed(error);
     }
 
-    const text = await locator.textContent();
+    const text = await locator.textContent().catch(toAssertionFailed);
+
     if (text === null || text === undefined) {
       return true;
     }
+
     return text.trim().length === 0;
   }
 }

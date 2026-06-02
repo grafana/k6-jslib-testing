@@ -3,7 +3,7 @@ import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { type AnyError, AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { green, red } from "../../formatting/index.ts";
-import { isLocator, withRetry } from "./utils.ts";
+import { isLocator, toAssertionFailed, withRetry } from "./utils.ts";
 
 declare module "../../extend.ts" {
   export interface Matchers<Received> {
@@ -47,7 +47,7 @@ extend("toBeDisabled", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const disabled = await received.isDisabled();
+      const disabled = await received.isDisabled().catch(toAssertionFailed);
 
       if (!disabled) {
         throw new AssertionFailed(

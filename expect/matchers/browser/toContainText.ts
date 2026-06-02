@@ -3,7 +3,7 @@ import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { normalizeWhiteSpace } from "../../../utils/string.ts";
-import { isLocator, withRetry } from "./utils.ts";
+import { isLocator, toAssertionFailed, withRetry } from "./utils.ts";
 
 export interface ToContainTextOptions extends RetryConfig {
   /**
@@ -56,8 +56,8 @@ extend("toContainText", {
 
     return withRetry(this, retryOptions, async () => {
       const actualText = options?.useInnerText
-        ? await locator.innerText()
-        : await locator.textContent();
+        ? await locator.innerText().catch(toAssertionFailed)
+        : await locator.textContent().catch(toAssertionFailed);
 
       if (actualText === null) {
         throw new AssertionFailed({

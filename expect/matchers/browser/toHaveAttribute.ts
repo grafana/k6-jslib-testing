@@ -3,7 +3,7 @@ import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { green, red } from "../../formatting/index.ts";
-import { isLocator, withRetry } from "./utils.ts";
+import { isLocator, toAssertionFailed, withRetry } from "./utils.ts";
 import type { AnyError } from "../../index.ts";
 
 declare module "../../extend.ts" {
@@ -64,7 +64,9 @@ extend("toHaveAttribute", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const actualValue = await locator.getAttribute(attribute);
+      const actualValue = await locator.getAttribute(attribute).catch(
+        toAssertionFailed,
+      );
 
       if (expectedValue === undefined) {
         if (actualValue === null) {

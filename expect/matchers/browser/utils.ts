@@ -94,6 +94,15 @@ export function isPage(value: unknown): value is Page {
   );
 }
 
+export function toAssertionFailed(error: unknown): never {
+  throw new AssertionFailed({
+    format: "custom",
+    content: {
+      Message: red(String(error)),
+    },
+  });
+}
+
 export async function withRetry<Fn extends MatcherFn>(
   context: MatcherContext,
   config: Required<RetryConfig>,

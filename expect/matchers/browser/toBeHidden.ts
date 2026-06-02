@@ -3,7 +3,7 @@ import { DEFAULT_RETRY_OPTIONS, type RetryConfig } from "../../../config.ts";
 import { type AnyError, AssertionFailed } from "../../errors.ts";
 import { extend } from "../../extend.ts";
 import { green, red } from "../../formatting/index.ts";
-import { isLocator, withRetry } from "./utils.ts";
+import { isLocator, toAssertionFailed, withRetry } from "./utils.ts";
 
 declare module "../../extend.ts" {
   export interface Matchers<Received> {
@@ -43,7 +43,7 @@ extend("toBeHidden", {
     };
 
     return withRetry(this, retryOptions, async () => {
-      const hidden = await received.isHidden();
+      const hidden = await received.isHidden().catch(toAssertionFailed);
 
       if (!hidden) {
         throw new AssertionFailed(
