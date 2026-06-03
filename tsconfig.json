@@ -9,7 +9,6 @@
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "rootDir": ".",
-    "baseUrl": ".",
     "paths": {
       "k6-execution-shim": ["./k6-execution-shim.ts"]
     },
