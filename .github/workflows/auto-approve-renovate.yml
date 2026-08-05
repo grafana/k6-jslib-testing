@@ -1,7 +1,7 @@
 name: Auto-approve Renovate
 on:
   schedule:
-    - cron: '1 * * * *'
+    - cron: "1 * * * *"
   workflow_dispatch:
 permissions:
   contents: read
