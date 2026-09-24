@@ -2,7 +2,7 @@
 import "./expect/matchers/index.ts";
 import "./expect/formats/index.ts";
 
-import type { Locator } from "k6/browser";
+import type { LocatorWithViewport } from "./expect/matchers/browser/utils.ts";
 import type { ExpectConfig } from "./config.ts";
 import { env } from "./environment.ts";
 import { createMatchers } from "./expect/extend.ts";
@@ -54,7 +54,7 @@ export function createMatchersWithSpy() {
   ] as const;
 }
 
-export function createMockLocator(mock: Partial<Locator>) {
+export function createMockLocator(mock: Partial<LocatorWithViewport>) {
   return {
     "clear": () => {
       return Promise.reject(new Error("Not implemented"));
@@ -126,6 +126,9 @@ export function createMockLocator(mock: Partial<Locator>) {
       return Promise.reject(new Error("Not implemented"));
     },
     "isVisible": () => {
+      return Promise.reject(new Error("Not implemented"));
+    },
+    "isInViewport": () => {
       return Promise.reject(new Error("Not implemented"));
     },
     "innerHTML": () => {

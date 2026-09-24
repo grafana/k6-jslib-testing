@@ -60,6 +60,16 @@ export function isLocator(value: unknown): value is Locator {
   );
 }
 
+export interface LocatorWithViewport extends Locator {
+  isInViewport(options?: { ratio?: number }): Promise<boolean>;
+}
+
+export function isLocatorWithViewport(
+  value: unknown,
+): value is LocatorWithViewport {
+  return isLocator(value) && "isInViewport" in value;
+}
+
 /**
  * Checks if the given value is a browser Page.
  *

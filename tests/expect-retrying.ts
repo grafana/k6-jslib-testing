@@ -1,3 +1,4 @@
+import "./expectations/toBeInViewport.ts";
 import "./expectations/toHaveAttribute.ts";
 
 import {
