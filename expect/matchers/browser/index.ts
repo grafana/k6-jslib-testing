@@ -4,6 +4,7 @@ import "./toBeEditable.ts";
 import "./toBeEmpty.ts";
 import "./toBeEnabled.ts";
 import "./toBeHidden.ts";
+import "./toBeInViewport.ts";
 import "./toBeVisible.ts";
 import "./toHaveAttribute.ts";
 import "./toHaveText.ts";

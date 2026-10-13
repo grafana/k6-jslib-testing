@@ -3,6 +3,7 @@ import execution from "k6/execution";
 import { suite } from "./helpers/test.ts";
 
 import "./expectations/toBeInstanceOf.ts";
+import "./expectations/toBeInViewport.ts";
 import "./expectations/toHaveAttribute.ts";
 import "./expectations/toHaveProperty.ts";
 import { colorize } from "../colors.ts";
